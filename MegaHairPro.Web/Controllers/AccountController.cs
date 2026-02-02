@@ -1,32 +1,77 @@
+using MegaHairPro.Web.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using MegaHairPro.Web.Data;
-using System.Linq;
+using System.Threading.Tasks;
 
-namespace MegaHairPro.Web.Controllers;
-public class AccountController : Controller
+namespace MegaHairPro.Web.Controllers
 {
-    private readonly AppDbContext _context;
-    public AccountController(AppDbContext context) => _context = context;
-
-    [HttpGet]
-    public IActionResult Login() => View();
-    
-    [HttpPost]
-    public IActionResult Login(string login, string senha)
+    public class AccountController : Controller
     {
-        if (string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(senha))
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+
+        // ✅ ÚNICO CONSTRUTOR
+        public AccountController(
+            SignInManager<ApplicationUser> signInManager,
+            UserManager<ApplicationUser> userManager)
         {
-            ModelState.AddModelError("", "Login e senha são obrigatórios.");
+            _signInManager = signInManager;
+            _userManager = userManager;
+        }
+
+        [HttpGet]
+        public IActionResult Login(string? returnUrl = null)
+        {
+            ViewBag.ReturnUrl = returnUrl;
             return View();
         }
-        
-        var user = _context.Usuarios.FirstOrDefault(u => u.Login == login && u.Senha == senha);
-        if (user == null)
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(
+            string email,
+            string senha,
+            string? returnUrl = null)
         {
-            ModelState.AddModelError("", "Credenciais inválidas.");
+            ViewBag.ReturnUrl = returnUrl;
+
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user == null)
+            {
+                ViewBag.Erro = "Usuário não encontrado.";
+                return View();
+            }
+
+            var result = await _signInManager.PasswordSignInAsync(
+                user.UserName,
+                senha,
+                true,
+                false);
+
+            if (!result.Succeeded)
+            {
+                ViewBag.Erro = "Senha incorreta.";
+                return View();
+            }
+
+            if (!string.IsNullOrEmpty(returnUrl))
+                return Redirect(returnUrl);
+
+            return RedirectToAction("Index", "Dashboard");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Logout()
+        {
+            await _signInManager.SignOutAsync();
+            return RedirectToAction("Login");
+        }
+
+        public IActionResult AcessoNegado()
+        {
             return View();
         }
-        
-        return RedirectToAction("Index", "Produtos");
     }
 }

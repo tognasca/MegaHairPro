@@ -1,12 +1,14 @@
 ﻿using MegaHairPro.Web.Data;
 using MegaHairPro.Web.Models;
 using MegaHairPro.Web.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
 
 namespace MegaHairPro.Web.Controllers
 {
+    [Authorize]
     public class SimulacaoController : Controller
     {
         private readonly ISimulacaoService _simulacao;
@@ -33,7 +35,7 @@ namespace MegaHairPro.Web.Controllers
 
             return View(lista); // ✅ SEMPRE LISTA
         }
-
+        [Authorize(Roles = "Admin")]
         // ✅ POST (CORRIGIDO: NÃO PODE RETORNAR OBJETO ÚNICO)
         [HttpPost]
         public IActionResult Index(SimulacaoVenda model)

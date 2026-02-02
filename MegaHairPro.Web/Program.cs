@@ -1,9 +1,11 @@
 ﻿using MegaHairPro.Web.Data;
 using MegaHairPro.Web.Infrastructure.Transactions;
+using MegaHairPro.Web.Models;
 using MegaHairPro.Web.Services;
 using MegaHairPro.Web.Services.Implementations;
-using MegaHairPro.Web.Services.Interfaces; // ✅ IMPORTANTE
+using MegaHairPro.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -14,28 +16,46 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
-// ✅ BANCO
+
+// ✅ BANCO DE DADOS
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")
     )
 );
 
-// ✅ REGISTRO DOS SERVICES (ISSO RESOLVE O ERRO)
+
+// ✅ SERVICES
 builder.Services.AddScoped<ISimulacaoService, SimulacaoService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IVendaService, VendaService>();
+
+
+// ✅ IDENTITY COMPLETO
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+{
+    options.Password.RequireDigit = true;
+    options.Password.RequiredLength = 6;
+    options.Password.RequireNonAlphanumeric = false;
+
+    options.User.RequireUniqueEmail = true;
+})
+.AddEntityFrameworkStores<AppDbContext>()
+.AddDefaultTokenProviders();
+
+
+// ✅ LOGIN PATH (IMPORTANTE)
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Account/Login";
+    options.AccessDeniedPath = "/Account/AcessoNegado";
+});
+
+
 var app = builder.Build();
 
-app.UseStaticFiles();
 
-app.UseRouting();
-
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Account}/{action=Login}/{id?}"
-);
-
+// ✅ CULTURA BRASIL (ANTES DO ROUTING)
 var cultureInfo = new CultureInfo("pt-BR");
 
 app.UseRequestLocalization(new RequestLocalizationOptions
@@ -44,5 +64,30 @@ app.UseRequestLocalization(new RequestLocalizationOptions
     SupportedCultures = [cultureInfo],
     SupportedUICultures = [cultureInfo]
 });
+
+
+// ✅ ARQUIVOS ESTÁTICOS
+app.UseStaticFiles();
+
+app.UseRouting();
+
+
+// ✅ AUTH
+app.UseAuthentication();
+app.UseAuthorization();
+
+
+// ✅ ROTAS MVC
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Account}/{action=Login}/{id?}"
+);
+
+
+// ✅ SEED ADMIN (ANTES DO RUN)
+using (var scope = app.Services.CreateScope())
+{
+    await SeedIdentity.CriarAdmin(scope.ServiceProvider);
+}
 
 app.Run();

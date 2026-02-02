@@ -1,0 +1,32 @@
+﻿@model IEnumerable<MegaHairPro.Web.Models.Usuario>
+
+<h2>Usuários</h2>
+
+<a class="btn btn-primary mb-3" href="/Usuario/Create">
+    ➕ Novo Usuário
+</a>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Login</th>
+            <th>Perfil</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var u in Model)
+        {
+            <tr>
+                <td>@u.Nome</td>
+                <td>@u.Login</td>
+                <td>@u.Perfil</td>
+                <td>
+                    @(u.Ativo ? "Ativo" : "Bloqueado")
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

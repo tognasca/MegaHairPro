@@ -1,0 +1,27 @@
+﻿@model MegaHairPro.Web.Models.Usuario
+
+<h2>Novo Usuário</h2>
+
+<form method="post">
+
+    <label>Nome</label>
+    <input class="form-control mb-2" name="Nome" />
+
+    <label>Login</label>
+    <input class="form-control mb-2" name="Login" />
+
+    <label>Senha</label>
+    <input type="password" class="form-control mb-2" name="SenhaHash" />
+
+    <label>Perfil</label>
+    <select class="form-control mb-3" name="Perfil">
+        <option>Admin</option>
+        <option>Vendedora</option>
+        <option>Cabeleireira</option>
+    </select>
+
+    <button class="btn btn-success w-100">
+        ✅ Salvar Usuário
+    </button>
+
+</form>

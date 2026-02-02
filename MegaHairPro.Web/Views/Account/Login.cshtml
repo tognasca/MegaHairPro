@@ -1,4 +1,4 @@
-@{
+﻿@{
     Layout = null;
 }
 
@@ -12,41 +12,126 @@
 
     <style>
         body {
-            background: linear-gradient(135deg, #111827, #1f2937);
-            min-height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
         }
 
-        .login-box {
-            background: #fff;
-            border-radius: 10px;
-            padding: 30px;
+        html, body {
             width: 100%;
-            max-width: 380px;
+            height: 100%;
+            margin: 0;
+            padding: 0;
         }
+
+        .login-page {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* Fundo bonito e suave */
+            background: linear-gradient(135deg, #111827, #1f2937);
+            padding: 20px;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 22px;
+            /* ✅ Agora fica bonito no desktop */
+            width: 100%;
+            max-width: 500px;
+            padding: 45px 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+            text-align: center;
+        }
+
+            .login-card h2 {
+                font-size: 2.2rem;
+                margin-bottom: 5px;
+            }
+
+            .login-card p {
+                margin-bottom: 35px;
+                font-size: 1rem;
+                color: #6b7280;
+            }
+
+        .input-group-text {
+            background: #f3f4f6;
+            border: none;
+        }
+
+        .form-control {
+            border: none;
+            background: #f3f4f6;
+            padding: 14px;
+            border-radius: 12px;
+        }
+
+            .form-control:focus {
+                outline: none;
+                box-shadow: 0 0 0 2px #ff4d6d55;
+            }
+
+        .btn-login {
+            background: linear-gradient(90deg, #ff4d6d, #ff758f);
+            color: white;
+            font-weight: bold;
+            border: none;
+            padding: 14px;
+            font-size: 1.1rem;
+            border-radius: 14px;
+            margin-top: 15px;
+            width: 100%;
+        }
+
+            .btn-login:hover {
+                opacity: 0.92;
+            }
     </style>
 </head>
 
 <body class="d-flex align-items-center justify-content-center">
+    <div class="login-page">
 
-    <div class="login-box shadow">
-        <h3 class="text-center mb-4">MegaHairPro</h3>
+        <div class="login-card">
 
-        <form method="post">
-            <div class="mb-3">
-                <label class="form-label">Usu�rio</label>
-                <input name="login" class="form-control" placeholder="Digite seu usu�rio" required />
-            </div>
+            <h2 class="text-center fw-bold mb-3">MegaHairPro</h2>
 
-            <div class="mb-3">
-                <label class="form-label">Senha</label>
-                <input name="senha" type="password" class="form-control" placeholder="Digite sua senha" required />
-            </div>
+            @if (ViewBag.Erro != null)
+            {
+                <div class="alert alert-danger">
+                    @ViewBag.Erro
+                </div>
+            }
 
-            <button class="btn btn-dark w-100 mt-2">
-                Entrar
-            </button>
-        </form>
+            <form method="post">
+
+                ✅ @Html.AntiForgeryToken()
+
+                <label>Email</label>
+                <input name="email" class="form-control mb-3" required />
+
+                <label>Senha</label>
+                <input name="senha" type="password" class="form-control mb-4" required />
+
+                <button class="btn btn-dark w-100">
+                    ✅ Entrar
+                </button>
+
+            </form>
+
+        </div>
     </div>
+
+    </div>
+
 
 </body>
 </html>
+<script>
+    function toggleSenha() {
+        let s = document.getElementById("senha");
+        s.type = s.type === "password" ? "text" : "password";
+    }
+</script>

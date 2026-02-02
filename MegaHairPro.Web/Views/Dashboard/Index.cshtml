@@ -1,0 +1,72 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h2 class="mb-4">📌 Painel MegaHairPro</h2>
+
+<div class="row g-4">
+
+    <!-- ✅ Total vendido -->
+    <div class="col-md-3">
+        <div class="card shadow-sm p-3 rounded-4">
+            <h6 class="text-muted">Vendas Hoje</h6>
+            <h3 class="fw-bold text-primary">
+                R$ @ViewBag.TotalHoje.ToString("N2")
+            </h3>
+        </div>
+    </div>
+
+    <!-- ✅ Lucro -->
+    <div class="col-md-3">
+        <div class="card shadow-sm p-3 rounded-4">
+            <h6 class="text-muted">Lucro Hoje</h6>
+            <h3 class="fw-bold text-success">
+                R$ @ViewBag.LucroHoje.ToString("N2")
+            </h3>
+        </div>
+    </div>
+
+    <!-- ✅ Comissões -->
+    <div class="col-md-3">
+        <div class="card shadow-sm p-3 rounded-4">
+            <h6 class="text-muted">Comissões Pendentes</h6>
+            <h3 class="fw-bold text-danger">
+                R$ @ViewBag.ComissoesPendentes.ToString("N2")
+            </h3>
+        </div>
+    </div>
+
+    <!-- ✅ Estoque baixo -->
+    <div class="col-md-3">
+        <div class="card shadow-sm p-3 rounded-4">
+            <h6 class="text-muted">Produtos com Estoque Baixo</h6>
+            <h3 class="fw-bold text-warning">
+                @ViewBag.EstoqueBaixo
+            </h3>
+        </div>
+    </div>
+</div>
+
+<hr class="my-4" />
+
+<h4 class="mb-3">⚡ Ações Rápidas</h4>
+
+<div class="d-flex gap-3 flex-wrap">
+
+    <a href="/Simulacao/index" class="btn btn-primary btn-lg rounded-4">
+        ➕ Nova Simulação
+    </a>
+
+    <a href="/Venda/index" class="btn btn-success btn-lg rounded-4">
+        📌 Vendas Realizadas
+    </a>
+
+    <a href="/Comissao/index" class="btn btn-danger btn-lg rounded-4">
+        💰 Comissões Pendentes
+    </a>
+
+    <a href="/Compras/index" class="btn btn-warning btn-lg rounded-4">
+        📦 Estoque
+    </a>
+
+</div>
