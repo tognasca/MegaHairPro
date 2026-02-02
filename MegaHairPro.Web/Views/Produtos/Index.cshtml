@@ -1,0 +1,235 @@
+﻿@model IEnumerable<MegaHairPro.Web.Models.Produto>
+
+@{
+    ViewData["Title"] = "Produtos";
+}
+
+<h2>📦 Controle de Produtos</h2>
+<hr />
+
+<!-- ✅ NOVO PRODUTO -->
+<div class="card p-3 mb-4">
+    <h4>➕ Novo Produto</h4>
+
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="row">
+
+            <div class="col-md-3">
+                <label>Tipo</label>
+                <select name="TipoProduto" class="form-control">
+                    <option value="1">Cabelo</option>
+                    <option value="2">Acessório</option>
+                </select>
+            </div>
+
+            <div class="col-md-5">
+                <label>Nome</label>
+                <input name="Nome" class="form-control" required />
+            </div>
+
+            <div class="col-md-2">
+                <label>Origem</label>
+                <select name="Origem" class="form-control">
+                    <option>Indiano</option>
+                    <option>Vietnamita</option>
+                    <option>Russo</option>
+                    <option>Brasileiro</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label>Tamanho</label>
+                <select name="Tamanho" class="form-control">
+                    <option>40cm</option>
+                    <option>45cm</option>
+                    <option>50cm</option>
+                    <option>55cm</option>
+                    <option>65cm</option>
+                    <option>70cm</option>
+                </select>
+            </div>
+
+        </div>
+
+        <br />
+
+        <button type="submit" class="btn btn-success">
+            ✅ Salvar Produto
+        </button>
+    </form>
+</div>
+
+<hr />
+
+<!-- ✅ LISTAGEM -->
+<h4>📋 Produtos Registrados</h4>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Código</th>
+            <th>Tipo</th>
+            <th>Nome</th>
+            <th>Origem</th>
+            <th>Tamanho</th>
+            <th>Cor</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+
+    <tbody id="produtosBody">
+        @foreach (var p in Model)
+        {
+            @Html.Partial("_ProdutoRow", p)
+        }
+    </tbody>
+</table>
+
+<!-- ✅ MODAL EDITAR PRODUTO -->
+<div class="modal fade" id="modalEditarProduto" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">✏️ Editar Produto</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <input type="hidden" id="editId" />
+
+                <div class="mb-2">
+                    <label>Tipo</label>
+                    <select id="editTipo" class="form-control">
+                        <option value="1">Cabelo</option>
+                        <option value="2">Acessório</option>
+                    </select>
+                </div>
+
+                <div class="mb-2">
+                    <label>Nome</label>
+                    <input id="editNome" class="form-control" />
+                </div>
+
+                <div class="mb-2">
+                    <label>Origem</label>
+                    <select id="editOrigem" class="form-control">
+                        <option>Indiano</option>
+                        <option>Vietnamita</option>
+                        <option>Russo</option>
+                        <option>Brasileiro</option>
+                    </select>
+                </div>
+
+                <div class="mb-2">
+                    <label>Tamanho</label>
+                    <select id="editTamanho" class="form-control">
+                        <option>40cm</option>
+                        <option>45cm</option>
+                        <option>50cm</option>
+                        <option>55cm</option>
+                        <option>65cm</option>
+                        <option>70cm</option>
+                    </select>
+                </div>
+
+                <div class="mb-2">
+                    <label>Cor</label>
+                    <select id="editCor" class="form-control">
+                        <option>Castanho</option>
+                        <option>Castanho Claro</option>
+                        <option>Castanho Escuro</option>
+                        <option>Louro</option>
+                        <option>Preto</option>
+                        <option>Ruivo</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+
+                <button class="btn btn-primary" onclick="salvarEdicao()">
+                    ✅ Salvar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ✅ SCRIPT AJAX -->
+<script>
+    let modalEditar;
+
+    document.addEventListener("DOMContentLoaded", function () {
+        modalEditar = new bootstrap.Modal(
+            document.getElementById("modalEditarProduto")
+        );
+    });
+
+    function editarProduto(id) {
+
+        let row = document.getElementById("row-" + id);
+
+        document.getElementById("editId").value = id;
+        document.getElementById("editTipo").value = row.dataset.tipo;
+        document.getElementById("editNome").value = row.dataset.nome;
+        document.getElementById("editOrigem").value = row.dataset.origem;
+        document.getElementById("editTamanho").value = row.dataset.tamanho;
+        document.getElementById("editCor").value = row.dataset.cor;
+
+        modalEditar.show();
+    }
+
+    function salvarEdicao() {
+
+        let id = document.getElementById("editId").value;
+
+        fetch("/Produtos/EditAjax", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body:
+                "Id=" + id +
+                "&TipoProduto=" + document.getElementById("editTipo").value +
+                "&Nome=" + document.getElementById("editNome").value +
+                "&Origem=" + document.getElementById("editOrigem").value +
+                "&Tamanho=" + document.getElementById("editTamanho").value +
+                "&Cor=" + document.getElementById("editCor").value
+        })
+        .then(r => r.text())
+        .then(html => {
+
+            document.getElementById("row-" + id).outerHTML = html;
+            modalEditar.hide();
+        });
+    }
+
+    function toggleStatus(id) {
+
+        fetch("/Produtos/ToggleStatusAjax", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "id=" + id
+        })
+        .then(() => location.reload());
+    }
+
+    function excluirProduto(id) {
+
+        if (!confirm("Excluir este produto?")) return;
+
+        fetch("/Produtos/Delete", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "id=" + id
+        })
+        .then(() => location.reload());
+    }
+</script>

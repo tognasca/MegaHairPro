@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36616.10
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MegaHairPro.Web", "MegaHairPro.Web\MegaHairPro.Web.csproj", "{AD2AEB98-1E23-E838-08E7-9FFE256CB112}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AD2AEB98-1E23-E838-08E7-9FFE256CB112}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD2AEB98-1E23-E838-08E7-9FFE256CB112}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD2AEB98-1E23-E838-08E7-9FFE256CB112}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD2AEB98-1E23-E838-08E7-9FFE256CB112}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CB0F8C32-C625-4DE7-A650-4E0E916FEA84}
+	EndGlobalSection
+EndGlobal

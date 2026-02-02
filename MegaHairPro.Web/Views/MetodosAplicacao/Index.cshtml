@@ -1,0 +1,160 @@
+﻿@model IEnumerable<MegaHairPro.Web.Models.MetodoAplicacao>
+
+@{
+    ViewData["Title"] = "Métodos de Aplicação";
+}
+
+<h2>✨ Métodos de Aplicação</h2>
+<hr />
+
+<!-- ✅ CADASTRO -->
+<div class="card p-3 mb-4">
+    <h4>➕ Novo Método</h4>
+
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="row">
+
+            <div class="col-md-4">
+                <label>Nome</label>
+                <input name="Nome" class="form-control" required />
+            </div>
+
+            <div class="col-md-6">
+                <label>Descrição</label>
+                <input name="Descricao" class="form-control" />
+            </div>
+
+        </div>
+
+        <br />
+
+        <button class="btn btn-success">
+            ✅ Salvar Método
+        </button>
+    </form>
+</div>
+
+<hr />
+
+<!-- ✅ LISTAGEM -->
+<h4>📋 Métodos Registrados</h4>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Descrição</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var m in Model)
+        {
+            @Html.Partial("_MetodoRow", m)
+        }
+    </tbody>
+</table>
+
+<!-- ✅ MODAL EDITAR -->
+<div class="modal fade" id="modalEditarMetodo" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">✏️ Editar Método</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <input type="hidden" id="editId" />
+
+                <div class="mb-2">
+                    <label>Nome</label>
+                    <input id="editNome" class="form-control" />
+                </div>
+
+                <div class="mb-2">
+                    <label>Descrição</label>
+                    <input id="editDescricao" class="form-control" />
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+
+                <button class="btn btn-primary" onclick="salvarEdicao()">
+                    ✅ Salvar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    let modalEditar;
+
+    document.addEventListener("DOMContentLoaded", function () {
+        modalEditar = new bootstrap.Modal(
+            document.getElementById("modalEditarMetodo")
+        );
+    });
+
+    function editarMetodo(id) {
+
+        let row = document.getElementById("row-" + id);
+
+        document.getElementById("editId").value = id;
+        document.getElementById("editNome").value = row.dataset.nome;
+        document.getElementById("editDescricao").value = row.dataset.descricao;
+
+        modalEditar.show();
+    }
+
+    function salvarEdicao() {
+
+        let id = document.getElementById("editId").value;
+
+        fetch("/MetodosAplicacao/EditAjax", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body:
+                "Id=" + id +
+                "&Nome=" + document.getElementById("editNome").value +
+                "&Descricao=" + document.getElementById("editDescricao").value
+        })
+        .then(r => r.text())
+        .then(html => {
+            document.getElementById("row-" + id).outerHTML = html;
+            modalEditar.hide();
+        });
+    }
+
+    function toggleStatus(id) {
+        fetch("/MetodosAplicacao/ToggleStatusAjax", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "id=" + id
+        })
+        .then(() => location.reload());
+    }
+
+    function excluirMetodo(id) {
+
+        if (!confirm("Excluir este método?")) return;
+
+        fetch("/MetodosAplicacao/Delete", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "id=" + id
+        })
+        .then(() => location.reload());
+    }
+</script>

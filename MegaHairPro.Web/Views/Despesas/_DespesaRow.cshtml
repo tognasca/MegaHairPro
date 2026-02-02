@@ -1,0 +1,37 @@
+@model MegaHairPro.Web.Models.Despesas
+
+<tr id="row-@Model.Id"
+    data-categoria="@Model.Categoria"
+    data-descricao="@Model.Descricao"
+    data-valor="@Model.Valor.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+    data-data="@Model.DataCadastro.ToString("yyyy-MM-dd")">
+    <td>@Model.Categoria</td>
+    <td>@Model.Descricao</td>
+
+    <td class="text-end">
+        R$ @Model.Valor.ToString("N2")
+    </td>
+
+    <td class="text-end">
+        @Model.DataCadastro.ToString("dd/MM/yyyy")
+    </td>
+
+    <td class="text-center">
+
+        <button class="btn btn-sm btn-outline-primary"
+                onclick="editarDespesa(@Model.Id)">
+            Editar
+        </button>
+
+        <button class="btn btn-sm btn-outline-warning"
+                onclick="toggleStatus(@Model.Id)">
+            @(Model.Status ? "Inativar" : "Ativar")
+        </button>
+
+        <button class="btn btn-sm btn-outline-danger"
+                onclick="excluirDespesa(@Model.Id)">
+            Excluir
+        </button>
+
+    </td>
+</tr>

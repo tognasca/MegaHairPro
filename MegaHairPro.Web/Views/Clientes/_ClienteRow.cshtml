@@ -1,0 +1,37 @@
+﻿@model MegaHairPro.Web.Models.Cliente
+
+<tr id="row-@Model.Id"
+    data-nome="@Model.Nome"
+    data-telefone="@Model.Telefone"
+    data-whatsapp="@Model.WhatsApp"
+    data-email="@Model.Email"
+    data-cpf="@Model.CPF"
+    data-nascimento="@Model.DataNascimento?.ToString("yyyy-MM-dd")"
+    data-endereco="@Model.Endereco"
+    data-obs="@Model.Observacoes"
+    class="@(Model.Status ? "" : "table-secondary text-muted")">
+
+    <td>@Model.Nome</td>
+    <td>@Model.Telefone</td>
+    <td>@Model.WhatsApp</td>
+    <td>@Model.Email</td>
+
+    <td class="text-center">
+
+        <button class="btn btn-sm btn-outline-primary"
+                onclick="editarCliente(@Model.Id)">
+            Editar
+        </button>
+
+        <button class="btn btn-sm btn-outline-warning"
+                onclick="toggleStatus(@Model.Id)">
+            @(Model.Status ? "Inativar" : "Ativar")
+        </button>
+
+        <button class="btn btn-sm btn-outline-danger"
+                onclick="excluirCliente(@Model.Id)">
+            Excluir
+        </button>
+
+    </td>
+</tr>

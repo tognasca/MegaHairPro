@@ -1,0 +1,29 @@
+﻿@model MegaHairPro.Web.Models.MetodoAplicacao
+
+<tr id="row-@Model.Id"
+    data-nome="@Model.Nome"
+    data-descricao="@Model.Descricao"
+    class="@(Model.Status ? "" : "table-secondary text-muted")">
+
+    <td>@Model.Nome</td>
+    <td>@Model.Descricao</td>
+
+    <td class="text-center">
+
+        <button class="btn btn-sm btn-outline-primary"
+                onclick="editarMetodo(@Model.Id)">
+            Editar
+        </button>
+
+        <button class="btn btn-sm btn-outline-warning"
+                onclick="toggleStatus(@Model.Id)">
+            @(Model.Status ? "Inativar" : "Ativar")
+        </button>
+
+        <button class="btn btn-sm btn-outline-danger"
+                onclick="excluirMetodo(@Model.Id)">
+            Excluir
+        </button>
+
+    </td>
+</tr>

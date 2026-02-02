@@ -1,0 +1,555 @@
+﻿@model IEnumerable<MegaHairPro.Web.Models.SimulacaoVenda>
+
+@{
+    ViewData["Title"] = "Simulação de Venda";
+    int mediaAtendimentosMes = 50; // ✅ ajuste como quiser
+}
+<h2>Simulação de Venda</h2>
+<br />
+
+<form asp-action="Index" method="post" class="row g-3">
+    @Html.AntiForgeryToken()
+
+    <!-- ✅ CLIENTE -->
+    <h4>Cliente</h4>
+
+    <div class="col-md-12">
+        <label>Cliente</label>
+        <select name="ClienteId" id="clienteSelect"
+                class="form-control" required>
+            <option value="">Selecione</option>
+            @foreach (var c in ViewBag.Clientes)
+            {
+                <option value="@c.Id">@c.CPF - @c.Nome</option>
+            }
+        </select>
+    </div>
+
+    <hr />
+
+    <!-- ✅ PRODUTO -->
+    <h4>Produto / Estoque</h4>
+
+    <div class="col-md-4">
+        <label>Produto</label>
+        <select name="ProdutoId" id="produtoSelect"
+                class="form-control" required>
+            <option value="">Selecione</option>
+            @foreach (var p in ViewBag.Produtos)
+            {
+                <option value="@p.Id">@p.Codigo - @p.Nome</option>
+            }
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <label>Quantidade (g)</label>
+        <input name="QuantidadeGramas" id="QuantidadeGramas"
+               class="form-control" />
+    </div>
+
+    <div class="col-md-2">
+        <label>Estoque Atual (g)</label>
+        <input class="form-control" readonly
+               id="EstoqueAtualGramas" />
+    </div>
+
+    <div class="col-md-3">
+        <label>Estoque Pós-Venda (g)</label>
+        <input class="form-control" readonly
+               id="EstoquePosVendaGramas" />
+    </div>
+
+    <hr />
+
+    <!-- ✅ LUCRO CABELO -->
+    <h4>Lucro do Cabelo</h4>
+
+    <div class="col-md-3">
+        <label>% Lucro</label>
+        <input name="PercentualLucroCabelo"
+               id="PercentualLucroCabelo"
+               class="form-control" />
+    </div>
+
+    <div class="col-md-3">
+        <label>Custo do Cabelo</label>
+        <input class="form-control" readonly id="CustoCabelo" />
+    </div>
+
+    <div class="col-md-3">
+        <label>Lucro do Cabelo</label>
+        <input class="form-control" readonly id="ValorLucroCabelo" />
+    </div>
+
+    <hr />
+
+    <!-- ✅ DESPESAS DO BANCO -->
+    <h4 class="mt-4 mb-3">📌 Selecionar Despesas da Venda</h4>
+
+    <div class="card shadow-sm p-3 rounded-4">
+
+        <p class="text-muted">
+            Escolha as despesas que deseja aplicar nesta venda:
+        </p>
+
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th></th>
+                    <th>Categoria</th>
+                    <th>Descrição</th>
+                    <th class="text-end">Valor</th>
+                </tr>
+            </thead>
+
+            <tbody>
+               
+                @foreach (var d in (List<MegaHairPro.Web.Models.Despesas>)ViewBag.Despesas)
+                {
+                    decimal valorAplicado = d.Ratear
+                    ? d.Valor / mediaAtendimentosMes
+                    : d.Valor;
+                    <tr>
+                        <td>
+
+                            <input class="form-check-input despesaCheck"
+                                   type="checkbox"
+                                   name="DespesasSelecionadas"
+                                   value="@d.Id"
+                                   data-valor="@valorAplicado" />
+                        </td>
+
+                        <td>
+                            <span class="badge bg-secondary">
+                                @d.Categoria
+                            </span>
+                        </td>
+
+                        <td class="fw-semibold">
+                            @d.Descricao
+
+                            @if (d.Ratear)
+                            {
+                                <span class="badge bg-info ms-2">Rateada</span>
+                            }
+                        </td>
+
+                        <td class="text-end">
+
+                            @if (d.Ratear)
+                            {
+                                var valorRateado = d.Valor / mediaAtendimentosMes;
+
+                                <span class="text-primary fw-bold">
+                                    R$ @valorRateado.ToString("N2")
+                                </span>
+
+                                <br />
+                                <small class="text-info">(Rateada)</small>
+                            }
+                            else
+                            {
+                                <span>
+                                    R$ @d.Valor.ToString("N2")
+                                </span>
+                            }
+
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <hr />
+
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold">💰 Total Despesas:</h5>
+
+            <input class="form-control w-25 text-center fw-bold text-success"
+                   readonly
+                   id="TotalDespesasSelecionadas"
+                   name="TotalDespesasSelecionadas"
+                   value="0,00" />
+        </div>
+
+    </div>
+
+    <hr />
+    <h4>Comissões</h4>
+
+    <div class="col-md-3">
+        <label>% Vendedora</label>
+        <input name="PercentualComissaoVendedora"
+               id="PercentualComissaoVendedora"
+               class="form-control" />
+    </div>
+
+    <div class="col-md-3">
+        <label>Valor Comissão Vendedora</label>
+        <input id="ValorComissaoVendedora"
+               class="form-control"
+               readonly
+               style="background:#f8f9fa; font-weight:bold;" />
+    </div>
+
+    <div class="col-md-3">
+        <label>% Cabeleireira</label>
+        <input name="PercentualComissaoCabeleireira"
+               id="PercentualComissaoCabeleireira"
+               class="form-control" />
+    </div>
+
+    <div class="col-md-3">
+        <label>Valor Comissão Cabeleireira</label>
+        <input id="ValorComissaoCabeleireira"
+               class="form-control"
+               readonly
+               style="background:#f8f9fa; font-weight:bold;" />
+    </div>
+
+    <div class="col-md-3 mt-3">
+        <label>Total Comissões</label>
+        <input id="TotalComissoes"
+               class="form-control text-danger fw-bold"
+               readonly
+               style="background:#f8f9fa;" />
+    </div>
+
+    <hr />
+
+    <!-- ✅ PREÇO FINAL -->
+    <div class="col-md-3">
+        <label>Preço Venda</label>
+        <input name="PrecoVenda"
+               id="PrecoVenda"
+               class="form-control"
+               readonly
+               style="background:#f8f9fa; font-weight:bold;" />
+    </div>
+
+    <div class="col-12">
+        <button class="btn btn-success w-100">
+            ✅ Salvar Simulação
+        </button>
+    </div>
+</form>
+
+<hr />
+
+<!-- ✅ GRID -->
+<h4>📋 Simulações Registradas</h4>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Cliente</th>
+            <th>Produto</th>
+
+            <th>Custo</th>
+            <th>Preço/Venda</th>
+            <th>Lucro / Margem</th>
+            <th>Data</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var s in Model)
+        {
+            @Html.Partial("_SimulacaoRow", s)
+        }
+    </tbody>
+</table>
+
+<hr />
+
+<!-- ✅ MODAL -->
+<div class="modal fade" id="modalEditarSimulacao">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5>✏️ Editar Simulação</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="editIdSimulacao" />
+
+                <label>Preço Venda</label>
+                <input id="editPreco" class="form-control mb-2" />
+
+                <label>Custo Total</label>
+                <input id="editCusto" class="form-control mb-2" />
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+
+                <button class="btn btn-primary"
+                        onclick="salvarEdicaoSimulacao()">
+                    ✅ Salvar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ✅ SCRIPTS -->
+<script>
+    let modalEditarSimulacao;
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        // ✅ Modal
+        modalEditarSimulacao =
+            new bootstrap.Modal(document.getElementById("modalEditarSimulacao"));
+
+                document.getElementById("PercentualComissaoVendedora")
+        .addEventListener("input", atualizarComissoes);
+
+    document.getElementById("PercentualComissaoCabeleireira")
+        .addEventListener("input", atualizarComissoes);
+
+        // ✅ ELEMENTOS
+        const produtoSelect = document.getElementById("produtoSelect");
+        const quantidadeInput = document.getElementById("QuantidadeGramas");
+
+        const estoqueAtualInput = document.getElementById("EstoqueAtualGramas");
+        const estoquePosVendaInput = document.getElementById("EstoquePosVendaGramas");
+
+        const custoCabeloInput = document.getElementById("CustoCabelo");
+        const percentualLucroInput = document.getElementById("PercentualLucroCabelo");
+        const lucroCabeloInput = document.getElementById("ValorLucroCabelo");
+
+        // ✅ DESPESAS TOTAL
+        const totalDespesasInput = document.getElementById("TotalDespesasSelecionadas");
+
+        if (!produtoSelect || !quantidadeInput) return;
+
+        // ======================================================
+        // ✅ SOMAR DESPESAS
+        // ======================================================
+        document.querySelectorAll(".despesaCheck").forEach(chk => {
+            chk.addEventListener("change", function () {
+
+                let total = 0;
+
+                document.querySelectorAll(".despesaCheck:checked").forEach(x => {
+                    total += parseFloat(x.dataset.valor);
+                });
+
+                totalDespesasInput.value =
+                    total.toFixed(2).replace(".", ",");
+
+                      // ✅ ATUALIZA PREÇO FINAL
+        atualizarPrecoVenda();
+            });
+        });
+
+        // ======================================================
+        // ✅ PRODUTO → ESTOQUE
+        // ======================================================
+        produtoSelect.addEventListener("change", function () {
+
+            const produtoId = this.value;
+
+            if (!produtoId) {
+                estoqueAtualInput.value = "";
+                estoquePosVendaInput.value = "";
+                custoCabeloInput.value = "";
+                lucroCabeloInput.value = "";
+                return;
+            }
+
+            fetch(`@Url.Action("ObterEstoqueProduto", "Simulacao")?produtoId=${produtoId}`)
+                .then(r => r.json())
+                .then(d => {
+                    estoqueAtualInput.value = d.estoque;
+                    calcularPosVenda();
+                    atualizarCustoELucro();
+                });
+        });
+
+        // ======================================================
+        // ✅ QUANTIDADE → ESTOQUE + CUSTO
+        // ======================================================
+        quantidadeInput.addEventListener("input", function () {
+            calcularPosVenda();
+            atualizarCustoELucro();
+        });
+
+        // ======================================================
+        // ✅ % LUCRO → LUCRO
+        // ======================================================
+        percentualLucroInput.addEventListener("input", function () {
+            atualizarCustoELucro();
+        });
+
+        // ======================================================
+        // ✅ FUNÇÃO ESTOQUE PÓS-VENDA
+        // ======================================================
+        function calcularPosVenda() {
+
+            const estoque = parseFloat(estoqueAtualInput.value);
+            const quantidade = parseFloat(quantidadeInput.value);
+
+            if (isNaN(estoque) || isNaN(quantidade)) {
+                estoquePosVendaInput.value = "";
+                return;
+            }
+
+            estoquePosVendaInput.value = estoque - quantidade;
+        }
+
+        // ======================================================
+        // ✅ FUNÇÃO CUSTO + LUCRO AUTOMÁTICO
+        // ======================================================
+        function atualizarCustoELucro() {
+
+            const produtoId = produtoSelect.value;
+            const quantidade = parseFloat(quantidadeInput.value);
+            const percentual = parseFloat(percentualLucroInput.value);
+
+            if (!produtoId || isNaN(quantidade) || quantidade <= 0) {
+                custoCabeloInput.value = "";
+                lucroCabeloInput.value = "";
+                return;
+            }
+
+            fetch(`@Url.Action("ObterLucroCabelo", "Simulacao")?produtoId=${produtoId}&quantidadeGramas=${quantidade}&percentualLucro=${percentual || 0}`)
+                .then(r => r.json())
+                .then(d => {
+
+                    custoCabeloInput.value = d.custo.toFixed(2);
+                    lucroCabeloInput.value = d.lucro.toFixed(2);
+
+                    // ✅ ATUALIZA PREÇO FINAL
+    atualizarPrecoVenda();
+
+                });
+        }
+
+    });
+
+    // ======================================================
+    // ✅ FUNÇÕES GLOBAIS MODAL EDITAR
+    // ======================================================
+    function editarSimulacao(id) {
+
+        let row = document.getElementById("row-" + id);
+
+        document.getElementById("editIdSimulacao").value = id;
+        document.getElementById("editPreco").value = row.dataset.preco;
+        document.getElementById("editCusto").value = row.dataset.custo;
+
+        modalEditarSimulacao.show();
+    }
+
+    function salvarEdicaoSimulacao() {
+
+        let id = document.getElementById("editIdSimulacao").value;
+
+        fetch("/Simulacao/EditAjax", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body:
+                "Id=" + id +
+                "&PrecoVenda=" + document.getElementById("editPreco").value +
+                "&CustoTotal=" + document.getElementById("editCusto").value
+        })
+        .then(r => r.text())
+        .then(html => {
+
+            document.getElementById("row-" + id).outerHTML = html;
+            modalEditarSimulacao.hide();
+        });
+    }
+
+    function excluirSimulacao(id) {
+
+        if (!confirm("Deseja excluir esta simulação?")) return;
+
+        fetch("/Simulacao/Delete", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "id=" + id
+        })
+        .then(() => location.reload());
+    }
+
+     function atualizarPrecoVenda() {
+
+        let custo = parseFloat(document.getElementById("CustoCabelo").value) || 0;
+        let lucro = parseFloat(document.getElementById("ValorLucroCabelo").value) || 0;
+
+        let despesas = 0;
+        document.querySelectorAll(".despesaCheck:checked").forEach(x => {
+            despesas += parseFloat(x.dataset.valor);
+        });
+
+        let precoFinal = custo + lucro + despesas;
+
+        document.getElementById("PrecoVenda").value =
+            precoFinal.toFixed(2).replace(".", ",");
+
+            atualizarComissoes();
+    }
+
+
+        function atualizarComissoes() {
+
+        let precoVenda =
+            parseFloat(document.getElementById("PrecoVenda").value.replace(",", ".")) || 0;
+
+        let percVend =
+            parseFloat(document.getElementById("PercentualComissaoVendedora").value) || 0;
+
+        let percCab =
+            parseFloat(document.getElementById("PercentualComissaoCabeleireira").value) || 0;
+
+        let valorVend = (percVend / 100) * precoVenda;
+        let valorCab = (percCab / 100) * precoVenda;
+
+        document.getElementById("ValorComissaoVendedora").value =
+            valorVend.toFixed(2).replace(".", ",");
+
+        document.getElementById("ValorComissaoCabeleireira").value =
+            valorCab.toFixed(2).replace(".", ",");
+
+        document.getElementById("TotalComissoes").value =
+            (valorVend + valorCab).toFixed(2).replace(".", ",");
+    }
+
+        function convertervenda(id) {
+
+        if (!confirm("deseja confirmar esta simulação como venda?"))
+            return;
+
+        fetch("/simulacao/confirmarvenda", {
+            method: "post",
+            headers: { "content-type": "application/x-www-form-urlencoded" },
+            body: "id=" + id
+        })
+        .then(() => location.reload());
+    }
+
+        function confirmarVenda(id) {
+
+        if (!confirm("Deseja transformar esta simulação em VENDA real?"))
+            return;
+
+        fetch("/Simulacao/ConfirmarVenda", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "id=" + id
+        })
+        .then(() => location.reload());
+    }
+</script>
+

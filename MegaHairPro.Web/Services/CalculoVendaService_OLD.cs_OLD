@@ -1,0 +1,59 @@
+﻿using MegaHairPro.Web.Data;
+using MegaHairPro.Web.Models;
+using System.Linq;
+
+public class CalculoVendaService
+{
+    private readonly AppDbContext _context;
+
+    public CalculoVendaService(AppDbContext context)
+    {
+        _context = context;
+    }
+
+    public SimulacaoVendaViewModel CalcularSimulacao(SimulacaoVendaViewModel model)
+    {
+        // 1️⃣ custo médio por grama vindo das compras
+        var custoMedioPorGrama = _context.Compras
+            .Where(c => c.ProdutoId == model.ProdutoId)
+            .Average(c => c.ValorTotal / c.QuantidadeGramas);
+
+        var custoCabelo = custoMedioPorGrama * model.QuantidadeGramas;
+
+        // 2️⃣ custo total
+        model.CustoTotal =
+            custoCabelo +
+            model.MaoDeObra +
+            model.TaxaCartao +
+            model.Impostos +
+            model.DespesasFixas;
+
+        // 3️⃣ formação de preço
+        switch (model.TipoPreco)
+        {
+            case TipoFormacaoPreco.PercentualSobreCusto:
+                model.PrecoVenda = model.CustoTotal +
+                    (model.CustoTotal * model.ValorPreco / 100);
+                break;
+
+            case TipoFormacaoPreco.Markup:
+                model.PrecoVenda = model.CustoTotal * model.ValorPreco;
+                break;
+
+            case TipoFormacaoPreco.PorGrama:
+                model.PrecoVenda = model.ValorPreco * model.QuantidadeGramas;
+                break;
+        }
+
+        // 4️⃣ lucro e margem
+        model.Lucro = model.PrecoVenda - model.CustoTotal;
+        model.Margem = model.PrecoVenda > 0
+            ? (model.Lucro / model.PrecoVenda) * 100
+            : 0;
+
+        // 5️⃣ comissão
+        model.Comissao = model.PrecoVenda * model.PercentualComissao / 100;
+
+        return model;
+    }
+}

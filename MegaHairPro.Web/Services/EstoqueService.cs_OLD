@@ -1,0 +1,43 @@
+
+using MegaHairPro.Web.Data;
+using MegaHairPro.Web.Models;
+using System.Linq;
+
+public class EstoqueService
+{
+    private readonly AppDbContext _context;
+    private readonly CustoMedioService _custo = new CustoMedioService();
+
+    public EstoqueService(AppDbContext context)
+    {
+        _context = context;
+    }
+
+    public decimal RegistrarCompra(int produtoId, decimal gramas, decimal valor)
+    {
+        var estoque = _context.Estoques.FirstOrDefault(x => x.ProdutoId == produtoId);
+        var custoUnit = valor / gramas;
+
+        if (estoque == null)
+        {
+            estoque = new Estoque { ProdutoId = produtoId, QuantidadeGramas = gramas, CustoMedio = custoUnit };
+            _context.Estoques.Add(estoque);
+        }
+        else
+        {
+            estoque.CustoMedio = _custo.Calcular(estoque.QuantidadeGramas, estoque.CustoMedio, gramas, valor);
+            estoque.QuantidadeGramas += gramas;
+        }
+
+        _context.SaveChanges();
+        return estoque.CustoMedio;
+    }
+
+    public decimal RegistrarVenda(int produtoId, decimal gramas)
+    {
+        var estoque = _context.Estoques.First(x => x.ProdutoId == produtoId);
+        estoque.QuantidadeGramas -= gramas;
+        _context.SaveChanges();
+        return estoque.CustoMedio;
+    }
+}

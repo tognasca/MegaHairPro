@@ -1,0 +1,237 @@
+﻿@model IEnumerable<MegaHairPro.Web.Models.Cliente>
+
+@{
+    ViewData["Title"] = "Clientes";
+}
+
+<h2>👩‍🦰 Controle de Clientes</h2>
+<hr />
+
+<!-- ✅ CADASTRO -->
+<div class="card p-3 mb-4">
+    <h4>➕ Novo Cliente</h4>
+
+    <form asp-action="Index" method="post">
+        @* @Html.AntiForgeryToken() *@
+
+        <div class="row">
+
+            <div class="col-md-6">
+                <label>Nome</label>
+                <input name="Nome" class="form-control" required />
+            </div>
+
+            <div class="col-md-3">
+                <label>Telefone</label>
+                <input name="Telefone" class="form-control" />
+            </div>
+
+            <div class="col-md-3">
+                <label>WhatsApp</label>
+                <input name="WhatsApp" class="form-control" />
+            </div>
+
+            <div class="col-md-4">
+                <label>Email</label>
+                <input name="Email" class="form-control" />
+            </div>
+
+            <div class="col-md-4">
+                <label>CPF</label>
+                <input name="CPF" class="form-control" />
+            </div>
+
+            <div class="col-md-4">
+                <label>Data Nascimento</label>
+                <input name="DataNascimento" type="date" class="form-control" />
+            </div>
+
+            <div class="col-md-12">
+                <label>Endereço</label>
+                <input name="Endereco" class="form-control" />
+            </div>
+
+            <div class="col-md-12">
+                <label>Observações</label>
+                <textarea name="Observacoes" class="form-control"></textarea>
+            </div>
+
+        </div>
+
+        <br />
+
+        <button class="btn btn-success">
+            ✅ Salvar Cliente
+        </button>
+    </form>
+</div>
+
+<hr />
+
+<!-- ✅ LISTAGEM -->
+<h4>📋 Clientes Registrados</h4>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Telefone</th>
+            <th>WhatsApp</th>
+            <th>Email</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+
+    <tbody id="clientesBody">
+        @foreach (var c in Model)
+        {
+            @Html.Partial("_ClienteRow", c)
+        }
+    </tbody>
+</table>
+
+<!-- ✅ MODAL EDITAR -->
+<div class="modal fade" id="modalEditarCliente" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">✏️ Editar Cliente</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <input type="hidden" id="editId" />
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-2">
+                        <label>Nome</label>
+                        <input id="editNome" class="form-control" />
+                    </div>
+
+                    <div class="col-md-3 mb-2">
+                        <label>Telefone</label>
+                        <input id="editTelefone" class="form-control" />
+                    </div>
+
+                    <div class="col-md-3 mb-2">
+                        <label>WhatsApp</label>
+                        <input id="editWhats" class="form-control" />
+                    </div>
+
+                    <div class="col-md-4 mb-2">
+                        <label>Email</label>
+                        <input id="editEmail" class="form-control" />
+                    </div>
+
+                    <div class="col-md-4 mb-2">
+                        <label>CPF</label>
+                        <input id="editCpf" class="form-control" />
+                    </div>
+
+                    <div class="col-md-4 mb-2">
+                        <label>Nascimento</label>
+                        <input id="editNascimento" type="date" class="form-control" />
+                    </div>
+
+                    <div class="col-md-12 mb-2">
+                        <label>Endereço</label>
+                        <input id="editEndereco" class="form-control" />
+                    </div>
+
+                    <div class="col-md-12 mb-2">
+                        <label>Observações</label>
+                        <textarea id="editObs" class="form-control"></textarea>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+
+                <button class="btn btn-primary" onclick="salvarEdicao()">
+                    ✅ Salvar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    let modalEditar;
+
+    document.addEventListener("DOMContentLoaded", function () {
+        modalEditar = new bootstrap.Modal(
+            document.getElementById("modalEditarCliente")
+        );
+    });
+
+    function editarCliente(id) {
+
+        let row = document.getElementById("row-" + id);
+
+        document.getElementById("editId").value = id;
+        document.getElementById("editNome").value = row.dataset.nome;
+        document.getElementById("editTelefone").value = row.dataset.telefone;
+        document.getElementById("editWhats").value = row.dataset.whatsapp;
+        document.getElementById("editEmail").value = row.dataset.email;
+        document.getElementById("editCpf").value = row.dataset.cpf;
+        document.getElementById("editNascimento").value = row.dataset.nascimento;
+        document.getElementById("editEndereco").value = row.dataset.endereco;
+        document.getElementById("editObs").value = row.dataset.obs;
+
+        modalEditar.show();
+    }
+
+    function salvarEdicao() {
+
+        let id = document.getElementById("editId").value;
+
+        fetch("/Clientes/EditAjax", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body:
+                "Id=" + id +
+                "&Nome=" + document.getElementById("editNome").value +
+                "&Telefone=" + document.getElementById("editTelefone").value +
+                "&WhatsApp=" + document.getElementById("editWhats").value +
+                "&Email=" + document.getElementById("editEmail").value +
+                "&CPF=" + document.getElementById("editCpf").value +
+                "&DataNascimento=" + document.getElementById("editNascimento").value +
+                "&Endereco=" + document.getElementById("editEndereco").value +
+                "&Observacoes=" + document.getElementById("editObs").value
+        })
+        .then(r => r.text())
+        .then(html => {
+            document.getElementById("row-" + id).outerHTML = html;
+            modalEditar.hide();
+        });
+    }
+
+    function toggleStatus(id) {
+        fetch("/Clientes/ToggleStatusAjax", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "id=" + id
+        })
+        .then(() => location.reload());
+    }
+
+    function excluirCliente(id) {
+
+        if (!confirm("Excluir este cliente?")) return;
+
+        fetch("/Clientes/Delete", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "id=" + id
+        })
+        .then(() => location.reload());
+    }
+</script>

@@ -1,0 +1,48 @@
+﻿@model MegaHairPro.Web.Models.Fornecedor
+
+<tr id="row-@Model.Id"
+    data-nome="@Model.Nome"
+    data-contato="@Model.Contato"
+    data-cnpj="@Model.CNPJ"
+    data-ie="@Model.InscricaoEstadual"
+    data-razao="@Model.RazaoSocial"
+    data-fantasia="@Model.NomeFantasia"
+    data-logradouro="@Model.Logradouro"
+    data-numero="@Model.Numero"
+    data-complemento="@Model.Complemento"
+    data-bairro="@Model.Bairro"
+    data-cidade="@Model.Cidade"
+    data-uf="@Model.UF"
+    data-cep="@Model.CEP"
+    data-banco="@Model.Banco"
+    data-agencia="@Model.Agencia"
+    data-conta="@Model.Conta"
+    data-tipoconta="@Model.TipoConta"
+    data-observacoes="@Model.Observacoes"
+    class="@(Model.Status ? "" : "table-secondary text-muted")">
+
+    <td>@Model.Nome</td>
+    <td>@Model.Contato</td>
+    <td>@Model.CNPJ</td>
+    <td>@Model.Banco</td>
+
+    <td class="text-center">
+
+        <button class="btn btn-sm btn-outline-primary"
+                onclick="editarFornecedor(@Model.Id)">
+            Editar
+        </button>
+
+        <button class="btn btn-sm btn-outline-warning"
+                onclick="toggleStatus(@Model.Id)">
+            @(Model.Status ? "Inativar" : "Ativar")
+        </button>
+
+        <button class="btn btn-sm btn-outline-danger"
+                onclick="excluirFornecedor(@Model.Id)">
+            Excluir
+        </button>
+
+    </td>
+</tr>
+

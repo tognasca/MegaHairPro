@@ -1,0 +1,32 @@
+﻿<tr id="row-@Model.Id"
+    data-produto="@Model.ProdutoId"
+    data-fornecedor="@Model.FornecedorId"
+    data-qtd="@Model.QuantidadeGramas.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+    data-valor="@Model.ValorTotal.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+    data-data="@Model.DataCompra.ToString("yyyy-MM-dd")"
+    data-ativo="@Model.Ativo.ToString().ToLower()">
+
+    <td>@Model.ProdutoNome</td>
+    <td>@Model.FornecedorNome</td>
+    <td class="text-end">@Model.QuantidadeGramas</td>
+    <td class="text-end">R$ @Model.ValorTotal.ToString("N2")</td>
+    <td class="text-end">@Model.DataCompra.ToString("dd/MM/yyyy")</td>
+
+    <td class="text-center">
+        <button class="btn btn-sm btn-outline-primary"
+                onclick="EditAjax(@Model.Id)">
+            Editar
+        </button>
+
+        <button class="btn btn-sm btn-outline-warning"
+                onclick="toggleStatus(@Model.Id)">
+            @(Model.Ativo ? "Inativar" : "Ativar")
+        </button>
+
+        <button class="btn btn-sm btn-outline-danger"
+                onclick="excluirCompra(@Model.Id)">
+            Excluir
+        </button>
+    </td>
+</tr>
+
