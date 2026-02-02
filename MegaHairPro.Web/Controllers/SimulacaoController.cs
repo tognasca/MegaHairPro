@@ -27,7 +27,7 @@ namespace MegaHairPro.Web.Controllers
             CarregarCliente();
             CarregarProdutos();
             CarregarDespesas();
-            var lista = _context.Simulacao
+            var lista = _context.Simulacao.Where(x => x.Status == true)
                 .OrderByDescending(x => x.DataCadastro)
                 .ToList();
 
@@ -259,12 +259,68 @@ namespace MegaHairPro.Web.Controllers
                 produto.EstoqueGramas -= sim.QuantidadeGramas;
             }
 
+            decimal quantidadeRestante = sim.QuantidadeGramas;
+
+            var compras = _context.Compras
+                .Where(c => c.ProdutoId == sim.ProdutoId && c.QuantidadeGramas > 0)
+                .OrderBy(c => c.DataCompra)
+                .ToList();
+
+            foreach (var c in compras)
+            {
+                if (quantidadeRestante <= 0)
+                    break;
+
+                if (c.QuantidadeGramas >= quantidadeRestante)
+                {
+                    c.QuantidadeGramas -= quantidadeRestante;
+                    quantidadeRestante = 0;
+                }
+                else
+                {
+                    quantidadeRestante -= c.QuantidadeGramas.Value;
+                    c.QuantidadeGramas = 0;
+                }
+            }
+
+            if (quantidadeRestante > 0)
+                return BadRequest("Estoque insuficiente para concluir a venda.");
+
+
             // ✅ Marcar simulação como vendida
             sim.Status = false;
 
-            _context.SaveChanges();
+           
 
-            return Ok();
+            if (venda.ValorComissaoVendedora > 0)
+            {
+                _context.Comissoes.Add(new Comissao
+                {
+                    VendaId = venda.Id,
+                    Profissional = "Vendedora",
+                    Valor = venda.ValorComissaoVendedora,
+                    Pago = false
+                });
+            }
+
+            if (venda.ValorComissaoCabeleireira > 0)
+            {
+                _context.Comissoes.Add(new Comissao
+                {
+                    VendaId = venda.Id,
+                    Profissional = "Cabeleireira",
+                    Valor = venda.ValorComissaoCabeleireira,
+                    Pago = false
+                });
+            }
+            _context.SaveChanges();
+            var mes = DateTime.Now.Month;
+            var ano = DateTime.Now.Year;
+
+            return Json(new
+            {
+                redirectUrl = Url.Action("Index", "Venda", new { mes, ano })
+            });
         }
     }
 }

@@ -15,4 +15,6 @@ public class AppDbContext : DbContext
     public DbSet<Venda> Vendas => Set<Venda>();
     public DbSet<Cliente> Clientes => Set<Cliente>();
     public DbSet<SimulacaoVenda> Simulacao => Set<SimulacaoVenda>();
+
+    public DbSet<Comissao> Comissoes { get; set; }
 }

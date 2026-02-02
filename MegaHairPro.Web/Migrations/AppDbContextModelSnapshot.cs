@@ -62,6 +62,37 @@ namespace MegaHairPro.Web.Migrations
                     b.ToTable("Clientes");
                 });
 
+            modelBuilder.Entity("MegaHairPro.Web.Models.Comissao", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DataGeracao")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DataPagamento")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("Pago")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Profissional")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Valor")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("VendaId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Comissoes");
+                });
+
             modelBuilder.Entity("MegaHairPro.Web.Models.Compra", b =>
                 {
                     b.Property<int>("Id")

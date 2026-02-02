@@ -104,7 +104,7 @@
             </thead>
 
             <tbody>
-               
+
                 @foreach (var d in (List<MegaHairPro.Web.Models.Despesas>)ViewBag.Despesas)
                 {
                     decimal valorAplicado = d.Ratear
@@ -182,7 +182,11 @@
         <label>% Vendedora</label>
         <input name="PercentualComissaoVendedora"
                id="PercentualComissaoVendedora"
-               class="form-control" />
+               class="form-control"
+               placeholder="Ex: 30"
+               step="1"
+               min="0"
+               max="100" />
     </div>
 
     <div class="col-md-3">
@@ -195,9 +199,14 @@
 
     <div class="col-md-3">
         <label>% Cabeleireira</label>
+
         <input name="PercentualComissaoCabeleireira"
                id="PercentualComissaoCabeleireira"
-               class="form-control" />
+               class="form-control"
+               placeholder="Ex: 30"
+               step="1"
+               min="0"
+               max="100" />
     </div>
 
     <div class="col-md-3">
@@ -305,6 +314,9 @@
     let modalEditarSimulacao;
 
     document.addEventListener("DOMContentLoaded", function () {
+
+     $("input[name='PercentualComissaoVendedora']").mask("000", { reverse: true });
+     $("input[name='PercentualComissaoCabeleireira']").mask("000", { reverse: true });
 
         // ✅ Modal
         modalEditarSimulacao =
@@ -430,7 +442,7 @@
                     lucroCabeloInput.value = d.lucro.toFixed(2);
 
                     // ✅ ATUALIZA PREÇO FINAL
-    atualizarPrecoVenda();
+                atualizarPrecoVenda();
 
                 });
         }
@@ -549,7 +561,14 @@
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: "id=" + id
         })
-        .then(() => location.reload());
+        .then(r => r.json())
+        .then(data => {
+            // ✅ Vai direto para Vendas Realizadas
+            window.location.href = data.redirectUrl;
+        });
     }
+
+
+
 </script>
 

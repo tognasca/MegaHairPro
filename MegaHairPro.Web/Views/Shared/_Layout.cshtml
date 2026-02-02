@@ -105,9 +105,14 @@
                     <i class="bi bi-cash-coin"></i> Simulação
                 </a>
 
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Vendas" ? "active" : "")"
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Venda" ? "active" : "")"
                    href="/Venda/Index">
                     <i class="bi bi-cash-coin"></i> Vendas
+                </a>
+
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Comissão" ? "active" : "")"
+                   href="/Comissao/Index">
+                    <i class="bi bi-cash-coin"></i> Comissões
                 </a>
 
                 <hr />       

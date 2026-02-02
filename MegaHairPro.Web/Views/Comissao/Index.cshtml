@@ -1,0 +1,71 @@
+﻿@model IEnumerable<MegaHairPro.Web.Models.Comissao>
+
+@{
+    ViewData["Title"] = "Comissões Pendentes";
+}
+
+<h2>💰 Comissões Pendentes</h2>
+<br />
+
+<!-- ✅ Total -->
+<div class="card shadow-sm p-3 rounded-4 mb-4">
+    <h5 class="text-muted">Total a Pagar</h5>
+    <h3 class="text-danger fw-bold">
+        R$ @ViewBag.TotalPendente.ToString("N2")
+    </h3>
+</div>
+
+<hr />
+
+<!-- ✅ Grid -->
+<table class="table table-bordered table-striped align-middle">
+    <thead class="table-light">
+        <tr>
+            <th>Profissional</th>
+            <th>Venda</th>
+            <th>Valor</th>
+            <th>Data</th>
+            <th>Ação</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var c in Model)
+        {
+            <tr>
+                <td class="fw-semibold">
+                    @c.Profissional
+                </td>
+
+                <td>
+                    Venda #@c.VendaId
+                </td>
+
+                <td class="text-danger fw-bold">
+                    R$ @c.Valor.ToString("N2")
+                </td>
+
+                <td>
+                    @c.DataGeracao.ToShortDateString()
+                </td>
+
+                <td>
+                    <form asp-action="MarcarPago" method="post">
+                        <input type="hidden" name="id" value="@c.Id" />
+
+                        <button class="btn btn-success btn-sm">
+                            ✅ Marcar como Pago
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-success mt-3">
+        ✅ Nenhuma comissão pendente! Tudo pago 🎉
+    </div>
+}
