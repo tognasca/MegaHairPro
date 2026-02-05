@@ -1,0 +1,51 @@
+﻿@{
+    ViewData["Title"] = "Novo Usuário";
+}
+
+<h2 class="mb-4">➕ Criar Usuário</h2>
+
+@if (ViewBag.Erros != null)
+{
+    <div class="alert alert-danger">
+        @foreach (var e in ViewBag.Erros)
+        {
+            <div>@e.Description</div>
+        }
+    </div>
+}
+
+<form method="post">
+    @Html.AntiForgeryToken()
+
+    <label>Nome</label>
+    <input name="nome"
+           class="form-control mb-3"
+           required />
+
+    <label>Email (Login)</label>
+    <input name="email"
+           class="form-control mb-3"
+           required />
+
+    <label>Senha</label>
+    <input name="senha"
+           type="password"
+           class="form-control mb-3"
+           required />
+
+    <label>Perfil</label>
+    <select name="role"
+            class="form-control mb-4"
+            required>
+        <option value="">Selecione</option>
+
+        @foreach (var r in ViewBag.Roles)
+        {
+            <option value="@r.Name">@r.Name</option>
+        }
+    </select>
+
+    <button class="btn btn-success w-100">
+        ✅ Criar Usuário
+    </button>
+</form>

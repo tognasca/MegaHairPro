@@ -31,7 +31,7 @@ namespace MegaHairPro.Web.Services
             model.EstoquePosVendaGramas =
                 (compra.QuantidadeGramas - model.QuantidadeGramas) ?? 0;
 
-            // ================= CUSTO DO CABELO (CORRETO) =================
+            // ================= CUSTO MÉDIO =================
             var compras = _context.Compras
                 .Where(c => c.ProdutoId == model.ProdutoId && c.QuantidadeGramas > 0)
                 .ToList();
@@ -44,41 +44,71 @@ namespace MegaHairPro.Web.Services
 
             var custoMedioGrama = totalValor / totalGramas;
 
-            var custoCabelo = custoMedioGrama * model.QuantidadeGramas;
-            model.CustoCabelo = custoCabelo;
+            model.CustoCabelo = custoMedioGrama * model.QuantidadeGramas;
 
-            // ================= LUCRO DO CABELO =================
-            var lucroCabelo = custoCabelo * (model.PercentualLucroCabelo / 100m);
-            model.ValorLucroCabelo = lucroCabelo;
+            // ================= LUCRO CABELO =================
+            model.ValorLucroCabelo =
+                model.CustoCabelo * (model.PercentualLucroCabelo / 100m);
 
-            var precoCabelo = custoCabelo + lucroCabelo;
+            var precoCabelo =
+                model.CustoCabelo + model.ValorLucroCabelo;
 
-            // ================= DESPESAS DO SERVIÇO =================
-            var custoServico =
+            // ================= SERVIÇOS =================
+            model.CustoServico =
                 model.MaoDeObra +
                 model.Tinta +
                 model.CorteEscova;
 
-            // ================= PREÇO DE VENDA =================
-            model.PrecoVenda =
+            // ================= PREÇO CHEIO (SEM DESCONTO) =================
+            model.PrecoVendaOriginal =
                 precoCabelo +
-                custoServico +
+                model.CustoServico +
                 model.DespesaSalaoRateada;
 
+            model.PrecoVenda = model.PrecoVendaOriginal;
+
+            // ================= DESCONTO =================
+            if (model.PercentualDesconto > 0)
+            {
+                model.ValorDesconto =
+                    model.PrecoVendaOriginal *
+                    (model.PercentualDesconto / 100m);
+
+                model.PrecoVenda =
+                    model.PrecoVendaOriginal -
+                    model.ValorDesconto;
+            }
+            else
+            {
+                model.ValorDesconto = 0;
+            }
+
             // ================= COMISSÕES =================
+            // Comissão sobre cabelo (ajuste se quiser sobre total)
             model.ValorComissaoVendedora =
-                (model.PercentualComissaoVendedora ?? 0) * model.PrecoVenda / 100m;
+                (model.PercentualComissaoVendedora ?? 0) *
+                precoCabelo / 100m;
 
             model.ValorComissaoCabeleireira =
-                (model.PercentualComissaoCabeleireira ?? 0) * model.PrecoVenda / 100m;
+                (model.PercentualComissaoCabeleireira ?? 0) *
+                precoCabelo / 100m;
 
             // ================= CUSTO TOTAL =================
             model.CustoTotal =
-                custoCabelo +
-                custoServico +
+                model.CustoCabelo +
+                model.CustoServico +
                 model.DespesaSalaoRateada +
                 model.ValorComissaoVendedora.Value +
                 model.ValorComissaoCabeleireira.Value;
+
+            // ================= LUCRO CABELO =================
+            model.LucroCabelo =
+                precoCabelo - model.CustoCabelo;
+
+            // ================= LUCRO VENDA =================
+            model.LucroVenda =
+                (precoCabelo + model.CustoServico) -
+                (model.CustoCabelo + model.CustoServico);
 
             // ================= LUCRO LÍQUIDO =================
             model.LucroLiquido =
@@ -86,7 +116,16 @@ namespace MegaHairPro.Web.Services
 
             model.LucroTotal = model.LucroLiquido;
 
+            // ================= MARGENS % =================
+            if (model.PrecoVenda > 0)
+                model.MargemPercentual =
+                    (model.LucroLiquido / model.PrecoVenda) * 100m;
+            else
+                model.MargemPercentual = 0;
+
             return model;
         }
+
+
     }
 }

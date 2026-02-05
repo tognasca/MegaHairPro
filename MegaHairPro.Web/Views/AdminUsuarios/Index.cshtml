@@ -1,0 +1,83 @@
+﻿@model IEnumerable<MegaHairPro.Web.Models.ViewModels.UsuarioAdminVM>
+
+<h2 class="mb-4">👥 Usuários do Sistema</h2>
+
+@if (TempData["Msg"] != null)
+{
+    <div class="alert alert-warning">
+        @TempData["Msg"]
+    </div>
+}
+
+<a href="/AdminUsuarios/Create" class="btn btn-primary mb-3">
+    ➕ Novo Usuário
+</a>
+
+<table class="table table-bordered table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Email</th>
+            <th>Perfil</th>
+            <th>Status</th>
+            <th width="280">Ações</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var u in Model)
+        {
+            <tr>
+                <td>@u.Nome</td>
+                <td>@u.Email</td>
+                <td>
+                    <span class="badge bg-secondary">
+                        @u.Perfil
+                    </span>
+                </td>
+
+                <td>
+                    @if (u.Ativo)
+                    {
+                        <span class="badge bg-success">Ativo</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Bloqueado</span>
+                    }
+                </td>
+
+                <td>
+
+                    <!-- ✅ BLOQUEAR -->
+                    <form action="/AdminUsuarios/ToggleStatus" method="post" style="display:inline-block;">
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden" name="id" value="@u.Id" />
+
+                        <button type="submit" class="btn btn-warning btn-sm">
+                            @(u.Ativo ? "Bloquear" : "Ativar")
+                        </button>
+                    </form>
+
+                    <!-- ✅ RESET -->
+                    <form action="/AdminUsuarios/ResetSenha"
+                          method="post"
+                          style="display:inline-block;">
+
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden" name="id" value="@u.Id" />
+
+                        <button type="submit"
+                                class="btn btn-danger btn-sm"
+                                onclick="return confirm('Deseja resetar a senha deste usuário?')">
+                            🔑 Resetar Senha
+                        </button>
+                    </form>
+
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -3,22 +3,33 @@
 <tr id="row-@Model.Id"
     data-cliente="@Model.ClienteNome"
     data-produto="@Model.ProdutoNome"
+    data-qtd="@Model.QuantidadeGramas"
     data-preco="@Model.PrecoVenda"
+    data-precodesconto="@Model.ValorDesconto"
     data-custo="@Model.CustoTotal">
 
     <!-- ✅ Cliente -->
     <td>@Model.ClienteNome</td>
     <!-- ✅ Produto -->
     <td>@Model.ProdutoNome</td>
+    <!-- ✅ Quantidade Vendida -->
+    <td>@Model.QuantidadeGramas.ToString("N0")</td>
     <!-- ✅ Custo -->
-    <td>R$ @Model.CustoTotal.ToString("N2")</td>
+    <td>R$ @Model.CustoTotal?.ToString("N2")</td>
     <!-- ✅ Preço -->
-    <td>R$ @Model.PrecoVenda.ToString("N2")</td>
+    <td>R$ @Model.PrecoVenda?.ToString("N2")</td>
 
+    <!-- Preco desconto/%-->
+    <td class="text-warning fw-bold">
+        R$ @Model.ValorDesconto?.ToString("N2")
+        <small class="text-muted">
+            (@((Model.PercentualDesconto ?? 0).ToString("N0"))%)
+        </small>
+    </td>
     <!-- ✅ Lucro + Margem -->
     <td>
         @{
-            decimal margem = 0;
+            decimal? margem = 0;
 
             if (Model.PrecoVenda > 0)
             {
@@ -29,31 +40,31 @@
         @if (Model.LucroTotal > 200)
         {
             <span class="badge bg-success fs-6">
-                ✅ R$ @Model.LucroTotal.ToString("N2")
+                ✅ R$ @Model.LucroTotal?.ToString("N2")
             </span>
             <br />
             <small class="text-success">
-                Margem: @margem.ToString("N1")%
+                Margem: @margem?.ToString("N1")%
             </small>
         }
         else if (Model.LucroTotal > 0)
         {
             <span class="badge bg-warning text-dark fs-6">
-                ⚠️ R$ @Model.LucroTotal.ToString("N2")
+                ⚠️ R$ @Model.LucroTotal?.ToString("N2")
             </span>
             <br />
             <small class="text-warning">
-                Margem: @margem.ToString("N1")%
+                Margem: @margem?.ToString("N1")%
             </small>
         }
         else
         {
             <span class="badge bg-danger fs-6">
-                ❌ R$ @Model.LucroTotal.ToString("N2")
+                ❌ R$ @Model.LucroTotal?.ToString("N2")
             </span>
             <br />
             <small class="text-danger">
-                Margem: @margem.ToString("N1")%
+                Margem: @margem?.ToString("N1")%
             </small>
         }
     </td>
@@ -67,8 +78,6 @@
                 onclick="excluirSimulacao(@Model.Id)">
             ❌ Excluir
         </button>
-    </td>
-    <td>
         <button class="btn btn-primary btn-sm"
                 onclick="confirmarVenda(@Model.Id)">
             ✅ Confirmar Venda

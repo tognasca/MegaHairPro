@@ -17,21 +17,30 @@ namespace MegaHairPro.Web.Controllers
         public IActionResult Index()
         {
             var hoje = DateTime.Today;
+            var amanha = hoje.AddDays(1);
 
-            // ✅ Vendas do dia
             var vendasHoje = _context.Vendas
-                .Where(v => v.DataVenda.Date == hoje)
+                .Where(v => v.DataVenda >= hoje &&
+                            v.DataVenda < amanha)
                 .ToList();
 
-            ViewBag.TotalHoje = vendasHoje.Sum(x => x.PrecoVenda);
-            ViewBag.LucroHoje = vendasHoje.Sum(x => x.LucroTotal);
+            ViewBag.TotalHoje =
+                vendasHoje.Any()
+                    ? vendasHoje.Sum(x => x.PrecoVenda)
+                    : 0;
 
-            // ✅ Comissões pendentes
-            ViewBag.ComissoesPendentes = _context.Comissoes
-                .Where(c => c.Pago == false)
-                .Sum(c => c.Valor);
+            ViewBag.LucroHoje =
+                vendasHoje.Any()
+                    ? vendasHoje.Sum(x => x.LucroTotal)
+                    : 0;
 
-            // ✅ Estoque baixo (menos que 100g)
+            ViewBag.ComissoesPendentes =
+                _context.Comissoes.Any()
+                    ? _context.Comissoes
+                        .Where(c => !c.Pago)
+                        .Sum(c => c.Valor)
+                    : 0;
+
             var estoqueBaixo = _context.Compras
                 .GroupBy(c => c.ProdutoId)
                 .Select(g => new
@@ -46,5 +55,6 @@ namespace MegaHairPro.Web.Controllers
 
             return View();
         }
+
     }
 }

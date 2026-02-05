@@ -27,7 +27,7 @@ namespace MegaHairPro.Web.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        ////[ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(
             string email,
             string senha,
@@ -62,7 +62,7 @@ namespace MegaHairPro.Web.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        //[ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();

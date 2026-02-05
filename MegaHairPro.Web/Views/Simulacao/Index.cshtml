@@ -224,7 +224,33 @@
                readonly
                style="background:#f8f9fa;" />
     </div>
+    <hr />
 
+    <h4>Desconto / Promoção</h4>
+
+    <div class="col-md-3">
+        <label>% Desconto</label>
+        <input name="PercentualDesconto"
+               id="PercentualDesconto"
+               class="form-control"
+               placeholder="Ex: 10" />
+    </div>
+
+    <div class="col-md-3">
+        <label>Valor do Desconto</label>
+        <input id="ValorDesconto"
+               class="form-control"
+               readonly
+               style="background:#f8f9fa; font-weight:bold;" />
+    </div>
+
+    <div class="col-md-3">
+        <label>Preço sem Desconto</label>
+        <input id="PrecoVendaOriginal"
+               class="form-control"
+               readonly
+               style="background:#f8f9fa;" />
+    </div>
     <hr />
 
     <!-- ✅ PREÇO FINAL -->
@@ -254,9 +280,11 @@
         <tr>
             <th>Cliente</th>
             <th>Produto</th>
+            <th>Quantidade(g)</th>
 
             <th>Custo</th>
             <th>Preço/Venda</th>
+            <th>Percentual/Desconto</th>
             <th>Lucro / Margem</th>
             <th>Data</th>
             <th>Ações</th>
@@ -341,6 +369,7 @@
 
         // ✅ DESPESAS TOTAL
         const totalDespesasInput = document.getElementById("TotalDespesasSelecionadas");
+        const descontoInput = document.getElementById("PercentualDesconto");
 
         if (!produtoSelect || !quantidadeInput) return;
 
@@ -387,7 +416,10 @@
                     atualizarCustoELucro();
                 });
         });
-
+            
+            if (descontoInput) {
+                descontoInput.addEventListener("input", atualizarPrecoVenda);
+            }
         // ======================================================
         // ✅ QUANTIDADE → ESTOQUE + CUSTO
         // ======================================================
@@ -494,8 +526,7 @@
         })
         .then(() => location.reload());
     }
-
-     function atualizarPrecoVenda() {
+        function atualizarPrecoVenda() {
 
         let custo = parseFloat(document.getElementById("CustoCabelo").value) || 0;
         let lucro = parseFloat(document.getElementById("ValorLucroCabelo").value) || 0;
@@ -505,12 +536,28 @@
             despesas += parseFloat(x.dataset.valor);
         });
 
-        let precoFinal = custo + lucro + despesas;
+        // ================= PREÇO ORIGINAL =================
+        let precoOriginal = custo + lucro + despesas;
+
+        document.getElementById("PrecoVendaOriginal").value =
+            precoOriginal.toFixed(2).replace(".", ",");
+
+        // ================= DESCONTO =================
+        let percDesc =
+            parseFloat(document.getElementById("PercentualDesconto")?.value) || 0;
+
+        let valorDesconto = (percDesc / 100) * precoOriginal;
+
+        document.getElementById("ValorDesconto").value =
+            valorDesconto.toFixed(2).replace(".", ",");
+
+        // ================= PREÇO FINAL =================
+        let precoFinal = precoOriginal - valorDesconto;
 
         document.getElementById("PrecoVenda").value =
             precoFinal.toFixed(2).replace(".", ",");
 
-            atualizarComissoes();
+        atualizarComissoes();
     }
 
 

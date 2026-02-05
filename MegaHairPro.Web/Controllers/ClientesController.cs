@@ -1,4 +1,4 @@
-﻿using MegaHairPro.Web.Data;
+﻿            using MegaHairPro.Web.Data;
 using MegaHairPro.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
@@ -27,7 +27,7 @@ namespace MegaHairPro.Web.Controllers
 
         // ✅ CREATE
         [HttpPost]
-        //[ValidateAntiForgeryToken]
+        ////[ValidateAntiForgeryToken]
         public IActionResult Index(Cliente cliente)
         {
             cliente.Status = true;

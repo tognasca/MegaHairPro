@@ -45,7 +45,7 @@ namespace MegaHairPro.Web.Controllers
 
         // ✅ CREATE CORRETO (não é Index)
         [HttpPost]
-        //[ValidateAntiForgeryToken]
+        ////[ValidateAntiForgeryToken]
         public IActionResult Index(Compra compra)
         {
             if (compra.ProdutoId == 0)

@@ -27,8 +27,8 @@ namespace MegaHairPro.Web.Controllers
 
         // ✅ CREATE
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Create(Fornecedor fornecedor)
+        ////[ValidateAntiForgeryToken]
+        public IActionResult Index(Fornecedor fornecedor)
         {
             fornecedor.Status = true;
 

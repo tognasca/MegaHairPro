@@ -10,7 +10,7 @@
     <meta name="theme-color" content="#ff4d6d">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" href="/manifest.json">
+    <link rel="c:/inetpub/wwwroot" href="/manifest.json">
 
     <!-- ✅ CSS -->
     <link rel="stylesheet" href="~/css/site.css" />
@@ -121,31 +121,51 @@
                     <i class="bi bi-wallet2"></i> Comissões
                 </a>
 
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminUsuarios" ? "active" : "")"
+                   href="/AdminUsuarios/Index">
+                    <i class="bi bi-person-gear"></i> Usuários
+                </a>
+
             </nav>
         </aside>
 
-        <!-- ✅ CONTEÚDO -->
+
+        <!-- ✅ CONTEÚDO PRINCIPAL -->
         <div class="flex-grow-1">
 
             <!-- ✅ TOPBAR -->
-            <nav class="navbar navbar-light bg-white border-bottom px-4">
+            <nav class="navbar navbar-light bg-white border-bottom px-4 d-flex justify-content-between">
+
                 <span class="navbar-text fw-semibold">
                     Sistema de Gestão MegaHairPro
                 </span>
+
+                <div class="d-flex align-items-center gap-3">
+
+                    <span class="text-muted">
+                        Olá, @User.Identity.Name 👋
+                    </span>
+
+                    <!-- ✅ LOGOUT -->
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <form asp-controller="Account"
+                              asp-action="Logout"
+                              method="post">
+                            @Html.AntiForgeryToken()
+
+                            <button class="btn btn-outline-danger btn-sm">
+                                <i class="bi bi-box-arrow-right"></i> Sair
+                            </button>
+                        </form>
+                    }
+
+                </div>
+
             </nav>
 
-            <!-- ✅ BODY -->
+            <!-- ✅ CONTEÚDO DAS PÁGINAS -->
             <main class="content">
-                <form asp-controller="Account"
-                      asp-action="Logout"
-                      method="post">
-
-                    @Html.AntiForgeryToken()
-
-                    <button class="btn btn-danger btn-sm">
-                        Sair
-                    </button>
-                </form>
                 @RenderBody()
             </main>
 
@@ -153,7 +173,8 @@
 
     </div>
 
-    <!-- ✅ MENU APP MOBILE (BOTTOM NAV) -->
+
+    <!-- ✅ MENU MOBILE -->
     <nav class="bottom-nav d-md-none">
 
         <a href="/Dashboard" class="nav-item">
@@ -183,7 +204,8 @@
 
     </nav>
 
-    <!-- ✅ Bootstrap JS (uma vez só) -->
+
+    <!-- ✅ Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>

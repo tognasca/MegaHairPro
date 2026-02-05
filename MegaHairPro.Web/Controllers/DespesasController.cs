@@ -27,8 +27,8 @@ namespace MegaHairPro.Web.Controllers
 
         // ✅ CREATE
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Create(Despesas despesa)
+        ////[ValidateAntiForgeryToken]
+        public IActionResult Index(Despesas despesa)
         {
             if (!ModelState.IsValid)
                 return RedirectToAction("Index");

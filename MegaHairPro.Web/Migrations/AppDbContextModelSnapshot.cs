@@ -30,6 +30,9 @@ namespace MegaHairPro.Web.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
+                    b.Property<bool>("Ativo")
+                        .HasColumnType("bit");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
@@ -437,7 +440,10 @@ namespace MegaHairPro.Web.Migrations
                     b.Property<decimal?>("CustoCabelo")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("CustoTotal")
+                    b.Property<decimal>("CustoServico")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("CustoTotal")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("DataCadastro")
@@ -452,13 +458,22 @@ namespace MegaHairPro.Web.Migrations
                     b.Property<decimal>("EstoquePosVendaGramas")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("LucroLiquido")
+                    b.Property<decimal?>("LucroCabelo")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("LucroTotal")
+                    b.Property<decimal?>("LucroLiquido")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("LucroTotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("LucroVenda")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("MaoDeObra")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("MargemPercentual")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal?>("PercentualComissaoCabeleireira")
@@ -467,10 +482,16 @@ namespace MegaHairPro.Web.Migrations
                     b.Property<decimal?>("PercentualComissaoVendedora")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<decimal?>("PercentualDesconto")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<decimal>("PercentualLucroCabelo")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("PrecoVenda")
+                    b.Property<decimal?>("PrecoVenda")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("PrecoVendaOriginal")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("ProdutoId")
@@ -492,6 +513,9 @@ namespace MegaHairPro.Web.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal?>("ValorComissaoVendedora")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("ValorDesconto")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal?>("ValorLucroCabelo")
@@ -550,16 +574,16 @@ namespace MegaHairPro.Web.Migrations
                     b.Property<string>("ClienteNome")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("CustoTotal")
+                    b.Property<decimal?>("CustoTotal")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("DataVenda")
                         .HasColumnType("datetime2");
 
-                    b.Property<decimal>("LucroTotal")
+                    b.Property<decimal?>("LucroTotal")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("PrecoVenda")
+                    b.Property<decimal?>("PrecoVenda")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("ProdutoId")

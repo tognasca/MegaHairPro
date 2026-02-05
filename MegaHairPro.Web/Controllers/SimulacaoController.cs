@@ -35,16 +35,20 @@ namespace MegaHairPro.Web.Controllers
 
             return View(lista); // ✅ SEMPRE LISTA
         }
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         // ✅ POST (CORRIGIDO: NÃO PODE RETORNAR OBJETO ÚNICO)
         [HttpPost]
         public IActionResult Index(SimulacaoVenda model)
         {
+            // ================= DESPESAS =================
             decimal totalDespesas = 0;
-            // ✅ Quantas vendas/serviços você faz por mês (média)
+
             int mediaAtendimentosMes = 50;
-            // ✅ Busca as despesas selecionadas
-            var despesasSelecionadas = _context.Despesas.Where(d => model.DespesasSelecionadas.Contains(d.Id)).ToList();
+
+            var despesasSelecionadas = _context.Despesas
+                .Where(d => model.DespesasSelecionadas.Contains(d.Id))
+                .ToList();
+
             foreach (var desp in despesasSelecionadas)
             {
                 if (desp.Ratear)
@@ -52,28 +56,31 @@ namespace MegaHairPro.Web.Controllers
                 else
                     totalDespesas += desp.Valor;
             }
+
+            // 🔴 IMPORTANTE: passa despesa UMA ÚNICA VEZ
+            model.DespesaSalaoRateada = totalDespesas;
             model.TotalDespesasSelecionadas = totalDespesas;
 
+            // ================= SIMULAÇÃO =================
             var resultado = _simulacao.Calcular(model);
 
             resultado.Status = true;
             resultado.DataCadastro = DateTime.Now;
 
-            resultado.CustoTotal += totalDespesas;
-            resultado.PrecoVenda += totalDespesas;
-
-            // ✅ Corrige Cliente e Produto no Grid
+            // ================= DADOS AUXILIARES =================
             var cliente = _context.Clientes.FirstOrDefault(c => c.Id == model.ClienteId);
             var produto = _context.Produtos.FirstOrDefault(p => p.Id == model.ProdutoId);
 
             resultado.ClienteNome = cliente?.Nome;
             resultado.ProdutoNome = produto?.Nome;
 
+            // ================= SALVA =================
             _context.Simulacao.Add(resultado);
             _context.SaveChanges();
 
             return RedirectToAction("Index");
         }
+
 
 
         // ✅ CARREGAR PRODUTOS

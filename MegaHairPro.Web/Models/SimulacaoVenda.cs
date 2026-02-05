@@ -23,6 +23,9 @@ namespace MegaHairPro.Web.Models
         // ================= CABELO =================
         public decimal? CustoCabelo { get; set; }
 
+        public decimal CustoServico { get; set; }
+        
+
         // LUCRO SOMENTE NO CABELO
         public decimal PercentualLucroCabelo { get; set; }
         public decimal? ValorLucroCabelo { get; set; }
@@ -42,10 +45,16 @@ namespace MegaHairPro.Web.Models
         public decimal? ValorComissaoCabeleireira { get; set; }
 
         // ================= RESULTADOS =================
-        public decimal PrecoVenda { get; set; }
-        public decimal CustoTotal { get; set; }
-        public decimal LucroLiquido { get; set; }
-        public decimal LucroTotal { get; set; }
+        public decimal? PrecoVenda { get; set; }
+        public decimal? CustoTotal { get; set; }
+        public decimal? LucroCabelo { get; set; }
+
+        public decimal? LucroVenda { get; set; }
+
+        
+
+        public decimal? LucroLiquido { get; set; }
+        public decimal? LucroTotal { get; set; }
         public DateTime DataCadastro { get; set; } = DateTime.Now;
         public bool Status { get; set; } = true;
         [NotMapped]
@@ -53,5 +62,10 @@ namespace MegaHairPro.Web.Models
 
         [NotMapped]
         public decimal TotalDespesasSelecionadas { get; set; }
+
+        public decimal? PercentualDesconto { get; set; }
+        public decimal? ValorDesconto { get; set; }
+        public decimal? PrecoVendaOriginal { get; set; }
+        public decimal? MargemPercentual { get; set; }
     }
 }

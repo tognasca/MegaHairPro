@@ -27,8 +27,8 @@ namespace MegaHairPro.Web.Controllers
 
         // ✅ CREATE CORRETO
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Create(Produto produto)
+        ////[ValidateAntiForgeryToken]
+        public IActionResult Index(Produto produto)
         {
             produto.Status = true;
             produto.Codigo = GerarCodigoProduto(produto.TipoProduto);

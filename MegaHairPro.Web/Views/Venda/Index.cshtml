@@ -91,11 +91,11 @@
                 <td>@v.QuantidadeGramas</td>
 
                 <td class="fw-bold text-primary">
-                    R$ @v.PrecoVenda.ToString("N2")
+                    R$ @v.PrecoVenda?.ToString("N2")
                 </td>
 
                 <td class="fw-bold text-success">
-                    R$ @v.LucroTotal.ToString("N2")
+                    R$ @v.LucroTotal?.ToString("N2")
                 </td>
 
                 <td class="text-danger">

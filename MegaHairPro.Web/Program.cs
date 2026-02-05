@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -54,40 +55,38 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 var app = builder.Build();
 
-
-// ✅ CULTURA BRASIL (ANTES DO ROUTING)
 var cultureInfo = new CultureInfo("pt-BR");
 
 app.UseRequestLocalization(new RequestLocalizationOptions
 {
     DefaultRequestCulture = new RequestCulture(cultureInfo),
-    SupportedCultures = [cultureInfo],
-    SupportedUICultures = [cultureInfo]
+    SupportedCultures = new[] { cultureInfo },
+    SupportedUICultures = new[] { cultureInfo }
 });
 
-
-// ✅ ARQUIVOS ESTÁTICOS
 app.UseStaticFiles();
-
 app.UseRouting();
 
-
-// ✅ AUTH
 app.UseAuthentication();
 app.UseAuthorization();
 
-
-// ✅ ROTAS MVC
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Login}/{id?}"
 );
 
-
-// ✅ SEED ADMIN (ANTES DO RUN)
+// SEED COM TRY-CATCH
 using (var scope = app.Services.CreateScope())
 {
-    await SeedIdentity.CriarAdmin(scope.ServiceProvider);
+    try
+    {
+        await SeedIdentity.CriarAdmin(scope.ServiceProvider);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("Erro no Seed: " + ex.Message);
+    }
 }
 
 app.Run();
+
