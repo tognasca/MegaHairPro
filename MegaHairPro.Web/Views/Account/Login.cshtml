@@ -9,139 +9,129 @@
     <title>Login | MegaHairPro</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        * {
-            font-family: 'Poppins', sans-serif;
-        }
-
-        html, body {
-            height: 100%;
+        body {
             margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f3f4f6;
         }
 
-        /* 🌌 Fundo com degradê + luz */
+        /* CENTRALIZA */
         .login-page {
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            background: radial-gradient(circle at top, #ff758f22, transparent 40%), linear-gradient(135deg, #0f172a, #1e293b, #020617);
             padding: 20px;
         }
 
-        /* 🧊 Card vidro (glassmorphism) */
+        /* CARD PADRÃO */
         .login-card {
             width: 100%;
-            max-width: 430px;
-            padding: 50px 40px;
-            border-radius: 24px;
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
-            border: 1px solid rgba(255,255,255,0.15);
-            box-shadow: 0 25px 80px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08);
-            color: white;
+            max-width: 400px;
+            background: #ffffff;
+            padding: 35px;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
             text-align: center;
         }
 
-        /* Logo / título */
-        .login-logo {
-            font-size: 2.3rem;
-            font-weight: 700;
-            background: linear-gradient(90deg, #ff4d6d, #ff9ab0);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        /* LOGO */
+        /* BLOCO TOPO */
+        .login-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        /* LOGO */
+        /* FAIXA ESCURA DO TOPO */
+        .login-header-dark {
+            background: #000; /* preto sólido */
+            padding: 25px 20px;
+            margin: -35px -35px 25px -35px;
+            border-radius: 10px 10px 0 0;
+            text-align: center;
+        }
+
+        /* LOGO */
+        .logo-img {
+            width: 140px;
+            height: auto;
             margin-bottom: 10px;
         }
 
-        .login-subtitle {
-            color: #cbd5e1;
-            font-size: 0.95rem;
-            margin-bottom: 35px;
+        /* TEXTO BRANCO */
+        .login-header-dark .login-subtitle {
+            color: #e5e7eb;
+            font-size: 0.85rem;
         }
 
-        /* Inputs */
-        .form-control {
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 14px;
-            padding: 14px;
-            color: white;
+        .login-header-dark .login-subtitle2 {
+            color: #9ca3af;
+            font-size: 0.85rem;
         }
 
-            .form-control::placeholder {
-                color: #94a3b8;
-            }
 
-            .form-control:focus {
-                background: rgba(255,255,255,0.12);
-                border-color: #ff4d6d;
-                box-shadow: 0 0 0 3px #ff4d6d33;
-                color: white;
-            }
 
+        /* LABEL */
         label {
-            font-weight: 500;
-            margin-bottom: 6px;
-            float: left;
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: block;
+            text-align: left;
         }
 
-        /* Botão */
+        /* INPUT */
+        .form-control {
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        /* BOTÃO PADRÃO */
         .btn-login {
-            background: linear-gradient(90deg, #ff4d6d, #ff758f);
+            background: #111827;
+            color: #fff;
             border: none;
-            padding: 14px;
-            font-size: 1.05rem;
-            border-radius: 14px;
+            padding: 12px;
+            border-radius: 8px;
             font-weight: 600;
             margin-top: 10px;
-            transition: 0.3s;
-            box-shadow: 0 10px 25px #ff4d6d55;
+            transition: 0.2s;
         }
 
             .btn-login:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 15px 35px #ff4d6d88;
+                background: #000;
             }
 
-        /* Alert */
+        /* ALERTA */
         .alert {
-            border-radius: 12px;
             font-size: 0.9rem;
-        }
-
-        /* Responsivo */
-        @@media (max-width: 500px) {
-            .login-card {
-                padding: 40px 25px;
-            }
-        }
-
+            border-radius: 8px;
         }
     </style>
 </head>
 
 <body>
+
     <div class="login-page">
 
         <div class="login-card">
-            <div class="login-logo">
-                MegaHair Pro
+
+            <div class="login-header-dark">
+
+                <img src="~/Imagem/LogoMegaHairPro.png" class="logo-img" />
+
                 <div class="login-subtitle">
                     By Tatiane Tognasca
                 </div>
-            </div>
-            <div class="login-logo">
-                MegaHair Pro
-                <div class="login-subtitle">
-                    By Tatiane Tognasca
+
+                <div class="login-subtitle2">
+                    Acesse sua plataforma profissional
                 </div>
+
             </div>
-            <div class="login-subtitle">
-                Acesse sua plataforma profissional
-            </div>
+
 
             @if (ViewBag.Erro != null)
             {
@@ -154,12 +144,12 @@
 
                 @Html.AntiForgeryToken()
 
-                <div class="mb-3 text-start">
+                <div class="mb-3">
                     <label>Email</label>
                     <input name="email" class="form-control" required />
                 </div>
 
-                <div class="mb-3 text-start">
+                <div class="mb-3">
                     <label>Senha</label>
                     <input name="senha" type="password" class="form-control" required />
                 </div>
@@ -171,10 +161,12 @@
             </form>
 
         </div>
-    </div>
-</body>
 
+    </div>
+
+</body>
 </html>
+
 <script>
     function toggleSenha() {
         let s = document.getElementById("senha");
