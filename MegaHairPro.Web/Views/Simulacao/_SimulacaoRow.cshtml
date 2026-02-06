@@ -82,5 +82,28 @@
                 onclick="confirmarVenda(@Model.Id)">
             ✅ Confirmar Venda
         </button>
+        @* <a class="btn btn-secondary btn-sm"
+           target="_blank"
+           href="@Url.Action("GerarPdf","Simulacao",
+                        new { id = Model.Id })">
+            🖨️ Imprimir
+        </a> *@
+        <a class="btn btn-dark btn-sm"
+           target="_blank"
+           href="@Url.Action("GerarPdf","Simulacao",
+                    new { id = Model.Id })">
+            🧾 PDF
+        </a>
+
+        <a class="btn btn-secondary btn-sm"
+           target="_blank"
+           href="@Url.Action(
+                   "GerarPdf",
+                   "Simulacao",
+                   new { id = Model.Id })">
+
+            🖨️ Imprimir
+
+        </a>
     </td>
 </tr>

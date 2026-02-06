@@ -48,7 +48,6 @@ namespace MegaHairPro.Web.Controllers
                 return Json(new { success = false });
 
             original.Nome = metodo.Nome;
-            original.Descricao = metodo.Descricao;
 
             _context.SaveChanges();
 

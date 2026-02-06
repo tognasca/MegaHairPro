@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MegaHairPro.Web.Migrations
 {
     /// <inheritdoc />
-    public partial class IdentityInicial : Migration
+    public partial class pix : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -149,7 +149,8 @@ namespace MegaHairPro.Web.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Nome = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Descricao = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ValorPorGrama = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    ValorTotalConfeccao = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Status = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
@@ -171,6 +172,7 @@ namespace MegaHairPro.Web.Migrations
                     EstoqueAtualGramas = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     EstoquePosVendaGramas = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     CustoCabelo = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    CustoServico = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     PercentualLucroCabelo = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     ValorLucroCabelo = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     MaoDeObra = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
@@ -181,12 +183,24 @@ namespace MegaHairPro.Web.Migrations
                     ValorComissaoVendedora = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     PercentualComissaoCabeleireira = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     ValorComissaoCabeleireira = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    PrecoVenda = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    CustoTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    LucroLiquido = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    LucroTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    PrecoVenda = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    CustoTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    LucroCabelo = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    LucroVenda = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    LucroLiquido = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    LucroTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     DataCadastro = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Status = table.Column<bool>(type: "bit", nullable: false)
+                    Status = table.Column<bool>(type: "bit", nullable: false),
+                    PercentualDesconto = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    ValorDesconto = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    PrecoVendaOriginal = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    MargemPercentual = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    QrCodePixBase64 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LogoCaminho = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ValorTotalConfeccao = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    MetodoId = table.Column<int>(type: "int", nullable: false),
+                    MetodoNome = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DataValidadePix = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -223,9 +237,9 @@ namespace MegaHairPro.Web.Migrations
                     ProdutoId = table.Column<int>(type: "int", nullable: false),
                     ProdutoNome = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     QuantidadeGramas = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    PrecoVenda = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    CustoTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    LucroTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    PrecoVenda = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    CustoTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    LucroTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     ValorComissaoVendedora = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     ValorComissaoCabeleireira = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     DataVenda = table.Column<DateTime>(type: "datetime2", nullable: false)

@@ -67,5 +67,16 @@ namespace MegaHairPro.Web.Models
         public decimal? ValorDesconto { get; set; }
         public decimal? PrecoVendaOriginal { get; set; }
         public decimal? MargemPercentual { get; set; }
+
+        public string QrCodePixBase64  { get; set; }
+
+        public string LogoCaminho { get; set; }
+
+        public decimal? ValorTotalConfeccao { get; set; }
+
+        public int MetodoId { get; set; }
+        public string MetodoNome { get; set; }
+
+        public DateTime DataValidadePix { get; set; } = DateTime.Now.AddDays(7);
     }
 }

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MegaHairPro.Web.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260205140231_lucro")]
-    partial class lucro
+    [Migration("20260206184115_pix")]
+    partial class pix
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -364,14 +364,17 @@ namespace MegaHairPro.Web.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Descricao")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Nome")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("Status")
                         .HasColumnType("bit");
+
+                    b.Property<decimal>("ValorPorGrama")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("ValorTotalConfeccao")
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
@@ -452,6 +455,9 @@ namespace MegaHairPro.Web.Migrations
                     b.Property<DateTime>("DataCadastro")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime>("DataValidadePix")
+                        .HasColumnType("datetime2");
+
                     b.Property<decimal>("DespesaSalaoRateada")
                         .HasColumnType("decimal(18,2)");
 
@@ -460,6 +466,9 @@ namespace MegaHairPro.Web.Migrations
 
                     b.Property<decimal>("EstoquePosVendaGramas")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("LogoCaminho")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal?>("LucroCabelo")
                         .HasColumnType("decimal(18,2)");
@@ -476,10 +485,22 @@ namespace MegaHairPro.Web.Migrations
                     b.Property<decimal>("MaoDeObra")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<decimal?>("MargemPercentual")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("MetodoId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MetodoNome")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<decimal?>("PercentualComissaoCabeleireira")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal?>("PercentualComissaoVendedora")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("PercentualDesconto")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("PercentualLucroCabelo")
@@ -488,10 +509,16 @@ namespace MegaHairPro.Web.Migrations
                     b.Property<decimal?>("PrecoVenda")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<decimal?>("PrecoVendaOriginal")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<int>("ProdutoId")
                         .HasColumnType("int");
 
                     b.Property<string>("ProdutoNome")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("QrCodePixBase64")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("QuantidadeGramas")
@@ -509,7 +536,13 @@ namespace MegaHairPro.Web.Migrations
                     b.Property<decimal?>("ValorComissaoVendedora")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<decimal?>("ValorDesconto")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<decimal?>("ValorLucroCabelo")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("ValorTotalConfeccao")
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");

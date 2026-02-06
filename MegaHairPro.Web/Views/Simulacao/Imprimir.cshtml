@@ -1,0 +1,239 @@
+@model MegaHairPro.Web.Models.SimulacaoVenda
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+
+    <style>
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #111;
+            padding: 40px;
+        }
+
+        /* CONTAINER PDF */
+        .container {
+            background: #fff;
+            padding: 35px;
+            border-radius: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* CABEÇALHO */
+        .header {
+            margin-bottom: 25px;
+        }
+
+            /* TABELA HEADER (funciona melhor em PDF) */
+            .header table {
+                width: 100%;
+                border-bottom: 1px solid #d1d5db;
+                margin-bottom: 15px;
+            }
+
+        .logo {
+            width: 120px;
+        }
+
+        .titulo {
+            font-size: 28px;
+            margin: 0;
+            color: #111827;
+        }
+
+        .subtitulo {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        /* CARDS */
+        .card {
+            border: 1px solid #eee;
+            padding: 18px;
+            border-radius: 10px;
+            margin-top: 20px;
+            background: #fafafa;
+        }
+
+            .card h4 {
+                margin-top: 0;
+            }
+
+        /* LINHAS */
+        .linha {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px dashed #ddd;
+        }
+
+        /* TOTAL */
+        .total-box {
+            background: linear-gradient(90deg, #b8962e, #f5e3a1, #caa64b);
+            padding: 18px;
+            font-size: 26px;
+            font-weight: bold;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+        }
+
+        /* PIX */
+        .pix-box {
+            text-align: center;
+            margin-top: 35px;
+        }
+
+        /* RODAPÉ */
+        .footer {
+            margin-top: 40px;
+            font-size: 12px;
+            color: #777;
+            text-align: center;
+        }
+
+        .watermark {
+            position: fixed;
+            top: 40%;
+            left: 10$;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            transform: translate(-50%, -50%) rotate(-70deg);
+            justify-content: center;
+            font-size: 120px;
+            font-weight: 900;
+            letter-spacing: 14px;
+            color: rgba(0, 0, 0, 0.04);
+            transform: rotate(-35deg);
+            pointer-events: none;
+            user-select: none;
+            z-index: 0;
+        }
+    </style>
+</head>
+
+<body>
+   
+    <div class="container">
+
+        <!-- MARCA D’ÁGUA -->
+
+        <div class="watermark">
+            SIMULAÇÃO
+        </div>
+        <!-- CABEÇALHO -->
+        <div class="header">
+
+            <table>
+                <tr>
+                    <td style="width:140px;">
+                        <img src="file:///@Model.LogoCaminho"
+                             class="logo" />
+                    </td>
+
+                    <td>
+                        <h2 class="titulo">
+                            Simulação de Venda
+                        </h2>
+
+                        <div class="subtitulo">
+                            Mega Hair Pro • Tatiane Tognasca
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+
+        <!-- DADOS CLIENTE -->
+        <div class="card">
+
+            <h4>Dados Cliente</h4>
+
+            <div class="linha">
+                <span>Cliente : </span>
+                <strong>@Model.ClienteNome</strong>
+            </div>
+
+            <div class="linha">
+                <span>Produto : </span>
+                <strong>@Model.ProdutoNome</strong>
+            </div>
+
+            <div class="linha">
+                <span>Quantidade : </span>
+                <strong>@Model.QuantidadeGramas g</strong>
+            </div>
+
+            <div class="linha">
+                <span>Validade : </span>
+                <strong>
+                    @Model.DataValidadePix.ToString("dd/MM/yyyy")
+                </strong>
+            </div>
+
+        </div>
+
+        <!-- COMPOSIÇÃO -->
+        <div class="card">
+
+            <h4>Composição do Valor</h4>
+
+            <div class="linha">
+                <span>Cabelo : </span>
+                <strong>
+                    R$ @((Model.CustoCabelo + Model.LucroCabelo)?
+                                        .ToString("N2"))
+                </strong>
+            </div>
+
+            <div class="linha">
+                <span>Método :  </span>
+                <strong>@Model.MetodoNome</strong>
+            </div>
+
+            <div class="linha">
+                <span>Valor : </span>
+                <strong>R$ @Model.ValorTotalConfeccao?.ToString("N2")</strong>
+            </div>
+
+        </div>
+
+        <!-- TOTAL -->
+        <div class="total-box">
+            <span>Venda : </span>
+            <strong>
+                R$ @Model.PrecoVenda?.ToString("N2")
+            </strong>
+        </div>
+
+        <!-- PIX -->
+        @if (!string.IsNullOrEmpty(Model.QrCodePixBase64))
+        {
+            <div class="pix-box">
+                <h4>Pagamento via PIX</h4>
+                <img src="data:image/png;base64,@Model.QrCodePixBase64"
+                     width="170" />
+                <p>Escaneie para pagamento</p>
+            </div>
+        }
+
+        <!-- RODAPÉ -->
+        <div class="footer">
+            Mega Hair Pro – Tatiane Tognasca <br />
+            Documento informativo • Não fiscal <br />
+            Valores sujeitos a alteração
+
+        </div>
+    </div>
+</body>
+</html>

@@ -1,7 +1,6 @@
 ﻿using MegaHairPro.Web.Data;
 using MegaHairPro.Web.Models;
 using MegaHairPro.Web.Services.Interfaces;
-using Microsoft.Identity.Client;
 using System;
 using System.Linq;
 
@@ -31,9 +30,10 @@ namespace MegaHairPro.Web.Services
             model.EstoquePosVendaGramas =
                 (compra.QuantidadeGramas - model.QuantidadeGramas) ?? 0;
 
-            // ================= CUSTO MÉDIO =================
+            // ================= CUSTO MÉDIO CABELO =================
             var compras = _context.Compras
-                .Where(c => c.ProdutoId == model.ProdutoId && c.QuantidadeGramas > 0)
+                .Where(c => c.ProdutoId == model.ProdutoId &&
+                            c.QuantidadeGramas > 0)
                 .ToList();
 
             if (!compras.Any())
@@ -44,28 +44,61 @@ namespace MegaHairPro.Web.Services
 
             var custoMedioGrama = totalValor / totalGramas;
 
-            model.CustoCabelo = custoMedioGrama * model.QuantidadeGramas;
+            model.CustoCabelo =
+                custoMedioGrama * model.QuantidadeGramas;
 
             // ================= LUCRO CABELO =================
             model.ValorLucroCabelo =
-                model.CustoCabelo * (model.PercentualLucroCabelo / 100m);
+                model.CustoCabelo *
+                (model.PercentualLucroCabelo / 100m);
 
             var precoCabelo =
-                model.CustoCabelo + model.ValorLucroCabelo;
+                model.CustoCabelo +
+                model.ValorLucroCabelo;
 
-            // ================= SERVIÇOS =================
+            // =====================================================
+            // 🔥 NOVO BLOCO — CONFECÇÃO POR MÉTODO
+            // =====================================================
+
+            decimal valorPorGramaMetodo = 0;
+
+            if (model.MetodoId > 0)
+            {
+                var metodo = _context.MetodosAplicacao
+                    .FirstOrDefault(x => x.Id == model.MetodoId);
+
+                if (metodo != null)
+                {
+                    valorPorGramaMetodo =
+                        metodo.ValorPorGrama;
+                }
+            }
+
+            model.ValorTotalConfeccao =
+                valorPorGramaMetodo *
+                model.QuantidadeGramas;
+
+            // =====================================================
+            // SERVIÇOS ADICIONAIS (mantido)
+            // =====================================================
+
             model.CustoServico =
                 model.MaoDeObra +
                 model.Tinta +
                 model.CorteEscova;
 
-            // ================= PREÇO CHEIO (SEM DESCONTO) =================
+            // =====================================================
+            // PREÇO CHEIO (SEM DESCONTO)
+            // =====================================================
+
             model.PrecoVendaOriginal =
                 precoCabelo +
+                model.ValorTotalConfeccao +   // 🔥 entrou aqui
                 model.CustoServico +
                 model.DespesaSalaoRateada;
 
-            model.PrecoVenda = model.PrecoVendaOriginal;
+            model.PrecoVenda =
+                model.PrecoVendaOriginal;
 
             // ================= DESCONTO =================
             if (model.PercentualDesconto > 0)
@@ -84,7 +117,6 @@ namespace MegaHairPro.Web.Services
             }
 
             // ================= COMISSÕES =================
-            // Comissão sobre cabelo (ajuste se quiser sobre total)
             model.ValorComissaoVendedora =
                 (model.PercentualComissaoVendedora ?? 0) *
                 precoCabelo / 100m;
@@ -96,6 +128,7 @@ namespace MegaHairPro.Web.Services
             // ================= CUSTO TOTAL =================
             model.CustoTotal =
                 model.CustoCabelo +
+                model.ValorTotalConfeccao +   // 🔥 entrou aqui
                 model.CustoServico +
                 model.DespesaSalaoRateada +
                 model.ValorComissaoVendedora.Value +
@@ -107,25 +140,30 @@ namespace MegaHairPro.Web.Services
 
             // ================= LUCRO VENDA =================
             model.LucroVenda =
-                (precoCabelo + model.CustoServico) -
-                (model.CustoCabelo + model.CustoServico);
+                (precoCabelo +
+                 model.ValorTotalConfeccao +
+                 model.CustoServico) -
+                (model.CustoCabelo +
+                 model.ValorTotalConfeccao +
+                 model.CustoServico);
 
             // ================= LUCRO LÍQUIDO =================
             model.LucroLiquido =
-                model.PrecoVenda - model.CustoTotal;
+                model.PrecoVenda -
+                model.CustoTotal;
 
-            model.LucroTotal = model.LucroLiquido;
+            model.LucroTotal =
+                model.LucroLiquido;
 
-            // ================= MARGENS % =================
+            // ================= MARGEM % =================
             if (model.PrecoVenda > 0)
                 model.MargemPercentual =
-                    (model.LucroLiquido / model.PrecoVenda) * 100m;
+                    (model.LucroLiquido /
+                     model.PrecoVenda) * 100m;
             else
                 model.MargemPercentual = 0;
 
             return model;
         }
-
-
     }
 }

@@ -1,25 +1,34 @@
 ﻿using MegaHairPro.Web.Data;
 using MegaHairPro.Web.Models;
+using MegaHairPro.Web.Services;
 using MegaHairPro.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace MegaHairPro.Web.Controllers
 {
     [Authorize]
     public class SimulacaoController : Controller
     {
-        private readonly ISimulacaoService _simulacao;
         private readonly AppDbContext _context;
+        private readonly IViewRenderService _viewRender;
+        private readonly IPdfService _pdfService;
+        private readonly ISimulacaoService _simulacao;
 
         public SimulacaoController(
-            ISimulacaoService simulacao,
-            AppDbContext context)
+            AppDbContext context,
+            IViewRenderService viewRender,
+            IPdfService pdfService,
+            ISimulacaoService simulacao )
         {
-            _simulacao = simulacao;
             _context = context;
+            _viewRender = viewRender;
+            _pdfService = pdfService;
+            _simulacao = simulacao;
         }
 
         // ✅ GET
@@ -28,12 +37,23 @@ namespace MegaHairPro.Web.Controllers
         {
             CarregarCliente();
             CarregarProdutos();
+            CarregarMetodos();
             CarregarDespesas();
             var lista = _context.Simulacao.Where(x => x.Status == true)
                 .OrderByDescending(x => x.DataCadastro)
                 .ToList();
 
             return View(lista); // ✅ SEMPRE LISTA
+        }
+
+        private void CarregarMetodos()
+        {
+            ViewBag.Metodos =
+                _context.MetodosAplicacao
+                .Where(x => x.Status)
+                .ToList();
+
+
         }
         //[Authorize(Roles = "Admin")]
         // ✅ POST (CORRIGIDO: NÃO PODE RETORNAR OBJETO ÚNICO)
@@ -70,9 +90,25 @@ namespace MegaHairPro.Web.Controllers
             // ================= DADOS AUXILIARES =================
             var cliente = _context.Clientes.FirstOrDefault(c => c.Id == model.ClienteId);
             var produto = _context.Produtos.FirstOrDefault(p => p.Id == model.ProdutoId);
-
+            var metodo = _context.MetodosAplicacao.FirstOrDefault(m => m.Id == model.MetodoId);
             resultado.ClienteNome = cliente?.Nome;
             resultado.ProdutoNome = produto?.Nome;
+            resultado.MetodoNome = metodo?.Nome;
+            if (metodo != null)
+            {
+                resultado.ValorTotalConfeccao =
+                    metodo.ValorPorGrama *
+                    model.QuantidadeGramas;
+            }
+
+
+            var logoPath =
+    Path.Combine(
+        Directory.GetCurrentDirectory(),
+        "wwwroot/Imagem/LogoMegaHairPro.png");
+
+            resultado.LogoCaminho = logoPath;
+
 
             // ================= SALVA =================
             _context.Simulacao.Add(resultado);
@@ -330,6 +366,37 @@ namespace MegaHairPro.Web.Controllers
             {
                 redirectUrl = Url.Action("Index", "Venda", new { mes, ano })
             });
+        }
+
+        public async Task<IActionResult> GerarPdf(int id)
+        {
+            var caminhoLogo =
+    Path.Combine(
+        Directory.GetCurrentDirectory(),
+        "wwwroot/imagem/logomegahairpro.png");
+
+
+            var sim = _context.Simulacao
+                .FirstOrDefault(x => x.Id == id);
+
+            if (sim == null)
+                return NotFound();
+
+            var html =
+                await _viewRender.RenderToStringAsync(
+                    "~/Views/Simulacao/Imprimir.cshtml",
+                    sim);
+
+            var pdf = _pdfService.GerarPdf(html);
+
+            //return File(
+            //    pdf,
+            //    "application/pdf",
+            //    $"Simulacao_{sim.Id}.pdf");
+
+            return File(
+    pdf,
+    "application/pdf");
         }
     }
 }

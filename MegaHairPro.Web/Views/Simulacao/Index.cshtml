@@ -81,9 +81,46 @@
         <label>Lucro do Cabelo</label>
         <input class="form-control" readonly id="ValorLucroCabelo" />
     </div>
-
     <hr />
 
+
+    <div class="col-md-4">
+
+        <label>Método</label>
+
+        <select name="MetodoId"
+                id="MetodoSelect"
+                class="form-control">
+
+            <option value="">
+                Selecione
+            </option>
+
+            @foreach (var m in ViewBag.Metodos)
+            {
+                <option value="@m.Id"
+                        data-valor="@m.ValorPorGrama">
+
+                    @m.Nome - R$
+                    @m.ValorPorGrama.ToString("N2")/g
+
+                </option>
+            }
+
+        </select>
+
+    </div>
+
+    <div class="col-md-3">
+
+        <label>Confecção</label>
+
+        <input id="ValorTotalConfeccao"
+               class="form-control"
+               readonly />
+
+    </div>
+    <hr />
     <!-- ✅ DESPESAS DO BANCO -->
     <h4 class="mt-4 mb-3">📌 Selecionar Despesas da Venda</h4>
 
@@ -356,6 +393,40 @@
     document.getElementById("PercentualComissaoCabeleireira")
         .addEventListener("input", atualizarComissoes);
 
+
+
+            document.getElementById("MetodoSelect")
+    .addEventListener("change", calcularConfeccao);
+
+    document.getElementById("QuantidadeGramas")
+    .addEventListener("input", calcularConfeccao);
+    });
+
+    function calcularConfeccao(){
+
+        let select =
+            document.getElementById("MetodoSelect");
+
+        let valorGrama =
+            parseFloat(
+                select.options[
+                    select.selectedIndex]
+                ?.dataset.valor) || 0;
+
+        let gramas =
+            parseFloat(
+                document
+                .getElementById("QuantidadeGramas")
+                .value) || 0;
+
+        let total = valorGrama * gramas;
+
+        document
+        .getElementById("ValorTotalConfeccao")
+        .value =
+            total.toFixed(2).replace(".", ",");
+    }
+
         // ✅ ELEMENTOS
         const produtoSelect = document.getElementById("produtoSelect");
         const quantidadeInput = document.getElementById("QuantidadeGramas");
@@ -371,7 +442,7 @@
         const totalDespesasInput = document.getElementById("TotalDespesasSelecionadas");
         const descontoInput = document.getElementById("PercentualDesconto");
 
-        if (!produtoSelect || !quantidadeInput) return;
+        // if (!produtoSelect || !quantidadeInput) return;
 
         // ======================================================
         // ✅ SOMAR DESPESAS
@@ -416,7 +487,7 @@
                     atualizarCustoELucro();
                 });
         });
-            
+
             if (descontoInput) {
                 descontoInput.addEventListener("input", atualizarPrecoVenda);
             }
@@ -479,8 +550,6 @@
                 });
         }
 
-    });
-
     // ======================================================
     // ✅ FUNÇÕES GLOBAIS MODAL EDITAR
     // ======================================================
@@ -526,33 +595,61 @@
         })
         .then(() => location.reload());
     }
-        function atualizarPrecoVenda() {
+           function atualizarPrecoVenda() {
 
-        let custo = parseFloat(document.getElementById("CustoCabelo").value) || 0;
-        let lucro = parseFloat(document.getElementById("ValorLucroCabelo").value) || 0;
+        let custo =
+            parseFloat(
+                document.getElementById("CustoCabelo").value
+            ) || 0;
+
+        let lucro =
+            parseFloat(
+                document.getElementById("ValorLucroCabelo").value
+            ) || 0;
+
+        let confeccao =
+            parseFloat(
+                document
+                .getElementById("ValorTotalConfeccao")
+                .value
+                .replace(",", ".")
+            ) || 0;
 
         let despesas = 0;
-        document.querySelectorAll(".despesaCheck:checked").forEach(x => {
+
+        document
+        .querySelectorAll(".despesaCheck:checked")
+        .forEach(x => {
             despesas += parseFloat(x.dataset.valor);
         });
 
         // ================= PREÇO ORIGINAL =================
-        let precoOriginal = custo + lucro + despesas;
+        let precoOriginal =
+            custo +
+            lucro +
+            confeccao +
+            despesas;
 
         document.getElementById("PrecoVendaOriginal").value =
             precoOriginal.toFixed(2).replace(".", ",");
 
         // ================= DESCONTO =================
         let percDesc =
-            parseFloat(document.getElementById("PercentualDesconto")?.value) || 0;
+            parseFloat(
+                document
+                .getElementById("PercentualDesconto")
+                ?.value
+            ) || 0;
 
-        let valorDesconto = (percDesc / 100) * precoOriginal;
+        let valorDesconto =
+            (percDesc / 100) * precoOriginal;
 
         document.getElementById("ValorDesconto").value =
             valorDesconto.toFixed(2).replace(".", ",");
 
         // ================= PREÇO FINAL =================
-        let precoFinal = precoOriginal - valorDesconto;
+        let precoFinal =
+            precoOriginal - valorDesconto;
 
         document.getElementById("PrecoVenda").value =
             precoFinal.toFixed(2).replace(".", ",");

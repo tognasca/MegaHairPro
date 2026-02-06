@@ -1,4 +1,7 @@
-﻿using MegaHairPro.Web.Data;
+﻿using DinkToPdf;
+using DinkToPdf.Contracts;
+using MegaHairPro.Web;
+using MegaHairPro.Web.Data;
 using MegaHairPro.Web.Infrastructure.Transactions;
 using MegaHairPro.Web.Models;
 using MegaHairPro.Web.Services;
@@ -12,6 +15,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Globalization;
+using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +34,18 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<ISimulacaoService, SimulacaoService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IVendaService, VendaService>();
+
+builder.Services.AddScoped<IPdfService, PdfService>();
+builder.Services.AddScoped<IViewRenderService, ViewRenderService>();
+
+builder.Services.AddSingleton(typeof(IConverter),
+    new SynchronizedConverter(new PdfTools()));
+
+var context = new CustomAssemblyLoadContext();
+context.LoadUnmanagedLibrary(
+    Path.Combine(
+        Directory.GetCurrentDirectory(),
+        "libwkhtmltox.dll"));
 
 
 // ✅ IDENTITY COMPLETO
