@@ -6,32 +6,35 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- ✅ PWA -->
+    <!-- PWA -->
     <meta name="theme-color" content="#ff4d6d">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="c:/inetpub/wwwroot" href="/manifest.json">
+    <link rel="manifest" href="/manifest.json">
 
-    <!-- ✅ CSS -->
+    <!-- CSS -->
     <link rel="stylesheet" href="~/css/site.css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet" />
 
-    <!-- ✅ jQuery obrigatório -->
+    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <!-- ✅ Plugin Mask -->
+    <!-- Mask -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.maskMoney/3.0.2/jquery.maskMoney.min.js"></script>
 
     <style>
+
         body {
             background-color: #f4f6f9;
         }
 
+        /* SIDEBAR */
         .sidebar {
             width: 260px;
             min-height: 100vh;
-            background-color: #1f2937;
+            background-color: #000;
         }
 
             .sidebar a {
@@ -45,19 +48,109 @@
                 }
 
             .sidebar .active {
-                background-color: #111827;
+                background-color: rgba(0,0,0,0.05);
                 color: #fff;
             }
 
+        /* FAIXA PRETA SUPERIOR */
+        .sidebar-brand {
+            background: #000;
+            padding: 30px 20px;
+            margin: -1rem -1rem 25px -1rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+            .sidebar-brand .logo-img {
+                width: 150px;
+                height: auto;
+                margin-bottom: 12px;
+            }
+
+            /* PRATA */
+            .sidebar-brand .login-subtitle {
+                font-size: 0.9rem;
+                font-weight: 500;
+                letter-spacing: 1px;
+                background: linear-gradient(90deg,#c0c0c0,#f5f5f5,#c0c0c0);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                margin-bottom: 4px;
+            }
+
+            .sidebar-brand .login-subtitle2 {
+                color: #d1d5db;
+                font-size: 0.85rem;
+                letter-spacing: 0.5px;
+            }
+
+        /* CONTEÚDO */
         .content {
             padding: 25px;
         }
+
+        /* CARD PADRÃO */
+        .page-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .page-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* MOBILE */
+       @@media (max-width:768px) {
+            .content
+
+        {
+            padding-bottom: 90px;
+        }
+
+        .sidebar {
+            display: none;
+        }
+
+        }
+
+        /* MENU MOBILE */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 999;
+        }
+
+            .bottom-nav .nav-item {
+                color: #d1d5db;
+                text-decoration: none;
+                font-size: 0.75rem;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+                .bottom-nav .nav-item i {
+                    font-size: 1.2rem;
+                }
+
     </style>
 </head>
 
 <body>
 
-    <!-- ✅ SERVICE WORKER -->
+    <!-- SERVICE WORKER -->
     <script>
         if ("serviceWorker" in navigator) {
             navigator.serviceWorker.register("/service-worker.js");
@@ -66,10 +159,20 @@
 
     <div class="d-flex">
 
-        <!-- ✅ SIDEBAR -->
+        <!-- SIDEBAR -->
         <aside class="sidebar p-3 d-none d-md-block">
-            <h4 class="text-white mb-4">MegaHairPro</h4>
 
+            <!-- FAIXA PRETA COM LOGO -->
+            <div class="sidebar-brand">
+
+                <img src="~/Imagem/LogoMegaHairPro.png" class="logo-img" />
+
+                <div class="login-subtitle">
+                    By Tatiane Tognasca
+                </div>
+            </div>
+
+            <!-- MENU -->
             <nav class="nav flex-column gap-1">
 
                 <span class="text-uppercase text-secondary small px-2">Cadastros</span>
@@ -127,13 +230,13 @@
                 </a>
 
             </nav>
+
         </aside>
 
-
-        <!-- ✅ CONTEÚDO PRINCIPAL -->
+        <!-- CONTEÚDO -->
         <div class="flex-grow-1">
 
-            <!-- ✅ TOPBAR -->
+            <!-- TOPBAR -->
             <nav class="navbar navbar-light bg-white border-bottom px-4 d-flex justify-content-between">
 
                 <span class="navbar-text fw-semibold">
@@ -146,15 +249,16 @@
                         Olá, @User.Identity.Name 👋
                     </span>
 
-                    <!-- ✅ LOGOUT -->
                     @if (User.Identity.IsAuthenticated)
                     {
                         <form asp-controller="Account"
                               asp-action="Logout"
                               method="post">
+
                             @Html.AntiForgeryToken()
 
-                            <button class="btn btn-outline-danger btn-sm">
+                            <button type="submit"
+                                    class="btn btn-outline-danger btn-sm">
                                 <i class="bi bi-box-arrow-right"></i> Sair
                             </button>
                         </form>
@@ -164,7 +268,7 @@
 
             </nav>
 
-            <!-- ✅ CONTEÚDO DAS PÁGINAS -->
+            <!-- CORPO -->
             <main class="content">
                 @RenderBody()
             </main>
@@ -173,8 +277,7 @@
 
     </div>
 
-
-    <!-- ✅ MENU MOBILE -->
+    <!-- MENU MOBILE -->
     <nav class="bottom-nav d-md-none">
 
         <a href="/Dashboard" class="nav-item">
@@ -204,8 +307,6 @@
 
     </nav>
 
-
-    <!-- ✅ Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>

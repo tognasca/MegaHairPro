@@ -62,13 +62,12 @@ namespace MegaHairPro.Web.Controllers
         }
 
         [HttpPost]
-        //[ValidateAntiForgeryToken]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
-            return RedirectToAction("Login");
+            return RedirectToAction("Login", "Account");
         }
-
         public IActionResult AcessoNegado()
         {
             return View();

@@ -1,5 +1,6 @@
 ﻿using DinkToPdf;
 using DinkToPdf.Contracts;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using MegaHairPro.Web;
 using MegaHairPro.Web.Data;
 using MegaHairPro.Web.Infrastructure.Transactions;
@@ -10,6 +11,7 @@ using MegaHairPro.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,8 +21,10 @@ using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllersWithViews();
-
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+});
 
 // ✅ BANCO DE DADOS
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -47,6 +51,10 @@ context.LoadUnmanagedLibrary(
         Directory.GetCurrentDirectory(),
         "libwkhtmltox.dll"));
 
+var culture = new CultureInfo("pt-BR");
+CultureInfo.DefaultThreadCurrentCulture = culture;
+CultureInfo.DefaultThreadCurrentUICulture = culture;
+
 
 // ✅ IDENTITY COMPLETO
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -69,6 +77,8 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 
+
+
 var app = builder.Build();
 
 var cultureInfo = new CultureInfo("pt-BR");
@@ -85,6 +95,8 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+
 
 app.MapControllerRoute(
     name: "default",

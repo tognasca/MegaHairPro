@@ -79,7 +79,7 @@
 
     <div class="col-md-3">
         <label>Lucro do Cabelo</label>
-        <input class="form-control" readonly id="ValorLucroCabelo" />
+        <input class="form-control decimal" readonly id="ValorLucroCabelo" />
     </div>
     <hr />
 
@@ -376,341 +376,257 @@
 
 <!-- ✅ SCRIPTS -->
 <script>
-    let modalEditarSimulacao;
-
-    document.addEventListener("DOMContentLoaded", function () {
-
-     $("input[name='PercentualComissaoVendedora']").mask("000", { reverse: true });
-     $("input[name='PercentualComissaoCabeleireira']").mask("000", { reverse: true });
-
-        // ✅ Modal
-        modalEditarSimulacao =
-            new bootstrap.Modal(document.getElementById("modalEditarSimulacao"));
-
-                document.getElementById("PercentualComissaoVendedora")
-        .addEventListener("input", atualizarComissoes);
-
-    document.getElementById("PercentualComissaoCabeleireira")
-        .addEventListener("input", atualizarComissoes);
+        let modalEditarSimulacao;
 
 
+        document.addEventListener("DOMContentLoaded", function () {
 
-            document.getElementById("MetodoSelect")
-    .addEventListener("change", calcularConfeccao);
-
-    document.getElementById("QuantidadeGramas")
-    .addEventListener("input", calcularConfeccao);
-    });
-
-    function calcularConfeccao(){
-
-        let select =
-            document.getElementById("MetodoSelect");
-
-        let valorGrama =
-            parseFloat(
-                select.options[
-                    select.selectedIndex]
-                ?.dataset.valor) || 0;
-
-        let gramas =
-            parseFloat(
-                document
-                .getElementById("QuantidadeGramas")
-                .value) || 0;
-
-        let total = valorGrama * gramas;
-
-        document
-        .getElementById("ValorTotalConfeccao")
-        .value =
-            total.toFixed(2).replace(".", ",");
-    }
-
-        // ✅ ELEMENTOS
-        const produtoSelect = document.getElementById("produtoSelect");
-        const quantidadeInput = document.getElementById("QuantidadeGramas");
-
-        const estoqueAtualInput = document.getElementById("EstoqueAtualGramas");
-        const estoquePosVendaInput = document.getElementById("EstoquePosVendaGramas");
-
-        const custoCabeloInput = document.getElementById("CustoCabelo");
-        const percentualLucroInput = document.getElementById("PercentualLucroCabelo");
-        const lucroCabeloInput = document.getElementById("ValorLucroCabelo");
-
-        // ✅ DESPESAS TOTAL
-        const totalDespesasInput = document.getElementById("TotalDespesasSelecionadas");
-        const descontoInput = document.getElementById("PercentualDesconto");
-
-        // if (!produtoSelect || !quantidadeInput) return;
-
-        // ======================================================
-        // ✅ SOMAR DESPESAS
-        // ======================================================
-        document.querySelectorAll(".despesaCheck").forEach(chk => {
-            chk.addEventListener("change", function () {
-
-                let total = 0;
-
-                document.querySelectorAll(".despesaCheck:checked").forEach(x => {
-                    total += parseFloat(x.dataset.valor);
-                });
-
-                totalDespesasInput.value =
-                    total.toFixed(2).replace(".", ",");
-
-                      // ✅ ATUALIZA PREÇO FINAL
-        atualizarPrecoVenda();
+            $("input[name='PercentualComissaoVendedora']").mask("000", { reverse: true });
+            $("input[name='PercentualComissaoCabeleireira']").mask("000", { reverse: true });
+            document.getElementById("PercentualComissaoVendedora").addEventListener("input", atualizarComissoes);
+            document.getElementById("PercentualComissaoCabeleireira").addEventListener("input", atualizarComissoes);
+            document.getElementById("MetodoSelect").addEventListener("change", calcularConfeccao);
+            document.getElementById("QuantidadeGramas").addEventListener("input", calcularConfeccao);
+            modalEditarSimulacao = new bootstrap.Modal(document.getElementById("modalEditarSimulacao"));
+            
             });
-        });
 
-        // ======================================================
-        // ✅ PRODUTO → ESTOQUE
-        // ======================================================
-        produtoSelect.addEventListener("change", function () {
+        function calcularConfeccao()
+        {
 
-            const produtoId = this.value;
-
-            if (!produtoId) {
-                estoqueAtualInput.value = "";
-                estoquePosVendaInput.value = "";
-                custoCabeloInput.value = "";
-                lucroCabeloInput.value = "";
-                return;
-            }
-
-            fetch(`@Url.Action("ObterEstoqueProduto", "Simulacao")?produtoId=${produtoId}`)
-                .then(r => r.json())
-                .then(d => {
-                    estoqueAtualInput.value = d.estoque;
-                    calcularPosVenda();
-                    atualizarCustoELucro();
-                });
-        });
-
-            if (descontoInput) {
-                descontoInput.addEventListener("input", atualizarPrecoVenda);
-            }
-        // ======================================================
-        // ✅ QUANTIDADE → ESTOQUE + CUSTO
-        // ======================================================
-        quantidadeInput.addEventListener("input", function () {
-            calcularPosVenda();
-            atualizarCustoELucro();
-        });
-
-        // ======================================================
-        // ✅ % LUCRO → LUCRO
-        // ======================================================
-        percentualLucroInput.addEventListener("input", function () {
-            atualizarCustoELucro();
-        });
-
-        // ======================================================
-        // ✅ FUNÇÃO ESTOQUE PÓS-VENDA
-        // ======================================================
-        function calcularPosVenda() {
-
-            const estoque = parseFloat(estoqueAtualInput.value);
-            const quantidade = parseFloat(quantidadeInput.value);
-
-            if (isNaN(estoque) || isNaN(quantidade)) {
-                estoquePosVendaInput.value = "";
-                return;
-            }
-
-            estoquePosVendaInput.value = estoque - quantidade;
+            let select =  document.getElementById("MetodoSelect");
+            let valorGrama = parseFloat(select.options[select.selectedIndex]?.dataset.valor) || 0;
+            let gramas =parseFloat(document.getElementById("QuantidadeGramas").value) || 0;
+            let total = valorGrama * gramas;
+            document.getElementById("ValorTotalConfeccao").value = total.toFixed(2).replace(".", ",");
         }
 
-        // ======================================================
-        // ✅ FUNÇÃO CUSTO + LUCRO AUTOMÁTICO
-        // ======================================================
-        function atualizarCustoELucro() {
+            // ✅ ELEMENTOS
+            const produtoSelect = document.getElementById("produtoSelect");
+            const quantidadeInput = document.getElementById("QuantidadeGramas");
+            const estoqueAtualInput = document.getElementById("EstoqueAtualGramas");
+            const estoquePosVendaInput = document.getElementById("EstoquePosVendaGramas");
+            const custoCabeloInput = document.getElementById("CustoCabelo");
+            const percentualLucroInput = document.getElementById("PercentualLucroCabelo");
+            const lucroCabeloInput = document.getElementById("ValorLucroCabelo");
+            // ✅ DESPESAS TOTAL
+            const totalDespesasInput = document.getElementById("TotalDespesasSelecionadas");
+            const descontoInput = document.getElementById("PercentualDesconto");
 
-            const produtoId = produtoSelect.value;
-            const quantidade = parseFloat(quantidadeInput.value);
-            const percentual = parseFloat(percentualLucroInput.value);
+           
+            // ======================================================
+            // ✅ SOMAR DESPESAS
+            // ======================================================
+            document.querySelectorAll(".despesaCheck").forEach(chk => {
+                chk.addEventListener("change", function () {
+                    let total = 0;
+                    document.querySelectorAll(".despesaCheck:checked").forEach(x => {
+                        total += parseFloat(x.dataset.valor);
+                    });
 
-            if (!produtoId || isNaN(quantidade) || quantidade <= 0) {
-                custoCabeloInput.value = "";
-                lucroCabeloInput.value = "";
-                return;
+                    totalDespesasInput.value = total.toFixed(2).replace(".", ",");
+                    atualizarPrecoVenda();
+                });
+            });
+
+            // ======================================================
+            // ✅ PRODUTO → ESTOQUE
+            // ======================================================
+            produtoSelect.addEventListener("change", function () {
+
+                const produtoId = this.value;
+
+                if (!produtoId) {
+                    estoqueAtualInput.value = "";
+                    estoquePosVendaInput.value = "";
+                    custoCabeloInput.value = "";
+                    lucroCabeloInput.value = "";
+                    return;
+                }
+
+                fetch(`@Url.Action("ObterEstoqueProduto", "Simulacao")?produtoId=${produtoId}`)
+                    .then(r => r.json()).then(d => {
+                        estoqueAtualInput.value = d.estoque;
+                        calcularPosVenda();
+                        atualizarCustoELucro();
+                    });
+            });
+
+                if (descontoInput) {
+                    descontoInput.addEventListener("input", atualizarPrecoVenda);
+                }
+            // ======================================================
+            // ✅ QUANTIDADE → ESTOQUE + CUSTO
+            // ======================================================
+            quantidadeInput.addEventListener("input", function () {
+                calcularPosVenda();
+                atualizarCustoELucro();
+            });
+
+            // ======================================================
+            // ✅ % LUCRO → LUCRO
+            // ======================================================
+            percentualLucroInput.addEventListener("input", function () {
+                atualizarCustoELucro();
+            });
+
+            // ======================================================
+            // ✅ FUNÇÃO ESTOQUE PÓS-VENDA
+            // ======================================================
+            function calcularPosVenda() {
+
+                const estoque = parseFloat(estoqueAtualInput.value);
+                const quantidade = parseFloat(quantidadeInput.value);
+
+                if (isNaN(estoque) || isNaN(quantidade)) {
+                    estoquePosVendaInput.value = "";
+                    return;
+                }
+
+                estoquePosVendaInput.value = estoque - quantidade;
             }
 
-            fetch(`@Url.Action("ObterLucroCabelo", "Simulacao")?produtoId=${produtoId}&quantidadeGramas=${quantidade}&percentualLucro=${percentual || 0}`)
-                .then(r => r.json())
-                .then(d => {
+            // ======================================================
+            // ✅ FUNÇÃO CUSTO + LUCRO AUTOMÁTICO
+            // ======================================================
+            function atualizarCustoELucro() {
 
-                    custoCabeloInput.value = d.custo.toFixed(2);
-                    lucroCabeloInput.value = d.lucro.toFixed(2);
+                const produtoId = produtoSelect.value;
+                const quantidade = parseFloat(quantidadeInput.value);
+                const percentual = parseFloat(percentualLucroInput.value);
 
-                    // ✅ ATUALIZA PREÇO FINAL
-                atualizarPrecoVenda();
+                if (!produtoId || isNaN(quantidade) || quantidade <= 0) {
+                    custoCabeloInput.value = "";
+                    lucroCabeloInput.value = "";
+                    return;
+                }
 
-                });
+                fetch(`@Url.Action("ObterLucroCabelo", "Simulacao")?produtoId=${produtoId}&quantidadeGramas=${quantidade}&percentualLucro=${percentual || 0}`).then(r => r.json()).then(d => {
+                        custoCabeloInput.value = d.custo.toFixed(2);
+                        lucroCabeloInput.value = d.lucro.toFixed(2);
+                        // ✅ ATUALIZA PREÇO FINAL
+                        atualizarPrecoVenda();
+                    });
+            }
+
+        // ======================================================
+        // ✅ FUNÇÕES GLOBAIS MODAL EDITAR
+        // ======================================================
+        function editarSimulacao(id) {
+
+            let row = document.getElementById("row-" + id);
+
+            document.getElementById("editIdSimulacao").value = id;
+            document.getElementById("editPreco").value = row.dataset.preco;
+            document.getElementById("editCusto").value = row.dataset.custo;
+
+            modalEditarSimulacao.show();
         }
 
-    // ======================================================
-    // ✅ FUNÇÕES GLOBAIS MODAL EDITAR
-    // ======================================================
-    function editarSimulacao(id) {
+        function salvarEdicaoSimulacao() {
 
-        let row = document.getElementById("row-" + id);
+            let id = document.getElementById("editIdSimulacao").value;
 
-        document.getElementById("editIdSimulacao").value = id;
-        document.getElementById("editPreco").value = row.dataset.preco;
-        document.getElementById("editCusto").value = row.dataset.custo;
+            fetch("/Simulacao/EditAjax", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body:
+                    "Id=" + id +
+                    "&PrecoVenda=" + document.getElementById("editPreco").value +
+                    "&CustoTotal=" + document.getElementById("editCusto").value
+            })
+            .then(r => r.text())
+            .then(html => {
 
-        modalEditarSimulacao.show();
-    }
+                document.getElementById("row-" + id).outerHTML = html;
+                modalEditarSimulacao.hide();
+            });
+        }
 
-    function salvarEdicaoSimulacao() {
+        function excluirSimulacao(id) {
 
-        let id = document.getElementById("editIdSimulacao").value;
+            if (!confirm("Deseja excluir esta simulação?")) return;
 
-        fetch("/Simulacao/EditAjax", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body:
-                "Id=" + id +
-                "&PrecoVenda=" + document.getElementById("editPreco").value +
-                "&CustoTotal=" + document.getElementById("editCusto").value
-        })
-        .then(r => r.text())
-        .then(html => {
+            fetch("/Simulacao/Delete", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: "id=" + id
+            })
+            .then(() => location.reload());
+        }
 
-            document.getElementById("row-" + id).outerHTML = html;
-            modalEditarSimulacao.hide();
-        });
-    }
+        function atualizarPrecoVenda() {
 
-    function excluirSimulacao(id) {
+            let custo =  parseFloat(document.getElementById("CustoCabelo").value) || 0;
+            let lucro = parseFloat(document.getElementById("ValorLucroCabelo").value) || 0;
+            let confeccao = parseFloat(document.getElementById("ValorTotalConfeccao").value.replace(",", ".")) || 0;
+            let despesas = 0;
 
-        if (!confirm("Deseja excluir esta simulação?")) return;
+            document.querySelectorAll(".despesaCheck:checked").forEach(x => {
+                despesas += parseFloat(x.dataset.valor);
+            });
 
-        fetch("/Simulacao/Delete", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: "id=" + id
-        })
-        .then(() => location.reload());
-    }
-           function atualizarPrecoVenda() {
+            // ================= PREÇO ORIGINAL =================
+            let precoOriginal =   custo + lucro +  confeccao +  despesas;
+            document.getElementById("PrecoVendaOriginal").value =  precoOriginal.toFixed(2).replace(".", ",");
 
-        let custo =
-            parseFloat(
-                document.getElementById("CustoCabelo").value
-            ) || 0;
+            // ================= DESCONTO =================
+            let percDesc =  parseFloat(document.getElementById("PercentualDesconto") ?.value) || 0;
+            let valorDesconto = (percDesc / 100) * precoOriginal;
+            document.getElementById("ValorDesconto").value =  valorDesconto.toFixed(2).replace(".", ",");
 
-        let lucro =
-            parseFloat(
-                document.getElementById("ValorLucroCabelo").value
-            ) || 0;
-
-        let confeccao =
-            parseFloat(
-                document
-                .getElementById("ValorTotalConfeccao")
-                .value
-                .replace(",", ".")
-            ) || 0;
-
-        let despesas = 0;
-
-        document
-        .querySelectorAll(".despesaCheck:checked")
-        .forEach(x => {
-            despesas += parseFloat(x.dataset.valor);
-        });
-
-        // ================= PREÇO ORIGINAL =================
-        let precoOriginal =
-            custo +
-            lucro +
-            confeccao +
-            despesas;
-
-        document.getElementById("PrecoVendaOriginal").value =
-            precoOriginal.toFixed(2).replace(".", ",");
-
-        // ================= DESCONTO =================
-        let percDesc =
-            parseFloat(
-                document
-                .getElementById("PercentualDesconto")
-                ?.value
-            ) || 0;
-
-        let valorDesconto =
-            (percDesc / 100) * precoOriginal;
-
-        document.getElementById("ValorDesconto").value =
-            valorDesconto.toFixed(2).replace(".", ",");
-
-        // ================= PREÇO FINAL =================
-        let precoFinal =
-            precoOriginal - valorDesconto;
-
-        document.getElementById("PrecoVenda").value =
-            precoFinal.toFixed(2).replace(".", ",");
-
-        atualizarComissoes();
-    }
+            // ================= PREÇO FINAL =================
+            let precoFinal =  precoOriginal - valorDesconto;
+            document.getElementById("PrecoVenda").value =  precoFinal.toFixed(2).replace(".", ",");
+            atualizarComissoes();
+        }
 
 
-        function atualizarComissoes() {
+            function atualizarComissoes() {
 
-        let precoVenda =
-            parseFloat(document.getElementById("PrecoVenda").value.replace(",", ".")) || 0;
+            let precoVenda = parseFloat(document.getElementById("PrecoVenda").value.replace(",", ".")) || 0;
 
-        let percVend =
-            parseFloat(document.getElementById("PercentualComissaoVendedora").value) || 0;
+            let percVend = parseFloat(document.getElementById("PercentualComissaoVendedora").value) || 0;
 
-        let percCab =
-            parseFloat(document.getElementById("PercentualComissaoCabeleireira").value) || 0;
+            let percCab = parseFloat(document.getElementById("PercentualComissaoCabeleireira").value) || 0;
 
-        let valorVend = (percVend / 100) * precoVenda;
-        let valorCab = (percCab / 100) * precoVenda;
+            let valorVend = (percVend / 100) * precoVenda;
+            let valorCab = (percCab / 100) * precoVenda;
 
-        document.getElementById("ValorComissaoVendedora").value =
-            valorVend.toFixed(2).replace(".", ",");
+            document.getElementById("ValorComissaoVendedora").value =  valorVend.toFixed(2).replace(".", ",");
+            document.getElementById("ValorComissaoCabeleireira").value =  valorCab.toFixed(2).replace(".", ",");
+            document.getElementById("TotalComissoes").value = (valorVend + valorCab).toFixed(2).replace(".", ",");
+        }
 
-        document.getElementById("ValorComissaoCabeleireira").value =
-            valorCab.toFixed(2).replace(".", ",");
+            function convertervenda(id) {
 
-        document.getElementById("TotalComissoes").value =
-            (valorVend + valorCab).toFixed(2).replace(".", ",");
-    }
+            if (!confirm("deseja confirmar esta simulação como venda?"))Inf
+                return;
 
-        function convertervenda(id) {
+            fetch("/simulacao/confirmarvenda", {
+                method: "post",
+                headers: { "content-type": "application/x-www-form-urlencoded" },
+                body: "id=" + id
+            })
+            .then(() => location.reload());
+        }
 
-        if (!confirm("deseja confirmar esta simulação como venda?"))
-            return;
+            function confirmarVenda(id) {
 
-        fetch("/simulacao/confirmarvenda", {
-            method: "post",
-            headers: { "content-type": "application/x-www-form-urlencoded" },
-            body: "id=" + id
-        })
-        .then(() => location.reload());
-    }
+            if (!confirm("Deseja transformar esta simulação em VENDA real?"))
+                return;
 
-        function confirmarVenda(id) {
-
-        if (!confirm("Deseja transformar esta simulação em VENDA real?"))
-            return;
-
-        fetch("/Simulacao/ConfirmarVenda", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: "id=" + id
-        })
-        .then(r => r.json())
-        .then(data => {
-            // ✅ Vai direto para Vendas Realizadas
-            window.location.href = data.redirectUrl;
-        });
-    }
+            fetch("/Simulacao/ConfirmarVenda", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: "id=" + id
+            })
+            .then(r => r.json())
+            .then(data => {
+                // ✅ Vai direto para Vendas Realizadas
+                window.location.href = data.redirectUrl;
+            });
+        }
 
 
 

@@ -40,7 +40,7 @@
                 <input name="Valor"
                        type="number"
                        step="0.01"
-                       class="form-control"
+                       class="form-control decimal"
                        required />
             </div>
 
@@ -121,7 +121,7 @@
                     <input id="editValor"
                            type="number"
                            step="0.01"
-                           class="form-control" />
+                           class="form-control decimal" />
                 </div>
 
                 <div class="mb-2">
@@ -152,6 +152,14 @@
 <script>
     let modalEditar;
 
+     $('.decimal').maskMoney({
+        prefix: 'R$ ',
+        allowNegative: false,
+        thousands: '.',
+        decimal: ',',
+        affixesStay: true
+    });
+
     document.addEventListener("DOMContentLoaded", function () {
         modalEditar = new bootstrap.Modal(
             document.getElementById("modalEditarDespesa")
@@ -169,6 +177,7 @@
 
         modalEditar.show();
     }
+
 
     function salvarEdicao() {
 
