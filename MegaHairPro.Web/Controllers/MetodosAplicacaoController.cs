@@ -27,7 +27,7 @@ namespace MegaHairPro.Web.Controllers
 
         // ✅ CREATE
         [HttpPost]
-        ////[ValidateAntiForgeryToken]
+        [ValidateAntiForgeryToken]
         public IActionResult Index(MetodoAplicacao metodo)
         {
             metodo.Status = true;

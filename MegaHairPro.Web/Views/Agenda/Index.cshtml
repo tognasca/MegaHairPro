@@ -1,0 +1,31 @@
+@using MegaHairPro.Web.Models
+
+@model IEnumerable<Agendamento>
+
+<h2 class="mb-4">Agenda</h2>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Data</th>
+            <th>Cliente</th>
+            <th>Profissional</th>
+            <th>Serviço</th>
+            <th>Valor</th>
+        </tr><a href="c:\git\megahairpro_v2\megahairpro.web\views\agenda\index.cshtml">c:\git\megahairpro_v2\megahairpro.web\views\agenda\index.cshtml</a>
+    </thead>
+    <tbody>
+@foreach (var a in Model)
+{
+    <tr>
+        <td>@a.DataHora.ToString("dd/MM HH:mm") - @a.DataFim.ToString("HH:mm")</td>
+        <td>@a.Cliente?.Nome</td>
+        <td>@a.Profissional?.Nome</td>
+        <td>@a.Servico?.Nome</td>
+        <td>R$ @(a.Servico?.ValorPromocional ?? a.Servico?.Valor)</td>
+    </tr>
+}
+    </tbody>
+</table>
+
+<a href="/Servico" class="btn btn-secondary">Serviços</a>

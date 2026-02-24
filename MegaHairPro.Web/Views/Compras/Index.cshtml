@@ -26,10 +26,10 @@
 <div class="card p-3 mb-4">
     <h4>➕ Nova Compra</h4>
 
-    <form asp-action="Create" method="post">
+    <form asp-action="Index" method="post">
 
         <!-- AntiForgery (recomendado) -->
-        @* @Html.AntiForgeryToken() *@
+    @Html.AntiForgeryToken() 
 
         <div class="row">
 

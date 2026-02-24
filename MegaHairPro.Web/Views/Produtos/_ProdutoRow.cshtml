@@ -1,39 +1,54 @@
-    @model MegaHairPro.Web.Models.Produto
+@model MegaHairPro.Web.Models.Produto
 
-    <tr id="row-@Model.Id"
-        data-nome="@Model.Nome"
-        data-tipo="@((int)Model.TipoProduto)"
-        data-origem="@Model.Origem"
-        data-tamanho="@Model.Tamanho"
-        data-cor="@Model.Cor"
-        class="@(Model.Status ? "" : "table-secondary text-muted")">
+<tr id="row-@Model.Id"
+    data-nome="@Model.Nome"
+    data-tipo="@((int)Model.TipoProduto)"
+    data-origem="@Model.Origem"
+    data-tamanho="@Model.Tamanho"
+    data-cor="@Model.Cor"
+    data-status="@Model.Status"
+    class="@(Model.Status ? "" : "table-secondary text-muted")">
 
-        <td>@Model.Codigo</td>
-        <td>@Model.TipoProduto</td>
-        <td>@Model.Nome</td>
-        <td>@Model.Origem</td>
-        <td>@Model.Tamanho</td>
-        <td>@Model.Cor</td>
+    <td>@Model.Codigo</td>
+    <td>@Model.TipoProduto</td>
+    <td>@Model.Nome</td>
+    <td>@Model.Origem</td>
+    <td>@Model.Tamanho</td>
+
+    <td>@Model.Cor</td>
+    <td>
+
+        @if (Model.Status)
+        {
+            <span class="badge bg-success">Ativo</span>
+        }
+        else
+        {
+            <span class="badge bg-danger">Inativo</span>
+        }
+
+    </td>
+
+    <td class="text-center">
+
+        <button class="btn btn-sm btn-outline-primary"
+                onclick="editarProduto(@Model.Id)">
+            Editar
+        </button>
+
+        <button class="btn btn-sm btn-outline-warning"
+                onclick="toggleStatus(@Model.Id)">
+            @(Model.Status ? "Inativar" : "Ativar")
+        </button>
+
+        <button class="btn btn-sm btn-outline-danger"
+                onclick="confirmarExcluir(@Model.Id)">
+
+            Excluir
+
+        </button>
 
 
-        <td class="text-center">
 
-            <button class="btn btn-sm btn-outline-primary"
-                    onclick="editarProduto(@Model.Id)">
-                Editar
-            </button>
-
-            <button class="btn btn-sm btn-outline-warning"
-                    onclick="toggleStatus(@Model.Id)">
-                @(Model.Status ? "Inativar" : "Ativar")
-            </button>
-
-            <button class="btn btn-sm btn-outline-danger"
-                    onclick="excluirProduto(@Model.Id)">
-                Excluir
-            </button>
-
-
-
-        </td>
-    </tr>
+    </td>
+</tr>

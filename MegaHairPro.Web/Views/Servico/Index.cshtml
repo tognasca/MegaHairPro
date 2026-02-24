@@ -1,0 +1,37 @@
+﻿@model IEnumerable<MegaHairPro.Web.Models.Servico>
+
+@{
+    ViewData["Title"] = "Serviços";
+}
+<hr />
+
+<h2>Serviços Premium</h2>
+
+
+<a href="/Servico/Create" class="btn btn-primary">Novo Serviço</a>
+
+<table class="table mt-3">
+    <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Valor</th>
+            <th>Duração</th>
+            <th></th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var s in Model)
+        {
+            <tr>
+                <td>@s.Nome</td>
+                <td>R$ @s.Valor</td>
+                <td>@s.DuracaoMinutos min</td>
+                <td>
+                    <a href="/Servico/Edit/@s.Id" class="btn btn-sm btn-warning">Editar</a>
+                    <a href="/Servico/Delete/@s.Id" class="btn btn-sm btn-danger">Excluir</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

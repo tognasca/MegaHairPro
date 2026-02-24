@@ -1,0 +1,25 @@
+@model MegaHairPro.Web.Models.Agendamento
+
+@{
+    ViewData["Title"] = "Agendamentos";
+}
+
+
+
+<h2>Novo Agendamento</h2>
+
+<form asp-action="CadastroAgendamento" method="post">
+    <select asp-for="ClienteId" asp-items="ViewBag.Clientes"></select>
+    <select asp-for="ProfissionalId" asp-items="ViewBag.Profissionais"></select>
+    <input type="datetime-local" asp-for="DataHora" />
+
+    @foreach (var s in ViewBag.Servicos)
+    {
+        <div>
+            <input type="checkbox" name="servicosSelecionados" value="@s.Id" />
+            @s.Nome - R$ @s.Valor
+        </div>
+    }
+
+    <button type="submit">Agendar</button>
+</form>

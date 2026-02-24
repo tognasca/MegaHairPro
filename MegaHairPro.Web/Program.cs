@@ -96,7 +96,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-
+app.UseDeveloperExceptionPage();
 
 app.MapControllerRoute(
     name: "default",

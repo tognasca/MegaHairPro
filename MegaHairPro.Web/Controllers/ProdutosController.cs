@@ -27,7 +27,8 @@ namespace MegaHairPro.Web.Controllers
 
         // ✅ CREATE CORRETO
         [HttpPost]
-        ////[ValidateAntiForgeryToken]
+        
+        [ValidateAntiForgeryToken]
         public IActionResult Index(Produto produto)
         {
             produto.Status = true;
@@ -41,6 +42,7 @@ namespace MegaHairPro.Web.Controllers
 
         // ✅ EDIT AJAX
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult EditAjax(Produto produto)
         {
             var original = _context.Produtos.Find(produto.Id);
@@ -61,6 +63,7 @@ namespace MegaHairPro.Web.Controllers
 
         // ✅ ATIVAR / INATIVAR
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult ToggleStatusAjax(int id)
         {
             var produto = _context.Produtos.Find(id);
@@ -71,25 +74,48 @@ namespace MegaHairPro.Web.Controllers
             produto.Status = !produto.Status;
             _context.SaveChanges();
 
-            return Json(new { success = true });
+
+            return PartialView("_ProdutoRow", produto);
         }
 
         // ✅ DELETE
         [HttpPost]
-        public IActionResult Delete(int id)
+        [ValidateAntiForgeryToken]
+        public IActionResult DeleteAjax(int id)
         {
+
             var produto = _context.Produtos.Find(id);
 
-            if (produto == null)
-                return RedirectToAction("Index");
+            if (produto != null)
+            {
 
-            _context.Produtos.Remove(produto);
+                _context.Produtos.Remove(produto);
+
+                _context.SaveChanges();
+
+            }
+
+            return Ok();
+
+        }
+        [HttpPost]
+        public IActionResult CreateAjax(Produto model)
+        {
+
+            model.Codigo = GerarCodigoProduto(model.TipoProduto);
+
+            model.Status = true;
+
+            _context.Produtos.Add(model);
+
             _context.SaveChanges();
 
-            return RedirectToAction("Index");
+
+            return PartialView("_ProdutoRow", model);
+
         }
 
-        // ✅ GERAR CÓDIGO
+          // ✅ GERAR CÓDIGO
         private string GerarCodigoProduto(TipoProduto tipo)
         {
             string prefixo = tipo switch

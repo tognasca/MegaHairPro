@@ -1,0 +1,20 @@
+@model List<MegaHairPro.Web.Models.Agendamento>
+
+<h2>Meus Agendamentos</h2>
+
+<table>
+@foreach (var a in Model)
+{
+    <tr>
+        <td>@a.DataHora</td>
+        <td>@a.Profissional.Nome</td>
+        <td>
+            @foreach (var s in a.AgendamentosServicos)
+            {
+                <div>@s.Servico.Nome - R$ @s.Servico.Valor</div>
+            }
+        </td>
+        <td>R$ @a.ValorTotal</td>
+    </tr>
+}
+</table>

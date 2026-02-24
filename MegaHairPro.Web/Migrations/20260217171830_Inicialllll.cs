@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MegaHairPro.Web.Migrations
 {
     /// <inheritdoc />
-    public partial class pix : Migration
+    public partial class Inicialllll : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -156,6 +156,39 @@ namespace MegaHairPro.Web.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_MetodosAplicacao", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Profissionais",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Nome = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Especialidade = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Profissionais", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Servicos",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Nome = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Descricao = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Valor = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    ValorPromocional = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    DuracaoMinutos = table.Column<int>(type: "int", nullable: false),
+                    Categoria = table.Column<int>(type: "int", nullable: false),
+                    ImagemUrl = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Servicos", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -383,6 +416,41 @@ namespace MegaHairPro.Web.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Agendamentos",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    DataHora = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ClienteId = table.Column<int>(type: "int", nullable: false),
+                    ProfissionalId = table.Column<int>(type: "int", nullable: false),
+                    ServicoId = table.Column<int>(type: "int", nullable: false),
+                    DataFim = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Agendamentos", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Agendamentos_Clientes_ClienteId",
+                        column: x => x.ClienteId,
+                        principalTable: "Clientes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Agendamentos_Profissionais_ProfissionalId",
+                        column: x => x.ProfissionalId,
+                        principalTable: "Profissionais",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Agendamentos_Servicos_ServicoId",
+                        column: x => x.ServicoId,
+                        principalTable: "Servicos",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Compras",
                 columns: table => new
                 {
@@ -433,6 +501,50 @@ namespace MegaHairPro.Web.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.CreateTable(
+                name: "AgendamentoServicos",
+                columns: table => new
+                {
+                    AgendamentoId = table.Column<int>(type: "int", nullable: false),
+                    ServicoId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AgendamentoServicos", x => new { x.AgendamentoId, x.ServicoId });
+                    table.ForeignKey(
+                        name: "FK_AgendamentoServicos_Agendamentos_AgendamentoId",
+                        column: x => x.AgendamentoId,
+                        principalTable: "Agendamentos",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_AgendamentoServicos_Servicos_ServicoId",
+                        column: x => x.ServicoId,
+                        principalTable: "Servicos",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Agendamentos_ClienteId",
+                table: "Agendamentos",
+                column: "ClienteId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Agendamentos_ProfissionalId",
+                table: "Agendamentos",
+                column: "ProfissionalId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Agendamentos_ServicoId",
+                table: "Agendamentos",
+                column: "ServicoId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AgendamentoServicos_ServicoId",
+                table: "AgendamentoServicos",
+                column: "ServicoId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -498,6 +610,9 @@ namespace MegaHairPro.Web.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "AgendamentoServicos");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
 
             migrationBuilder.DropTable(
@@ -511,9 +626,6 @@ namespace MegaHairPro.Web.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUserTokens");
-
-            migrationBuilder.DropTable(
-                name: "Clientes");
 
             migrationBuilder.DropTable(
                 name: "Comissoes");
@@ -540,6 +652,9 @@ namespace MegaHairPro.Web.Migrations
                 name: "Vendas");
 
             migrationBuilder.DropTable(
+                name: "Agendamentos");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
@@ -547,6 +662,15 @@ namespace MegaHairPro.Web.Migrations
 
             migrationBuilder.DropTable(
                 name: "Produtos");
+
+            migrationBuilder.DropTable(
+                name: "Clientes");
+
+            migrationBuilder.DropTable(
+                name: "Profissionais");
+
+            migrationBuilder.DropTable(
+                name: "Servicos");
 
             migrationBuilder.DropTable(
                 name: "Fornecedores");

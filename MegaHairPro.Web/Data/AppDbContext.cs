@@ -20,4 +20,32 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
     public DbSet<Cliente> Clientes { get; set; }
     public DbSet<SimulacaoVenda> Simulacao { get; set; }
     public DbSet<Comissao> Comissoes { get; set; }
+
+
+    //**************** SALAO ****************//
+
+    public DbSet<Servico> Servicos { get; set; }
+    public DbSet<Profissional> Profissionais { get; set; }
+    public DbSet<Agendamento> Agendamentos { get; set; }
+    public DbSet<AgendamentoServico> AgendamentoServicos { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<AgendamentoServico>()
+            .HasKey(x => new { x.AgendamentoId, x.ServicoId });
+
+        modelBuilder.Entity<AgendamentoServico>()
+            .HasOne(x => x.Agendamento)
+            .WithMany(a => a.AgendamentosServicos)
+            .HasForeignKey(x => x.AgendamentoId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<AgendamentoServico>()
+            .HasOne(x => x.Servico)
+            .WithMany()
+            .HasForeignKey(x => x.ServicoId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
 }

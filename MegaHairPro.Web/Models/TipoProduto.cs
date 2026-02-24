@@ -3,8 +3,8 @@
     public enum TipoProduto
     {
         Cabelo = 1,
-        Outro = 2,
-        Acessorio = 3
+        Acessorio = 2,
+        Outro = 3,
     }
 
 }

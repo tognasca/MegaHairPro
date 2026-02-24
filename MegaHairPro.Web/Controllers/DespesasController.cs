@@ -42,53 +42,113 @@ namespace MegaHairPro.Web.Controllers
         }
 
         // ✅ EDITAR VIA AJAX (igual Compras)
+        //[HttpPost]
+        //public IActionResult EditAjax(Despesas despesa)
+        //{
+        //    var original = _context.Despesas.Find(despesa.Id);
+
+        //    if (original == null)
+        //        return Json(new { success = false });
+
+
+        //    original.Categoria = despesa.Categoria;
+        //    original.Descricao = despesa.Descricao;
+        //    original.Valor = despesa.Valor;
+        //    original.DataCadastro = despesa.DataCadastro;
+
+        //    _context.SaveChanges();
+
+        //    return PartialView("_DespesaRow", original);
+        //}
+
+        //// ✅ ATIVAR / INATIVAR
+        //[HttpPost]
+        //public IActionResult ToggleStatusAjax(int id)
+        //{
+        //    var despesa = _context.Despesas.Find(id);
+
+        //    if (despesa == null)
+        //        return Json(new { success = false });
+
+        //    despesa.Status = !despesa.Status;
+        //    _context.SaveChanges();
+
+        //    return Json(new { success = true, ativo = despesa.Status });
+        //}
+
+        //// ✅ EXCLUIR
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public IActionResult Delete(int id)
+        //{
+        //    var despesa = _context.Despesas.Find(id);
+
+        //    if (despesa == null)
+        //        return Json(new { success = false });
+
+        //    _context.Despesas.Remove(despesa);
+
+        //    _context.SaveChanges();
+
+        //    return Json(new { success = true });
+        //}
+
+
         [HttpPost]
-        public IActionResult EditAjax(Despesas despesa)
+        [ValidateAntiForgeryToken]
+        public IActionResult CreateAjax(Despesas d)
         {
-            var original = _context.Despesas.Find(despesa.Id);
 
-            if (original == null)
-                return Json(new { success = false });
+            d.Status = true;
 
-
-            original.Categoria = despesa.Categoria;
-            original.Descricao = despesa.Descricao;
-            original.Valor = despesa.Valor;
-            original.DataCadastro = despesa.DataCadastro;
+            _context.Add(d);
 
             _context.SaveChanges();
 
-            return PartialView("_DespesaRow", original);
+            return PartialView("_DespesaRow", d);
+
         }
 
-        // ✅ ATIVAR / INATIVAR
+
+
         [HttpPost]
-        public IActionResult ToggleStatusAjax(int id)
-        {
-            var despesa = _context.Despesas.Find(id);
-
-            if (despesa == null)
-                return Json(new { success = false });
-
-            despesa.Status = !despesa.Status;
-            _context.SaveChanges();
-
-            return Json(new { success = true, ativo = despesa.Status });
-        }
-
-        // ✅ EXCLUIR
-        [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Delete(int id)
         {
-            var despesa = _context.Despesas.Find(id);
 
-            if (despesa == null)
-                return RedirectToAction("Index");
+            var d = _context.Despesas.Find(id);
 
-            _context.Despesas.Remove(despesa);
+            _context.Remove(d);
+
             _context.SaveChanges();
 
-            return RedirectToAction("Index");
+            return Json(new { success = true });
+
+        }
+
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult EditAjax(Despesas d)
+        {
+
+            var o = _context.Despesas.Find(d.Id);
+
+            o.Categoria = d.Categoria;
+
+            o.Descricao = d.Descricao;
+
+            o.Valor = d.Valor;
+
+            o.DataCadastro = d.DataCadastro;
+
+            o.Ratear = d.Ratear;
+
+            _context.SaveChanges();
+
+            return PartialView("_DespesaRow", o);
+
         }
     }
 }

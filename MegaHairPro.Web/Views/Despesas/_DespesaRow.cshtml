@@ -3,35 +3,55 @@
 <tr id="row-@Model.Id"
     data-categoria="@Model.Categoria"
     data-descricao="@Model.Descricao"
-    data-valor="@Model.Valor.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+    data-valor="@Model.Valor"
+    data-ratear="@Model.Ratear"
     data-data="@Model.DataCadastro.ToString("yyyy-MM-dd")">
+
     <td>@Model.Categoria</td>
+
     <td>@Model.Descricao</td>
 
-    <td class="text-end">
-        R$ @Model.Valor.ToString("N2")
+    <td>R$ @Model.Valor</td>
+
+    <td>
+
+        @if (Model.Ratear)
+        {
+            <span class="badge bg-info">
+                Sim
+            </span>
+        }
+        else
+        {
+            <span class="badge bg-secondary">
+                Não
+            </span>
+        }
+
     </td>
 
-    <td class="text-end">
-        @Model.DataCadastro.ToString("dd/MM/yyyy")
-    </td>
+    <td>@Model.DataCadastro.ToShortDateString()</td>
 
-    <td class="text-center">
+    <td>
 
-        <button class="btn btn-sm btn-outline-primary"
-                onclick="editarDespesa(@Model.Id)">
+        <button onclick="editarDespesa(@Model.Id)"
+                class="btn btn-primary btn-sm">
+
             Editar
+
         </button>
 
-        <button class="btn btn-sm btn-outline-warning"
-                onclick="toggleStatus(@Model.Id)">
-            @(Model.Status ? "Inativar" : "Ativar")
-        </button>
 
-        <button class="btn btn-sm btn-outline-danger"
-                onclick="excluirDespesa(@Model.Id)">
+        <button onclick="Delete(@Model.Id)"
+                class="btn btn-danger btn-sm">
+
             Excluir
+
         </button>
+
 
     </td>
+
+  
+
 </tr>

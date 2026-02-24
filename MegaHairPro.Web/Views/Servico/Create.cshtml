@@ -1,0 +1,28 @@
+@using MegaHairPro.Web.Models
+@model MegaHairPro.Web.Models.Servico
+
+
+<h2>Novo Serviço</h2>
+
+<form asp-controller="Servico" asp-action="Create" method="post" enctype="multipart/form-data">
+
+    <input asp-for="Nome" class="form-control" placeholder="Nome" />
+
+    <textarea asp-for="Descricao" class="form-control mt-2" placeholder="Descrição"></textarea>
+
+    <select asp-for="Categoria"
+            asp-items="Html.GetEnumSelectList<CategoriaServico>()"
+            class="form-control mt-2" placeholder="Categoria"></select>
+
+    <input asp-for="Valor" class="form-control mt-2" placeholder="Valor" />
+
+    <input asp-for="ValorPromocional" class="form-control mt-2" placeholder="Valor Promocional" />
+
+    <input asp-for="DuracaoMinutos" class="form-control mt-2" placeholder="Duração do Serviço(Tempo)" />
+
+    <input type="file" name="imagem" class="form-control mt-2" placeholder="Imgem" />
+    <button class="btn btn-success mt-3">Salvar</button>
+    <a href="/Servico" class="btn btn-secondary mt-3">Voltar</a>
+
+</form>
+

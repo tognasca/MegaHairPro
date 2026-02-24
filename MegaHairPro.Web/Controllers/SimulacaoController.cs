@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace MegaHairPro.Web.Controllers
 {
-    [Authorize]
+    //[Authorize]
     public class SimulacaoController : Controller
     {
         private readonly AppDbContext _context;
