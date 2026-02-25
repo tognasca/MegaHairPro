@@ -1,127 +1,278 @@
 ﻿@model IEnumerable<MegaHairPro.Web.Models.Despesas>
 
-@{
-    ViewData["Title"] = "Despesas";
-}
+<div class="container-fluid">
 
-<h2>💸 Controle de Despesas</h2>
 
-<hr />
+    <!-- DASHBOARD -->
 
-<form id="formCreate">
+    <div class="row mb-4">
 
-    @Html.AntiForgeryToken()
-    <div class="card p-3 mb-4">
+        <div class="col-md-4">
 
-        <h4>➕ Nova Despesa</h4>
+            <div class="card-premium">
 
-        <div class="row">
+                <small>Total do mês</small>
 
-            <div class="col-md-3">
+                <h3 class="text-danger">
 
-                <select name="Categoria" class="form-control" required>
+                    R$ @Model.Sum(x => x.Valor).ToString("N2")
+
+                </h3>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- NOVA DESPESA -->
+
+    <div class="card-premium mb-4">
+
+        <h5>➕ Nova Despesa</h5>
+
+        @Html.AntiForgeryToken()
+
+        <div class="row g-2">
+
+
+            <div class="col-md-2">
+
+                <select id="categoria" class="form-select">
+
                     <option value="">Categoria</option>
-                    <option>Despesa Salão</option>
-                    <option>Produtos</option>
-                    <option>Funcionários</option>
+
+                    <option>Salão</option>
+                    <option>Aluguel</option>
+                    <option>Internet</option>
+                    <option>Produto</option>
                     <option>Marketing</option>
-                    <option>Impostos</option>
-                    <option>Outros</option>
+
                 </select>
 
             </div>
 
-            <div class="col-md-4">
-                <input name="Descricao"
+
+
+            <div class="col-md-3">
+
+                <input id="descricao"
                        class="form-control"
-                       placeholder="Descrição"
-                       required />
+                       placeholder="Descrição">
+
             </div>
 
+
+
             <div class="col-md-2">
-                <input name="Valor"
+
+                <input id="valor"
                        type="number"
-                       step="0.01"
-                       placeholder="Valor"
                        class="form-control"
-                       required />
+                       placeholder="Valor">
+
             </div>
-            <div class="form-check">
+
+
+
+            <div class="col-md-2">
+
+                <input id="data"
+                       type="date"
+                       class="form-control">
+
+            </div>
+
+
+
+            <div class="col-md-1 form-check mt-2">
 
                 <input type="checkbox"
-                       name="Ratear"
-                       value="true"
-                       class="form-check-input"
-                       id="Ratear">
+                       id="ratear"
+                       class="form-check-input">
 
-                <label class="form-check-label" for="Ratear">
-                    Ratear
-                </label>
+                <label>Ratear</label>
 
             </div>
+
+
+
             <div class="col-md-2">
-                <input name="DataCadastro"
-                       type="date"
-                       class="form-control"
-                       value="@DateTime.Now.ToString("yyyy-MM-dd")"
-                       required />
-            </div>
 
-            <div class="col-md-1">
+                <button id="btnSalvar"
+                        class="btn btn-success w-100"
+                        onclick="salvarDespesa()">
 
-                <button class="btn btn-success w-100">
                     Salvar
+
                 </button>
 
             </div>
+
+
 
         </div>
 
     </div>
 
-</form>
 
 
-<table class="table table-bordered">
 
-    <thead>
-        <tr>
-            <th>Categoria</th>
-            <th>Descrição</th>
-            <th>Valor</th>
-            <th>Rateado</th>
-            <th>Data</th>
-            <th></th>
-        </tr>
-    </thead>
+    <!-- TABELA -->
 
-    <tbody id="despesasBody">
+    <div class="card-premium">
 
-        @foreach (var item in Model)
-        {
-            @Html.Partial("_DespesaRow", item)
-        }
+        <table class="table table-hover">
 
-    </tbody>
+            <thead>
 
-</table>
+                <tr>
+
+                    <th>Categoria</th>
+                    <th>Descrição</th>
+                    <th>Valor</th>
+                    <th>Data</th>
+                    <th>Rateio</th>
+                    <th width="180"></th>
+
+                </tr>
+
+            </thead>
+
+
+
+            <tbody id="lista">
+
+                @foreach (var d in Model)
+                {
+
+                    @Html.Partial("_DespesaRow", d)
+
+                }
+
+            </tbody>
+
+
+        </table>
+
+    </div>
+
+</div>
+
+
+
+
+<!-- MODAL EDITAR -->
+
+<div class="modal fade" id="modalEditar">
+
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content">
+
+
+            <div class="modal-header bg-primary text-white">
+
+                <h5>Editar Despesa</h5>
+
+                <button class="btn-close btn-close-white"
+                        data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+
+
+            <div class="modal-body">
+
+
+                <input type="hidden" id="editId">
+
+
+                <label>Categoria</label>
+
+                <select id="editCategoria"
+                        class="form-control mb-2">
+
+                    <option>Salão</option>
+                    <option>Aluguel</option>
+                    <option>Internet</option>
+                    <option>Produto</option>
+                    <option>Marketing</option>
+
+                </select>
+
+
+
+                <label>Descrição</label>
+
+                <input id="editDescricao"
+                       class="form-control mb-2">
+
+
+
+                <label>Valor</label>
+
+                <input id="editValor"
+                       type="number"
+                       class="form-control mb-2">
+
+
+
+                <label>Data</label>
+
+                <input id="editData"
+                       type="date"
+                       class="form-control mb-2">
+
+
+
+                <div class="form-check">
+
+                    <input type="checkbox"
+                           id="editRatear"
+                           class="form-check-input">
+
+                    <label>Ratear</label>
+
+                </div>
+
+
+            </div>
+
+
+
+            <div class="modal-footer">
+
+                <button class="btn btn-success"
+                        onclick="salvarEdicao()">
+
+                    Salvar
+
+                </button>
+
+            </div>
+
+
+
+        </div>
+    </div>
+</div>
+
 
 
 
 <!-- TOAST -->
+
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
 
     <div id="toast"
-         class="toast text-white border-0">
+         class="toast text-white">
 
-        <div class="d-flex">
-
-            <div id="toastMsg"
-                 class="toast-body"></div>
-
-            <button class="btn-close btn-close-white"
-                    data-bs-dismiss="toast"></button>
-
+        <div id="toastMsg"
+             class="toast-body">
         </div>
 
     </div>
@@ -129,80 +280,148 @@
 </div>
 
 
+<div class="modal fade" id="modalExcluir">
 
-<!-- MODAL EDIT -->
-<div class="modal fade" id="modalEditar">
+    <div class="modal-dialog modal-dialog-centered">
 
-    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
 
-        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
 
-            <div class="modal-body">
+                <h5>
 
-                <input type="hidden" id="editId">
+                    Confirmar exclusão
 
-                <input id="editCategoria" class="form-control mb-2">
+                </h5>
 
-                <input id="editDescricao" class="form-control mb-2">
-
-                <input id="editValor"
-                       type="number"
-                       step="0.01"
-                       class="form-control mb-2">
-
-
-                <input type="checkbox" id="editRatear" />
-
-
-
-                <input id="editData"
-                       type="date"
-                       class="form-control">
             </div>
+
+
+            <div class="modal-body text-center">
+
+                <h6>
+
+                    Deseja excluir esta Despesa?
+
+                </h6>
+
+                <input type="hidden"
+                       id="excluirId">
+
+            </div>
+
+
 
             <div class="modal-footer">
 
-                <button class="btn btn-primary"
-                        onclick="salvarEdit()">
-                    Salvar
+                <button class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+
+                    Cancelar
+
+                </button>
+
+
+                <button class="btn btn-danger"
+                        id="btnExcluir">
+
+                    Excluir
+
                 </button>
 
             </div>
 
+
         </div>
 
     </div>
 
 </div>
-
-
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 
 <script>
 
 
-       let modal;
+    let modalEditar;
 
-    window.onload = function () {
+     let modalExcluir;
 
-        modal = new bootstrap.Modal(
-            document.getElementById("modalEditar")
-        );
+    document.addEventListener("DOMContentLoaded", function(){
 
-    };
+    modalEditar =
+    new bootstrap.Modal(document.getElementById("modalEditar"));
 
+    document.getElementById("data").valueAsDate =
+    new Date();
 
+      modalExcluir =  new bootstrap.Modal(document.getElementById("modalExcluir"));
 
-    function toast(msg, tipo)
+    });
+    function confirmarExcluir(id)
     {
 
-    let t = $("#toast");
+        $("#excluirId").val(id);
+
+        modalExcluir.show();
+
+    }
+
+
+    $("#btnExcluir").click(function()
+    {
+
+        let id = $("#excluirId").val();
+
+        let btn = $(this);
+
+        btn.html("Excluindo...");
+        btn.prop("disabled", true);
+
+
+
+        let formData = new FormData();
+
+        formData.append("id", id);
+
+        formData.append("__RequestVerificationToken",
+            $('input[name="__RequestVerificationToken"]').val());
+
+        $.ajax({
+
+            url: "/Despesas/DeleteAjax",
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function()
+            {
+                let row = $("#row-" + id);
+                row.fadeOut(300,function(){
+                    row.remove();
+                });
+                modalExcluir.hide();
+                toast("Produto excluído com sucesso","bg-success");
+            },
+            complete: function()
+            {
+                btn.html("Excluir");
+                btn.prop("disabled", false);
+            }
+        });
+    });
+
+
+
+
+    // TOAST
+
+    function toast(msg,cor){
+
+    let t=$("#toast");
 
     t.removeClass("bg-success bg-danger");
 
-    t.addClass(tipo);
+    t.addClass(cor);
 
     $("#toastMsg").html(msg);
 
@@ -211,60 +430,40 @@
     }
 
 
-       $("#formCreate").submit(function (e)
-    {
-        e.preventDefault();
 
-        let form = $(this);
 
-        let formData = new FormData(this);
+    // SALVAR
 
-        $.ajax({
+    function salvarDespesa(){
 
-            url: '/Despesas/CreateAjax',
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
+    let fd=new FormData();
 
-            success: function (html)
-            {
-                $("#despesasBody").prepend(html);
+    fd.append("Categoria",categoria.value);
 
-                toast("Criado com sucesso", "bg-success");
+    fd.append("Descricao",descricao.value);
 
-                form[0].reset();
-            }
+    fd.append("Valor",valor.value);
 
-        });
+    fd.append("DataCadastro",data.value);
 
-    });
+    fd.append("Ratear",ratear.checked);
 
-    function Delete(id)
-    {
+    fd.append("__RequestVerificationToken",
 
-    if (!confirm("Excluir?")) return;
+    $('input[name="__RequestVerificationToken"]').val());
 
-    $.post("/Despesas/Delete",
 
-    {
+    $.ajax({
+    url:'/Despesas/CreateAjax',
+    type:'POST',
+    data:fd,
+    processData:false,
+    contentType:false,
+    success:function(html){
+    $("#lista").prepend(html);
+    toast("Salvo com sucesso","bg-success");
 
-    id:id,
-
-    __RequestVerificationToken:
-    $('input[name="__RequestVerificationToken"]').val()
-
-    },
-
-    function(r)
-    {
-
-    if(r.success)
-    {
-
-    $("#row-"+id).fadeOut();
-
-    toast("Excluído com sucesso","bg-success");
+    limpar();
 
     }
 
@@ -272,86 +471,83 @@
 
     }
 
+    // EDITAR ABRIR
 
-        function editarDespesa(id)
-    {
+    function abrirModalEditar(id,categoria,descricao,valor,data,ratear){
+      
+    editId.value=id;
+    editCategoria.value=categoria;
+    editDescricao.value=descricao;
+    editValor.value=valor;
+    editData.value=data;
+    editRatear.checked=ratear;
+    modalEditar.show();
 
-        let r = $("#row-" + id);
+    }
 
-        $("#editId").val(id);
+    // SALVAR EDIÇÃO
 
-        $("#editCategoria").val(r.data("categoria"));
+    function salvarEdicao(){
 
-        $("#editDescricao").val(r.data("descricao"));
+    let fd=new FormData();
 
-        $("#editValor").val(r.data("valor"));
+    fd.append("Id",editId.value);
 
-        $("#editData").val(r.data("data"));
+    fd.append("Categoria",editCategoria.value);
 
-        $("#editRatear").prop("checked", r.data("ratear"));
+    fd.append("Descricao",editDescricao.value);
 
-        let modal = new bootstrap.Modal(
-            document.getElementById("modalEditar"));
+    fd.append("Valor",editValor.value);
 
-        modal.show();
+    fd.append("DataCadastro",editData.value);
+
+    fd.append("Ratear",editRatear.checked);
+
+    fd.append("__RequestVerificationToken",
+
+    $('input[name="__RequestVerificationToken"]').val());
+
+
+    $.ajax({
+
+    url:'/Despesas/EditAjax',
+
+    type:'POST',
+
+    data:fd,
+
+    processData:false,
+
+    contentType:false,
+
+
+    success:function(html){
+
+    $("#row-"+editId.value)
+
+    .replaceWith(html);
+
+    modalEditar.hide();
+
+    toast("Editado com sucesso","bg-success");
+
+    }
+
+    });
+
+    }
+    // LIMPAR
+
+    function limpar(){
+
+    descricao.value="";
+
+    valor.value="";
+
+    ratear.checked=false;
 
     }
 
 
 
-    function salvarEdit()
-    {
-
-        let formData = new FormData();
-
-        formData.append("Id", $("#editId").val());
-
-        formData.append("Categoria", $("#editCategoria").val());
-
-        formData.append("Descricao", $("#editDescricao").val());
-
-        formData.append("Valor", $("#editValor").val());
-
-        formData.append("DataCadastro", $("#editData").val());
-
-        formData.append("Ratear",
-            $("#editRatear").is(":checked"));
-
-        formData.append("__RequestVerificationToken",
-            $('input[name="__RequestVerificationToken"]').val());
-
-
-        $.ajax({
-
-            url: '/Despesas/EditAjax',
-
-            type: 'POST',
-
-            data: formData,
-
-            processData: false,
-
-            contentType: false,
-
-            success: function (html)
-            {
-
-                $("#row-" + $("#editId").val())
-                    .replaceWith(html);
-
-
-                let modal =
-                    bootstrap.Modal.getInstance(
-                        document.getElementById("modalEditar"));
-
-                modal.hide();
-
-
-                toast("Editado com sucesso", "bg-success");
-
-            }
-
-        });
-
-    }
 </script>

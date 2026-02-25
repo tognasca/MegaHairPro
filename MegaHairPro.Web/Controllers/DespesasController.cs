@@ -1,6 +1,7 @@
 ﻿using MegaHairPro.Web.Data;
 using MegaHairPro.Web.Models;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Linq;
 
 namespace MegaHairPro.Web.Controllers
@@ -18,88 +19,58 @@ namespace MegaHairPro.Web.Controllers
         [HttpGet]
         public IActionResult Index()
         {
+
+
             var despesas = _context.Despesas
                 .OrderByDescending(d => d.DataCadastro)
                 .ToList();
+
+
 
             return View(despesas);
         }
 
         // ✅ CREATE
         [HttpPost]
-        ////[ValidateAntiForgeryToken]
+        [ValidateAntiForgeryToken]
         public IActionResult Index(Despesas despesa)
         {
-            if (!ModelState.IsValid)
-                return RedirectToAction("Index");
 
-            despesa.Status = true;
+            despesa.Codigo = "DESP-" + DateTime.Now.Ticks.ToString().Substring(10);
+
+
+            string cor = despesa.Categoria switch
+            {
+                "Salão" => "bg-success",
+
+                "Marketing" => "bg-success",
+
+                "Produto" => "bg-primary",
+
+                "Internet" => "bg-warning",
+
+                "Aluguel" => "bg-danger",
+
+                _ => "bg-secondary"
+
+            };
+
+            despesa.CorCategoria = cor;
+
 
             _context.Despesas.Add(despesa);
+
             _context.SaveChanges();
 
             return RedirectToAction("Index");
+
         }
-
-        // ✅ EDITAR VIA AJAX (igual Compras)
-        //[HttpPost]
-        //public IActionResult EditAjax(Despesas despesa)
-        //{
-        //    var original = _context.Despesas.Find(despesa.Id);
-
-        //    if (original == null)
-        //        return Json(new { success = false });
-
-
-        //    original.Categoria = despesa.Categoria;
-        //    original.Descricao = despesa.Descricao;
-        //    original.Valor = despesa.Valor;
-        //    original.DataCadastro = despesa.DataCadastro;
-
-        //    _context.SaveChanges();
-
-        //    return PartialView("_DespesaRow", original);
-        //}
-
-        //// ✅ ATIVAR / INATIVAR
-        //[HttpPost]
-        //public IActionResult ToggleStatusAjax(int id)
-        //{
-        //    var despesa = _context.Despesas.Find(id);
-
-        //    if (despesa == null)
-        //        return Json(new { success = false });
-
-        //    despesa.Status = !despesa.Status;
-        //    _context.SaveChanges();
-
-        //    return Json(new { success = true, ativo = despesa.Status });
-        //}
-
-        //// ✅ EXCLUIR
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public IActionResult Delete(int id)
-        //{
-        //    var despesa = _context.Despesas.Find(id);
-
-        //    if (despesa == null)
-        //        return Json(new { success = false });
-
-        //    _context.Despesas.Remove(despesa);
-
-        //    _context.SaveChanges();
-
-        //    return Json(new { success = true });
-        //}
-
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult CreateAjax(Despesas d)
         {
 
-            d.Status = true;
+            d.CorCategoria = CorCategoria(d.Categoria);
 
             _context.Add(d);
 
@@ -113,16 +84,30 @@ namespace MegaHairPro.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Delete(int id)
+        public IActionResult EditAjax(Despesas d)
         {
 
-            var d = _context.Despesas.Find(id);
+            var despesa =
+            _context.Despesas.Find(d.Id);
 
-            _context.Remove(d);
+
+            despesa.Categoria = d.Categoria;
+
+            despesa.Descricao = d.Descricao;
+
+            despesa.Valor = d.Valor;
+
+            despesa.DataCadastro = d.DataCadastro;
+
+            despesa.Ratear = d.Ratear;
+
+            despesa.CorCategoria =
+            CorCategoria(d.Categoria);
+
 
             _context.SaveChanges();
 
-            return Json(new { success = true });
+            return PartialView("_DespesaRow", despesa);
 
         }
 
@@ -130,24 +115,36 @@ namespace MegaHairPro.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult EditAjax(Despesas d)
+        public IActionResult DeleteAjax(int id)
         {
 
-            var o = _context.Despesas.Find(d.Id);
+            var d =
+            _context.Despesas.Find(id);
 
-            o.Categoria = d.Categoria;
-
-            o.Descricao = d.Descricao;
-
-            o.Valor = d.Valor;
-
-            o.DataCadastro = d.DataCadastro;
-
-            o.Ratear = d.Ratear;
+            _context.Remove(d);
 
             _context.SaveChanges();
 
-            return PartialView("_DespesaRow", o);
+            return Ok();
+
+        }
+        string CorCategoria(string cat)
+        {
+
+            return cat switch
+            {
+
+                "Marketing" => "bg-success",
+
+                "Produto" => "bg-primary",
+
+                "Internet" => "bg-warning",
+
+                "Aluguel" => "bg-danger",
+
+                _ => "bg-secondary"
+
+            };
 
         }
     }

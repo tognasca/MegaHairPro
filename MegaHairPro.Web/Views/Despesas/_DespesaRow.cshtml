@@ -1,17 +1,36 @@
-@model MegaHairPro.Web.Models.Despesas
+﻿@model MegaHairPro.Web.Models.Despesas
 
-<tr id="row-@Model.Id"
-    data-categoria="@Model.Categoria"
-    data-descricao="@Model.Descricao"
-    data-valor="@Model.Valor"
-    data-ratear="@Model.Ratear"
-    data-data="@Model.DataCadastro.ToString("yyyy-MM-dd")">
+<tr id="row-@Model.Id">
 
-    <td>@Model.Categoria</td>
 
-    <td>@Model.Descricao</td>
+<tr id="row-@Model.Id"  class="fade-in">
 
-    <td>R$ @Model.Valor</td>
+    <td>
+        <span class="categoria-badge">
+            <span class="dot @Model.CorCategoria"></span>
+            @Model.Categoria
+        </span>
+    </td>
+    <td>
+
+        @Model.Descricao
+
+    </td>
+
+
+    <td>
+
+        R$ @Model.Valor.ToString("N2")
+
+    </td>
+
+
+    <td>
+
+        @Model.DataCadastro.ToString("dd-MM-yyyy")
+
+    </td>
+
 
     <td>
 
@@ -24,34 +43,46 @@
         else
         {
             <span class="badge bg-secondary">
-                N�o
+                Não
             </span>
         }
 
     </td>
 
-    <td>@Model.DataCadastro.ToShortDateString()</td>
 
     <td>
 
-        <button onclick="editarDespesa(@Model.Id)"
-                class="btn btn-primary btn-sm">
+        <button class="btn btn-sm btn-outline-primary"
+                onclick="abrirModalEditar(
+
+'@Model.Id',
+
+'@Model.Categoria',
+
+'@Model.Descricao',
+
+'@Model.Valor',
+
+'@Model.DataCadastro.ToString("yyyy-MM-dd")',
+
+@Model.Ratear.ToString().ToLower()
+
+)">
 
             Editar
 
         </button>
 
 
-        <button onclick="Delete(@Model.Id)"
-                class="btn btn-danger btn-sm">
+
+        <button class="btn btn-sm btn-outline-danger"
+                onclick="confirmarExcluir(@Model.Id)">
 
             Excluir
 
         </button>
 
-
     </td>
 
-  
 
 </tr>
