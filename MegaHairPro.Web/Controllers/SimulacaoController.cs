@@ -1,4 +1,4 @@
-﻿using MegaHairPro.Web.Data;
+using MegaHairPro.Web.Data;
 using MegaHairPro.Web.Models;
 using MegaHairPro.Web.Services;
 using MegaHairPro.Web.Services.Interfaces;
@@ -129,6 +129,7 @@ namespace MegaHairPro.Web.Controllers
                     p.Codigo,
                     p.Nome,
                     p.EstoqueGramas,
+                    p.UnidadeMedida,
                     p.Status
                 })
                 .Where(x => x.Status == true)
@@ -155,9 +156,10 @@ namespace MegaHairPro.Web.Controllers
         [HttpGet]
         public IActionResult ObterEstoqueProduto(int produtoId)
         {
-            var estoque = _context.Compras
-                .Where(c => c.ProdutoId == produtoId)
-                .Sum(c => c.QuantidadeGramas ?? 0);
+            var estoque = _context.Produtos
+                .Where(p => p.Id == produtoId)
+                .Select(p => p.EstoqueGramas)
+                .FirstOrDefault();
 
             return Json(new { estoque });
         }
@@ -295,6 +297,17 @@ namespace MegaHairPro.Web.Controllers
             };
 
             _context.Vendas.Add(venda);
+            _context.ContasFinanceiras.Add(new ContaFinanceira
+            {
+                Tipo = TipoContaFinanceira.Receber,
+                Origem = OrigemContaFinanceira.Venda,
+                Descricao = $"Venda #{venda.Id} - {venda.ProdutoNome}",
+                Valor = venda.PrecoVenda ?? 0,
+                DataCompetencia = venda.DataVenda,
+                DataVencimento = venda.DataVenda,
+                Status = StatusContaFinanceira.Aberta,
+                Venda = venda
+            });
 
             // ✅ Baixar estoque do produto
             var produto = _context.Produtos.FirstOrDefault(p => p.Id == sim.ProdutoId);

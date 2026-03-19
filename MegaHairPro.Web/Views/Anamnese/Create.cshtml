@@ -1,0 +1,39 @@
+@model MegaHairPro.Web.Models.Anamnese
+@{
+    ViewData["Title"] = "Nova Anamnese";
+}
+
+<h2 class="mb-3">Nova anamnese</h2>
+
+<form asp-action="Create" method="post" class="card p-3">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="ClienteId" />
+
+    <div class="mb-3">
+        <label class="form-label">Alergias</label>
+        <textarea asp-for="Alergias" class="form-control" rows="2"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Histórico clínico</label>
+        <textarea asp-for="HistoricoClinico" class="form-control" rows="3"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Procedimentos anteriores</label>
+        <textarea asp-for="ProcedimentosAnteriores" class="form-control" rows="3"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Restrições</label>
+        <textarea asp-for="Restricoes" class="form-control" rows="2"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Observações</label>
+        <textarea asp-for="Observacoes" class="form-control" rows="3"></textarea>
+    </div>
+
+    <button class="btn btn-success">Salvar</button>
+</form>
+

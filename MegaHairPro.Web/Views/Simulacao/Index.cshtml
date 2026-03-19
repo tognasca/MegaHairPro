@@ -1,4 +1,4 @@
-﻿@model IEnumerable<MegaHairPro.Web.Models.SimulacaoVenda>
+@model IEnumerable<MegaHairPro.Web.Models.SimulacaoVenda>
 
 @{
     ViewData["Title"] = "Simulação de Venda";
@@ -37,25 +37,28 @@
             <option value="">Selecione</option>
             @foreach (var p in ViewBag.Produtos)
             {
-                <option value="@p.Id">@p.Codigo - @p.Nome</option>
+                <option value="@p.Id"
+                        data-unidade="@((int)p.UnidadeMedida)">
+                    @p.Codigo - @p.Nome
+                </option>
             }
         </select>
     </div>
 
     <div class="col-md-3">
-        <label>Quantidade (g)</label>
+        <label id="QuantidadeLabel">Quantidade</label>
         <input name="QuantidadeGramas" id="QuantidadeGramas"
                class="form-control" />
     </div>
 
     <div class="col-md-2">
-        <label>Estoque Atual (g)</label>
+        <label id="EstoqueAtualLabel">Estoque Atual</label>
         <input class="form-control" readonly
                id="EstoqueAtualGramas" />
     </div>
 
     <div class="col-md-3">
-        <label>Estoque Pós-Venda (g)</label>
+        <label id="EstoquePosVendaLabel">Estoque Pós-Venda</label>
         <input class="form-control" readonly
                id="EstoquePosVendaGramas" />
     </div>
@@ -317,7 +320,7 @@
         <tr>
             <th>Cliente</th>
             <th>Produto</th>
-            <th>Quantidade(g)</th>
+            <th>Quantidade</th>
 
             <th>Custo</th>
             <th>Preço/Venda</th>
@@ -435,6 +438,16 @@
             produtoSelect.addEventListener("change", function () {
 
                 const produtoId = this.value;
+                const unidade = this.options[this.selectedIndex]?.dataset?.unidade;
+                const sufixo = unidade === "2" ? " (mL)" : " (g)";
+
+                const qtdLabel = document.getElementById("QuantidadeLabel");
+                const estAtualLabel = document.getElementById("EstoqueAtualLabel");
+                const estPosLabel = document.getElementById("EstoquePosVendaLabel");
+
+                if (qtdLabel) qtdLabel.textContent = "Quantidade" + sufixo;
+                if (estAtualLabel) estAtualLabel.textContent = "Estoque Atual" + sufixo;
+                if (estPosLabel) estPosLabel.textContent = "Estoque Pós-Venda" + sufixo;
 
                 if (!produtoId) {
                     estoqueAtualInput.value = "";
@@ -596,19 +609,6 @@
             document.getElementById("ValorComissaoVendedora").value =  valorVend.toFixed(2).replace(".", ",");
             document.getElementById("ValorComissaoCabeleireira").value =  valorCab.toFixed(2).replace(".", ",");
             document.getElementById("TotalComissoes").value = (valorVend + valorCab).toFixed(2).replace(".", ",");
-        }
-
-            function convertervenda(id) {
-
-            if (!confirm("deseja confirmar esta simulação como venda?"))Inf
-                return;
-
-            fetch("/simulacao/confirmarvenda", {
-                method: "post",
-                headers: { "content-type": "application/x-www-form-urlencoded" },
-                body: "id=" + id
-            })
-            .then(() => location.reload());
         }
 
             function confirmarVenda(id) {

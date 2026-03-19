@@ -1,4 +1,4 @@
-﻿using MegaHairPro.Web.Data;
+using MegaHairPro.Web.Data;
 using MegaHairPro.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -192,6 +192,7 @@ namespace MegaHairPro.Web.Controllers
         private void AtualizarEstoque(int produtoId, decimal quantidade, bool adicionar)
         {
             var estoque = _context.Estoques.FirstOrDefault(e => e.ProdutoId == produtoId);
+            var produto = _context.Produtos.FirstOrDefault(p => p.Id == produtoId);
 
             if (estoque == null)
             {
@@ -206,6 +207,14 @@ namespace MegaHairPro.Web.Controllers
             estoque.QuantidadeGramas += adicionar ? quantidade : -quantidade;
             if (estoque.QuantidadeGramas < 0)
                 estoque.QuantidadeGramas = 0;
+
+            // Mantém o estoque do Produto consistente com compras/vendas
+            if (produto != null)
+            {
+                produto.EstoqueGramas += adicionar ? quantidade : -quantidade;
+                if (produto.EstoqueGramas < 0)
+                    produto.EstoqueGramas = 0;
+            }
         }
     }
 }

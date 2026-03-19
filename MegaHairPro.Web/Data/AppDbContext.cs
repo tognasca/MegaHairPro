@@ -1,4 +1,4 @@
-﻿using MegaHairPro.Web.Models;
+using MegaHairPro.Web.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +20,8 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
     public DbSet<Cliente> Clientes { get; set; }
     public DbSet<SimulacaoVenda> Simulacao { get; set; }
     public DbSet<Comissao> Comissoes { get; set; }
+    public DbSet<ContaFinanceira> ContasFinanceiras { get; set; }
+    public DbSet<Anamnese> Anamneses { get; set; }
 
 
     //**************** SALAO ****************//

@@ -191,20 +191,19 @@
             <div class="linha">
                 <span>Cabelo : </span>
                 <strong>
-                    R$ @((Model.CustoCabelo + Model.LucroCabelo)?
-                                        .ToString("N2"))
+                    R$ @((Model.CustoCabelo + Model.LucroCabelo)?.ToString("N2"))
                 </strong>
             </div>
 
             <div class="linha">
-                <span>Método :  </span>
+                <span>Método:  </span>
                 <strong>@Model.MetodoNome</strong>
             </div>
 
-            <div class="linha">
+           @*  <div class="linha">
                 <span>Valor : </span>
                 <strong>R$ @Model.ValorTotalConfeccao?.ToString("N2")</strong>
-            </div>
+            </div> *@
 
         </div>
 
@@ -212,7 +211,7 @@
         <div class="total-box">
             <span>Venda : </span>
             <strong>
-                R$ @Model.PrecoVenda?.ToString("N2")
+                R$ @((Model.PrecoVenda + Model.ValorTotalConfeccao)?.ToString("N2"))
             </strong>
         </div>
 

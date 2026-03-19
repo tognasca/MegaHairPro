@@ -1,4 +1,4 @@
-﻿@model IEnumerable<MegaHairPro.Web.Models.Produto>
+@model IEnumerable<MegaHairPro.Web.Models.Produto>
 
 @{
     ViewData["Title"] = "Produtos";
@@ -45,6 +45,17 @@
 
                 </div>
 
+                <!-- Unidade (g/mL) -->
+                <div class="col-md-2">
+                    <label class="form-label">Unidade</label>
+                    <select name="UnidadeMedida"
+                            id="UnidadeMedida"
+                            class="form-select"
+                            required>
+                        <option value="1">g</option>
+                        <option value="2">mL</option>
+                    </select>
+                </div>
 
 
                 <!-- Nome -->
@@ -352,6 +363,14 @@
 
                     </div>
 
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Unidade</label>
+                        <select id="editUnidadeMedida"
+                                class="form-select form-select-lg shadow-sm">
+                            <option value="1">g</option>
+                            <option value="2">mL</option>
+                        </select>
+                    </div>
 
 
                     <div class="col-md-6">
@@ -545,6 +564,7 @@
 
         modalEditarProduto = new bootstrap.Modal(document.getElementById("modalEditarProduto"));
         modalExcluir =  new bootstrap.Modal(document.getElementById("modalExcluir"));
+        aplicarRegraUnidade($("#TipoProduto").val());
     });
 
     function confirmarExcluir(id)
@@ -602,7 +622,18 @@
     });
 
 
-        $("#TipoProduto").change(function(){
+    function aplicarRegraUnidade(tipo) {
+        // Cabelo sempre em gramas
+        if (tipo === "1") {
+            $("#UnidadeMedida").val("1").prop("disabled", true);
+            $("#editUnidadeMedida").val("1").prop("disabled", true);
+        } else {
+            $("#UnidadeMedida").prop("disabled", false);
+            $("#editUnidadeMedida").prop("disabled", false);
+        }
+    }
+
+    $("#TipoProduto").change(function(){
 
         let tipo = $(this).val();
 
@@ -622,6 +653,8 @@
             $(".campo-acessorio").addClass("d-none");
 
         }
+
+        aplicarRegraUnidade(tipo);
 
     });
 
@@ -694,6 +727,7 @@
     {
 
         $("#formProduto")[0].reset();
+        aplicarRegraUnidade($("#TipoProduto").val());
 
     }
 
@@ -711,6 +745,8 @@
         $("#editOrigem").val(row.dataset.origem);
         $("#editTamanho").val(row.dataset.tamanho);
         $("#editCor").val(row.dataset.cor);
+        $("#editUnidadeMedida").val(row.dataset.unidade || "1");
+        aplicarRegraUnidade($("#editTipo").val());
 
         modalEditarProduto.show();
 
@@ -722,6 +758,7 @@
         let formData = new FormData();
             formData.append("Id", $("#editId").val());
             formData.append("TipoProduto", $("#editTipo").val());
+            formData.append("UnidadeMedida", $("#editUnidadeMedida").val());
             formData.append("Nome", $("#editNome").val());
             formData.append("Origem", $("#editOrigem").val());
             formData.append("Tamanho", $("#editTamanho").val());

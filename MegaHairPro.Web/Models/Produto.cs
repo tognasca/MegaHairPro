@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace MegaHairPro.Web.Models;
@@ -10,6 +10,7 @@ public class Produto
     public string Codigo { get; set; } = null!;
     public string Nome { get; set; }
     public TipoProduto TipoProduto { get; set; }
+    public UnidadeMedida UnidadeMedida { get; set; } = UnidadeMedida.Grama;
     // ===== CAMPOS ESPECÍFICOS DE CABELO =====
     public string? Origem { get; set; }
     public string? Tamanho { get; set; }

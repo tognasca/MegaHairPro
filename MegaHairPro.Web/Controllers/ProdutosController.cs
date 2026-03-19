@@ -1,4 +1,4 @@
-﻿using MegaHairPro.Web.Data;
+using MegaHairPro.Web.Data;
 using MegaHairPro.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
@@ -33,6 +33,9 @@ namespace MegaHairPro.Web.Controllers
         {
             produto.Status = true;
             produto.Codigo = GerarCodigoProduto(produto.TipoProduto);
+            produto.UnidadeMedida = produto.TipoProduto == TipoProduto.Cabelo
+                ? UnidadeMedida.Grama
+                : produto.UnidadeMedida;
 
             _context.Produtos.Add(produto);
             _context.SaveChanges();
@@ -52,6 +55,9 @@ namespace MegaHairPro.Web.Controllers
 
             original.Nome = produto.Nome;
             original.TipoProduto = produto.TipoProduto;
+            original.UnidadeMedida = produto.TipoProduto == TipoProduto.Cabelo
+                ? UnidadeMedida.Grama
+                : produto.UnidadeMedida;
             original.Origem = produto.Origem;
             original.Tamanho = produto.Tamanho;
             original.Cor = produto.Cor;
@@ -105,6 +111,9 @@ namespace MegaHairPro.Web.Controllers
             model.Codigo = GerarCodigoProduto(model.TipoProduto);
 
             model.Status = true;
+            model.UnidadeMedida = model.TipoProduto == TipoProduto.Cabelo
+                ? UnidadeMedida.Grama
+                : model.UnidadeMedida;
 
             _context.Produtos.Add(model);
 

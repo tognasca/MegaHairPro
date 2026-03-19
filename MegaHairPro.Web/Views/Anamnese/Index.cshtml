@@ -1,0 +1,52 @@
+@model IEnumerable<MegaHairPro.Web.Models.Anamnese>
+@{
+    var cliente = (MegaHairPro.Web.Models.Cliente)ViewBag.Cliente;
+    ViewData["Title"] = "Anamnese - " + cliente.Nome;
+}
+
+<h2 class="mb-3">Ficha de Anamnese – @cliente.Nome</h2>
+
+<a asp-action="Create"
+   asp-route-clienteId="@cliente.Id"
+   class="btn btn-success mb-3">
+    Nova ficha
+    </a>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Data</th>
+            <th>Alergias</th>
+            <th>Histórico clínico</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var a in Model)
+        {
+            <tr>
+                <td>@a.DataCadastro.ToString("dd/MM/yyyy")</td>
+                <td>@a.Alergias</td>
+                <td>@a.HistoricoClinico</td>
+                <td>
+                    <a asp-action="Details"
+                       asp-route-id="@a.Id"
+                       class="btn btn-sm btn-primary">
+                        Ver
+                    </a>
+                    <form asp-action="Delete"
+                          asp-route-id="@a.Id"
+                          method="post"
+                          class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-sm btn-outline-danger"
+                                onclick="return confirm('Inativar esta ficha?')">
+                            Inativar
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+

@@ -1,0 +1,55 @@
+@{
+    ViewData["Title"] = "Agenda";
+}
+
+<h2 class="mb-4">📅 Agenda</h2>
+
+<div class="card-premium mb-3">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label>Profissional</label>
+            <select id="profissionalFiltro" class="form-select">
+                <option value="">Todos</option>
+                @foreach (var p in ViewBag.Profissionais)
+                {
+                    <option value="@p.Value">@p.Text</option>
+                }
+            </select>
+        </div>
+    </div>
+</div>
+
+<div id="calendar"></div>
+
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var calendarEl = document.getElementById('calendar');
+
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'timeGridWeek',
+            locale: 'pt-br',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            events: function (info, successCallback, failureCallback) {
+                let profissionalId = document.getElementById('profissionalFiltro').value;
+                fetch(`/Agendamento/ListarEventos?profissionalId=${profissionalId}`)
+                    .then(r => r.json())
+                    .then(data => successCallback(data))
+                    .catch(err => failureCallback(err));
+            }
+        });
+
+        calendar.render();
+
+        document.getElementById('profissionalFiltro').addEventListener('change', function () {
+            calendar.refetchEvents();
+        });
+    });
+</script>
+

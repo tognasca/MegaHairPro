@@ -1,4 +1,4 @@
-﻿@model MegaHairPro.Web.Models.Cliente
+@model MegaHairPro.Web.Models.Cliente
 
 <tr id="row-@Model.Id"
     data-nome="@Model.Nome"
@@ -17,6 +17,13 @@
     <td>@Model.Email</td>
 
     <td class="text-center">
+
+        <a asp-controller="Anamnese"
+           asp-action="Index"
+           asp-route-clienteId="@Model.Id"
+           class="btn btn-sm btn-outline-dark">
+            Anamnese
+        </a>
 
         <button class="btn btn-sm btn-outline-primary"
                 onclick="editarCliente(@Model.Id)">

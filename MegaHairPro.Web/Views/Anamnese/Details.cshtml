@@ -1,0 +1,22 @@
+@model MegaHairPro.Web.Models.Anamnese
+@{
+    ViewData["Title"] = "Anamnese";
+}
+
+<h2 class="mb-3">Anamnese – @Model.Cliente?.Nome</h2>
+
+<div class="card p-3">
+    <p><strong>Data:</strong> @Model.DataCadastro.ToString("dd/MM/yyyy")</p>
+    <p><strong>Alergias:</strong><br />@Model.Alergias</p>
+    <p><strong>Histórico clínico:</strong><br />@Model.HistoricoClinico</p>
+    <p><strong>Procedimentos anteriores:</strong><br />@Model.ProcedimentosAnteriores</p>
+    <p><strong>Restrições:</strong><br />@Model.Restricoes</p>
+    <p><strong>Observações:</strong><br />@Model.Observacoes</p>
+</div>
+
+<a asp-action="Index"
+   asp-route-clienteId="@Model.ClienteId"
+   class="btn btn-secondary mt-3">
+    Voltar
+</a>
+

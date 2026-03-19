@@ -226,7 +226,7 @@
         </div>
 
 
-        <a href="/Dashboard">
+        <a href="/Dashboard/index">
 
             <i class="bi bi-house"></i>
 
@@ -245,6 +245,25 @@
         </a>
 
 
+        <a href="/MetodosAplicacao/Index"
+           class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "MetodosAplicacao" ? "active" : "")">
+
+            <i class="bi bi-box"></i>
+
+            Metodos
+
+        </a>
+
+        <a href="/Compras/Index"
+           class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Compras" ? "active" : "")">
+
+            <i class="bi bi-box"></i>
+
+            Compras
+
+        </a>
+
+
         <a href="/Despesas/Index"
            class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Despesas" ? "active" : "")">
 
@@ -254,6 +273,23 @@
 
         </a>
 
+        <a href="/Financeiro/Index"
+           class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Financeiro" ? "active" : "")">
+
+            <i class="bi bi-graph-up"></i>
+
+            Financeiro
+
+        </a>
+
+        <a href="/Simulacao/Index"
+           class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Simulacao" ? "active" : "")">
+
+            <i class="bi bi-cash"></i>
+
+            Simulacao
+
+        </a>
 
         <a href="/Venda/Index">
 
@@ -269,6 +305,24 @@
             <i class="bi bi-people"></i>
 
             Clientes
+
+        </a>
+
+        <a href="/Agendamento/Index"
+           class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Agendamento" ? "active" : "")">
+
+            <i class="bi bi-calendar-event"></i>
+
+            Agenda
+
+        </a>
+
+        <a href="/Relatorios/Vendas"
+           class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Relatorios" ? "active" : "")">
+
+            <i class="bi bi-bar-chart"></i>
+
+            Relatórios
 
         </a>
 

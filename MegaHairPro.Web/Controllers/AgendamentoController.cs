@@ -1,5 +1,6 @@
 using MegaHairPro.Web.Data;
 using MegaHairPro.Web.Models;
+using MegaHairPro.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -11,10 +12,47 @@ namespace MegaHairPro.Web.Controllers
     public class AgendamentoController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly AgendamentoService _agendamentoService;
 
-        public AgendamentoController(AppDbContext context)
+        public AgendamentoController(AppDbContext context, AgendamentoService agendamentoService)
         {
             _context = context;
+            _agendamentoService = agendamentoService;
+        }
+
+        // Calendário principal
+        [HttpGet]
+        public IActionResult Index()
+        {
+            ViewBag.Profissionais = new SelectList(_context.Profissionais, "Id", "Nome");
+            return View();
+        }
+
+        // Eventos para o calendário (JSON)
+        [HttpGet]
+        public async Task<IActionResult> ListarEventos(int? profissionalId)
+        {
+            var query = _context.Agendamentos
+                .Include(a => a.Profissional)
+                .Include(a => a.Cliente)
+                .AsQueryable();
+
+            if (profissionalId.HasValue && profissionalId > 0)
+            {
+                query = query.Where(a => a.ProfissionalId == profissionalId.Value);
+            }
+
+            var eventos = await query
+                .Select(a => new
+                {
+                    id = a.Id,
+                    title = a.Cliente.Nome + " - " + a.Servico.Nome,
+                    start = a.DataHora,
+                    end = a.DataFim
+                })
+                .ToListAsync();
+
+            return Json(eventos);
         }
 
         public IActionResult CadastroAgendamento()
@@ -29,19 +67,7 @@ namespace MegaHairPro.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> CadastroAgendamento(Agendamento model, int[] servicosSelecionados)
         {
-            _context.Agendamentos.Add(model);
-            await _context.SaveChangesAsync();
-
-            foreach (var id in servicosSelecionados)
-            {
-                _context.AgendamentoServicos.Add(new AgendamentoServico
-                {
-                    AgendamentoId = model.Id,
-                    ServicoId = id
-                });
-            }
-
-            await _context.SaveChangesAsync();
+            await _agendamentoService.CriarAgendamentoAsync(model, servicosSelecionados);
 
             return RedirectToAction("PainelCliente", new { id = model.ClienteId });
         }

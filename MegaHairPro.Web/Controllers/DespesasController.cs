@@ -1,4 +1,4 @@
-﻿using MegaHairPro.Web.Data;
+using MegaHairPro.Web.Data;
 using MegaHairPro.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -62,6 +62,20 @@ namespace MegaHairPro.Web.Controllers
 
             _context.SaveChanges();
 
+            _context.ContasFinanceiras.Add(new ContaFinanceira
+            {
+                Tipo = TipoContaFinanceira.Pagar,
+                Origem = OrigemContaFinanceira.Despesa,
+                Descricao = $"Despesa {despesa.Categoria} - {despesa.Descricao}",
+                Valor = despesa.Valor,
+                DataCompetencia = despesa.DataCadastro,
+                DataVencimento = despesa.DataCadastro,
+                Status = StatusContaFinanceira.Aberta,
+                DespesaId = despesa.Id
+            });
+
+            _context.SaveChanges();
+
             return RedirectToAction("Index");
 
         }
@@ -73,6 +87,20 @@ namespace MegaHairPro.Web.Controllers
             d.CorCategoria = CorCategoria(d.Categoria);
 
             _context.Add(d);
+
+            _context.SaveChanges();
+
+            _context.ContasFinanceiras.Add(new ContaFinanceira
+            {
+                Tipo = TipoContaFinanceira.Pagar,
+                Origem = OrigemContaFinanceira.Despesa,
+                Descricao = $"Despesa {d.Categoria} - {d.Descricao}",
+                Valor = d.Valor,
+                DataCompetencia = d.DataCadastro,
+                DataVencimento = d.DataCadastro,
+                Status = StatusContaFinanceira.Aberta,
+                DespesaId = d.Id
+            });
 
             _context.SaveChanges();
 

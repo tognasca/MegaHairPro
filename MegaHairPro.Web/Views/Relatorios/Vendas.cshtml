@@ -1,0 +1,96 @@
+@model IEnumerable<MegaHairPro.Web.Models.Venda>
+@{
+    ViewData["Title"] = "Relatório de Vendas";
+}
+
+<h2 class="mb-3">Relatório de Vendas</h2>
+
+<div class="card-premium mb-3">
+    <form method="get" class="row g-3">
+        <div class="col-md-3">
+            <label>Início</label>
+            <input type="date" name="inicio" class="form-control" value="@ViewBag.Inicio" />
+        </div>
+        <div class="col-md-3">
+            <label>Fim</label>
+            <input type="date" name="fim" class="form-control" value="@ViewBag.Fim" />
+        </div>
+        <div class="col-md-3">
+            <label>Produto</label>
+            <select name="produtoId" class="form-select">
+                <option value="">Todos</option>
+                @foreach (var p in (IEnumerable<MegaHairPro.Web.Models.Produto>)ViewBag.Produtos)
+                {
+                    <option value="@p.Id">@p.Nome</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label>Cliente</label>
+            <select name="clienteId" class="form-select">
+                <option value="">Todos</option>
+                @foreach (var c in (IEnumerable<MegaHairPro.Web.Models.Cliente>)ViewBag.Clientes)
+                {
+                    <option value="@c.Id">@c.Nome</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3 mt-3">
+            <button class="btn btn-primary w-100">Filtrar</button>
+        </div>
+        <div class="col-md-3 mt-3">
+            <a asp-action="ExportarVendas"
+               asp-route-inicio="@ViewBag.Inicio"
+               asp-route-fim="@ViewBag.Fim"
+               class="btn btn-success w-100">
+                Exportar Excel
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <div class="card shadow-sm p-3 rounded-4">
+            <h6 class="text-muted">Total Vendido</h6>
+            <h3 class="fw-bold text-primary">
+                R$ @((decimal)ViewBag.TotalVendido).ToString("N2")
+            </h3>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm p-3 rounded-4">
+            <h6 class="text-muted">Lucro Total</h6>
+            <h3 class="fw-bold text-success">
+                R$ @((decimal)ViewBag.TotalLucro).ToString("N2")
+            </h3>
+        </div>
+    </div>
+</div>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Data</th>
+            <th>Cliente</th>
+            <th>Produto</th>
+            <th>Qtd</th>
+            <th>Preço</th>
+            <th>Lucro</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var v in Model)
+        {
+            <tr>
+                <td>@v.DataVenda.ToString("dd/MM/yyyy")</td>
+                <td>@v.ClienteNome</td>
+                <td>@v.ProdutoNome</td>
+                <td>@v.QuantidadeGramas</td>
+                <td>R$ @v.PrecoVenda?.ToString("N2")</td>
+                <td>R$ @v.LucroTotal?.ToString("N2")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+

@@ -1,4 +1,4 @@
-﻿using DinkToPdf;
+using DinkToPdf;
 using DinkToPdf.Contracts;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using MegaHairPro.Web;
@@ -41,6 +41,8 @@ builder.Services.AddScoped<IVendaService, VendaService>();
 
 builder.Services.AddScoped<IPdfService, PdfService>();
 builder.Services.AddScoped<IViewRenderService, ViewRenderService>();
+builder.Services.AddScoped<INotificationService, EmailNotificationService>();
+builder.Services.AddScoped<AgendamentoService>();
 
 builder.Services.AddSingleton(typeof(IConverter),
     new SynchronizedConverter(new PdfTools()));
