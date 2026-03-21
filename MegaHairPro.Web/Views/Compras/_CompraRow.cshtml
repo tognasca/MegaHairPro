@@ -1,32 +1,33 @@
-﻿<tr id="row-@Model.Id"
+@model MegaHairPro.Web.Models.CompraViewModel
+
+<tr id="row-@Model.Id"
     data-produto="@Model.ProdutoId"
     data-fornecedor="@Model.FornecedorId"
     data-qtd="@Model.QuantidadeGramas.ToString(System.Globalization.CultureInfo.InvariantCulture)"
     data-valor="@Model.ValorTotal.ToString(System.Globalization.CultureInfo.InvariantCulture)"
     data-data="@Model.DataCompra.ToString("yyyy-MM-dd")"
-    data-ativo="@Model.Ativo.ToString().ToLower()">
+    class="@(!Model.Ativo ? "table-secondary text-muted" : "")">
 
-    <td>@Model.ProdutoNome</td>
-    <td>@Model.FornecedorNome</td>
-    <td class="text-end">@Model.QuantidadeGramas</td>
-    <td class="text-end">R$ @Model.ValorTotal.ToString("N2")</td>
-    <td class="text-end">@Model.DataCompra.ToString("dd/MM/yyyy")</td>
-
+    <td style="font-weight:600;">@Model.ProdutoNome</td>
+    <td style="font-size:13px;color:#64748b;">@Model.FornecedorNome</td>
+    <td class="text-end" style="font-size:13px;">@Model.QuantidadeGramas.ToString("N2") g</td>
+    <td class="text-end" style="font-weight:600;">R$ @Model.ValorTotal.ToString("N2")</td>
+    <td class="text-center" style="font-size:12px;color:#64748b;">@Model.DataCompra.ToString("dd/MM/yyyy")</td>
     <td class="text-center">
-        <button class="btn btn-sm btn-outline-primary"
-                onclick="EditAjax(@Model.Id)">
-            Editar
-        </button>
-
-        <button class="btn btn-sm btn-outline-warning"
-                onclick="toggleStatus(@Model.Id)">
-            @(Model.Ativo ? "Inativar" : "Ativar")
-        </button>
-
-        <button class="btn btn-sm btn-outline-danger"
-                onclick="excluirCompra(@Model.Id)">
-            Excluir
-        </button>
+        @if (Model.Ativo)
+        {
+            <span class="badge bg-success-soft">Ativo</span>
+        }
+        else
+        {
+            <span class="badge bg-danger-soft">Inativo</span>
+        }
+    </td>
+    <td class="text-center">
+        <div class="d-flex gap-1 justify-content-center">
+            <button class="btn-act btn-act-blue"  onclick="editarCompra(@Model.Id)">Editar</button>
+            <button class="btn-act btn-act-warn"  onclick="toggleStatus(@Model.Id)">@(Model.Ativo ? "Inativar" : "Ativar")</button>
+            <button class="btn-act btn-act-red"   onclick="confirmarExcluir(@Model.Id)">Excluir</button>
+        </div>
     </td>
 </tr>
-

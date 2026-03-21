@@ -1,52 +1,92 @@
 @model IEnumerable<MegaHairPro.Web.Models.Comissao>
+
 @{
     ViewData["Title"] = "Relatório de Comissões";
 }
 
-h2 class="mb-3">Relatório de Comissões</h2>
+<div class="page-header">
+    <div class="page-title">Relatório de Comissões</div>
+    <div class="page-sub">Acompanhamento de comissões por período</div>
+</div>
 
-<div class="card-premium mb-3">
-    <form method="get" class="row g-3">
+<!-- FILTRO -->
+<div class="section-card">
+    <div class="section-label">Filtrar período</div>
+    <form method="get" class="row g-3 align-items-end">
         <div class="col-md-3">
-            <label>Início</label>
+            <label class="form-label">Início</label>
             <input type="date" name="inicio" class="form-control" value="@ViewBag.Inicio" />
         </div>
         <div class="col-md-3">
-            <label>Fim</label>
+            <label class="form-label">Fim</label>
             <input type="date" name="fim" class="form-control" value="@ViewBag.Fim" />
         </div>
-        <div class="col-md-3 mt-3">
+        <div class="col-md-2">
             <button class="btn btn-primary w-100">Filtrar</button>
         </div>
     </form>
 </div>
 
-<div class="card shadow-sm p-3 rounded-4 mb-3">
-    <h6 class="text-muted">Total Comissões</h6>
-    <h3 class="fw-bold text-danger">
-        R$ @((decimal)ViewBag.TotalComissoes).ToString("N2")
-    </h3>
+<!-- CARD TOTAL -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;">
+            <div style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Total Comissões</div>
+            <div style="font-size:24px;font-weight:700;color:#dc2626;margin-top:4px;">
+                R$ @((decimal)ViewBag.TotalComissoes).ToString("N2")
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;">
+            <div style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Registros</div>
+            <div style="font-size:24px;font-weight:700;color:#0f172a;margin-top:4px;">@Model.Count()</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;">
+            <div style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Pendentes</div>
+            <div style="font-size:24px;font-weight:700;color:#d97706;margin-top:4px;">@Model.Count(c => !c.Pago)</div>
+        </div>
+    </div>
 </div>
 
-<table class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th>Data</th>
-            <th>Profissional</th>
-            <th>Valor</th>
-            <th>Pago</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var c in Model)
-        {
-            <tr>
-                <td>@c.DataGeracao.ToString("dd/MM/yyyy")</td>
-                <td>@c.Profissional</td>
-                <td>R$ @c.Valor.ToString("N2")</td>
-                <td>@(c.Pago ? "Sim" : "Não")</td>
-            </tr>
-        }
-    </tbody>
-</table>
-
+<!-- TABELA -->
+<div class="table-card">
+    <div class="table-card-header">
+        <span class="table-card-title">Comissões do período</span>
+        <span class="table-count">@Model.Count() registros</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Profissional</th>
+                    <th class="text-end">Valor</th>
+                    <th class="text-center">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model)
+                {
+                    <tr>
+                        <td style="font-size:12px;color:#64748b;">@c.DataGeracao.ToString("dd/MM/yyyy")</td>
+                        <td style="font-weight:600;">@c.Profissional</td>
+                        <td class="text-end" style="font-weight:600;">R$ @c.Valor.ToString("N2")</td>
+                        <td class="text-center">
+                            @if (c.Pago)
+                            {
+                                <span class="badge bg-success-soft">Pago</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning-soft">Pendente</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

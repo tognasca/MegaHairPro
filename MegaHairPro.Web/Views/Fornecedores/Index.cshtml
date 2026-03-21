@@ -1,384 +1,297 @@
-﻿@model IEnumerable<MegaHairPro.Web.Models.Fornecedor>
+@model IEnumerable<MegaHairPro.Web.Models.Fornecedor>
 
 @{
     ViewData["Title"] = "Fornecedores";
-
-    var bancos = new List<string>
-    {
-        "Banco do Brasil", "Caixa Econômica Federal", "Bradesco",
-        "Itaú", "Santander", "Banco Safra", "PIX"
-    };
+    var bancos = new List<string> { "Banco do Brasil","Caixa Econômica Federal","Bradesco","Itaú","Santander","Banco Safra","PIX" };
 }
 
-<h2>🏢 Controle de Fornecedores</h2>
-<hr />
+<div class="page-header">
+    <div class="page-title">Fornecedores</div>
+    <div class="page-sub">Cadastro e gerenciamento de fornecedores</div>
+</div>
 
-<!-- ✅ CADASTRO -->
-<div class="card p-3 mb-4">
-    <h4>➕ Novo Fornecedor</h4>
-
+<!-- CADASTRO -->
+<div class="section-card">
+    <div class="section-label">Novo fornecedor</div>
     <form asp-action="Index" method="post">
         @Html.AntiForgeryToken()
+        <div class="row g-3">
 
-        <div class="row">
-
-            <!-- PRINCIPAIS -->
-            <div class="col-md-6">
-                <label>Nome</label>
+            <div class="col-md-4">
+                <label class="form-label">Nome</label>
                 <input name="Nome" class="form-control" required />
             </div>
-
-            <div class="col-md-6">
-                <label>Contato</label>
+            <div class="col-md-4">
+                <label class="form-label">Contato</label>
                 <input name="Contato" class="form-control" />
             </div>
-
-            <div class="col-md-6">
-                <label>CNPJ</label>
+            <div class="col-md-2">
+                <label class="form-label">CNPJ</label>
                 <input name="CNPJ" class="form-control" />
             </div>
-
-            <div class="col-md-6">
-                <label>Inscrição Estadual</label>
+            <div class="col-md-2">
+                <label class="form-label">Inscrição Estadual</label>
                 <input name="InscricaoEstadual" class="form-control" />
             </div>
-
-            <div class="col-md-6">
-                <label>Razão Social</label>
+            <div class="col-md-4">
+                <label class="form-label">Razão Social</label>
                 <input name="RazaoSocial" class="form-control" />
             </div>
-
-            <div class="col-md-6">
-                <label>Nome Fantasia</label>
+            <div class="col-md-4">
+                <label class="form-label">Nome Fantasia</label>
                 <input name="NomeFantasia" class="form-control" />
             </div>
 
-            <!-- ENDEREÇO -->
             <div class="col-md-4">
-                <label>Logradouro</label>
+                <label class="form-label">Logradouro</label>
                 <input name="Logradouro" class="form-control" />
             </div>
-
-            <div class="col-md-2">
-                <label>Número</label>
+            <div class="col-md-1">
+                <label class="form-label">Número</label>
                 <input name="Numero" class="form-control" />
             </div>
-
-            <div class="col-md-3">
-                <label>Complemento</label>
+            <div class="col-md-2">
+                <label class="form-label">Complemento</label>
                 <input name="Complemento" class="form-control" />
             </div>
-
-            <div class="col-md-3">
-                <label>Bairro</label>
+            <div class="col-md-2">
+                <label class="form-label">Bairro</label>
                 <input name="Bairro" class="form-control" />
             </div>
-
-            <div class="col-md-4">
-                <label>Cidade</label>
+            <div class="col-md-2">
+                <label class="form-label">Cidade</label>
                 <input name="Cidade" class="form-control" />
             </div>
-
-            <div class="col-md-2">
-                <label>UF</label>
+            <div class="col-md-1">
+                <label class="form-label">UF</label>
                 <input name="UF" maxlength="2" class="form-control" />
             </div>
 
-            <div class="col-md-2">
-                <label>CEP</label>
-                <input name="CEP" class="form-control" />
-            </div>
-
-            <!-- DADOS BANCÁRIOS -->
-            <div class="col-md-4">
-                <label>Banco / Forma</label>
-                <select name="Banco" class="form-control">
+            <div class="col-md-3">
+                <label class="form-label">Banco / Forma</label>
+                <select name="Banco" class="form-select">
                     <option value="">Selecione</option>
-                    @foreach (var banco in bancos)
-                    {
-                        <option value="@banco">@banco</option>
-                    }
+                    @foreach (var banco in bancos) { <option value="@banco">@banco</option> }
                 </select>
             </div>
-
             <div class="col-md-2">
-                <label>Agência</label>
+                <label class="form-label">Agência</label>
                 <input name="Agencia" class="form-control" />
             </div>
-
-            <div class="col-md-3">
-                <label>Conta</label>
+            <div class="col-md-2">
+                <label class="form-label">Conta</label>
                 <input name="Conta" class="form-control" />
             </div>
-
-            <div class="col-md-3">
-                <label>Tipo Conta</label>
-                <select name="TipoConta" class="form-control">
+            <div class="col-md-2">
+                <label class="form-label">Tipo Conta</label>
+                <select name="TipoConta" class="form-select">
                     <option value="">Selecione</option>
                     <option value="Corrente">Corrente</option>
                     <option value="Poupança">Poupança</option>
                 </select>
             </div>
-
-            <!-- OBS -->
-            <div class="col-12">
-                <label>Observações</label>
-                <textarea name="Observacoes"
-                          class="form-control"
-                          rows="2"></textarea>
+            <div class="col-md-12">
+                <label class="form-label">Observações</label>
+                <textarea name="Observacoes" class="form-control" rows="2"></textarea>
             </div>
-
+            <div class="col-12">
+                <button class="btn btn-success px-4">Salvar Fornecedor</button>
+            </div>
         </div>
-
-        <br />
-
-        <button class="btn btn-success">
-            ✅ Salvar Fornecedor
-        </button>
     </form>
 </div>
 
-<hr />
+<!-- LISTAGEM -->
+<div class="table-card">
+    <div class="table-card-header">
+        <span class="table-card-title">Fornecedores registrados</span>
+        <span class="table-count">@Model.Count() registros</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Contato</th>
+                    <th>CNPJ</th>
+                    <th>Banco</th>
+                    <th>Status</th>
+                    <th width="200"></th>
+                </tr>
+            </thead>
+            <tbody id="fornecedoresBody">
+                @foreach (var f in Model) { @Html.Partial("_FornecedorRow", f) }
+            </tbody>
+        </table>
+    </div>
+</div>
 
-<!-- ✅ LISTAGEM -->
-<h4>📋 Fornecedores Registrados</h4>
-
-<table class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th>Nome</th>
-            <th>Contato</th>
-            <th>CNPJ</th>
-            <th>Banco</th>
-            <th>Ações</th>
-        </tr>
-    </thead>
-
-    <tbody id="fornecedoresBody">
-        @foreach (var f in Model)
-        {
-            @Html.Partial("_FornecedorRow", f)
-        }
-    </tbody>
-</table>
-
-<!-- ✅ MODAL EDITAR -->
+<!-- MODAL EDITAR -->
 <div class="modal fade" id="modalEditarFornecedor" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-
-            <div class="modal-header">
-                <h5 class="modal-title">✏️ Editar Fornecedor</h5>
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Editar Fornecedor</h5>
                 <button class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
             <div class="modal-body">
-
                 <input type="hidden" id="editId" />
-
-                <div class="row">
-
-                    <div class="col-md-6 mb-2">
-                        <label>Nome</label>
-                        <input id="editNome" class="form-control" />
-                    </div>
-
-                    <div class="col-md-6 mb-2">
-                        <label>Contato</label>
-                        <input id="editContato" class="form-control" />
-                    </div>
-
-                    <div class="col-md-6 mb-2">
-                        <label>CNPJ</label>
-                        <input id="editCnpj" class="form-control" />
-                    </div>
-
-                    <div class="col-md-6 mb-2">
-                        <label>Inscrição Estadual</label>
-                        <input id="editIe" class="form-control" />
-                    </div>
-
-                    <div class="col-md-6 mb-2">
-                        <label>Razão Social</label>
-                        <input id="editRazao" class="form-control" />
-                    </div>
-
-                    <div class="col-md-6 mb-2">
-                        <label>Nome Fantasia</label>
-                        <input id="editFantasia" class="form-control" />
-                    </div>
-
-                    <div class="col-md-4 mb-2">
-                        <label>Logradouro</label>
-                        <input id="editLogradouro" class="form-control" />
-                    </div>
-
-                    <div class="col-md-2 mb-2">
-                        <label>Número</label>
-                        <input id="editNumero" class="form-control" />
-                    </div>
-
-                    <div class="col-md-3 mb-2">
-                        <label>Complemento</label>
-                        <input id="editComplemento" class="form-control" />
-                    </div>
-
-                    <div class="col-md-3 mb-2">
-                        <label>Bairro</label>
-                        <input id="editBairro" class="form-control" />
-                    </div>
-
-                    <div class="col-md-4 mb-2">
-                        <label>Cidade</label>
-                        <input id="editCidade" class="form-control" />
-                    </div>
-
-                    <div class="col-md-2 mb-2">
-                        <label>UF</label>
-                        <input id="editUf" class="form-control" />
-                    </div>
-
-                    <div class="col-md-2 mb-2">
-                        <label>CEP</label>
-                        <input id="editCep" class="form-control" />
-                    </div>
-
-                    <div class="col-md-4 mb-2">
-                        <label>Banco</label>
-                        <input id="editBanco" class="form-control" />
-                    </div>
-
-                    <div class="col-md-2 mb-2">
-                        <label>Agência</label>
-                        <input id="editAgencia" class="form-control" />
-                    </div>
-
-                    <div class="col-md-3 mb-2">
-                        <label>Conta</label>
-                        <input id="editConta" class="form-control" />
-                    </div>
-
-                    <div class="col-md-3 mb-2">
-                        <label>Tipo Conta</label>
-                        <input id="editTipoConta" class="form-control" />
-                    </div>
-
-                    <div class="col-12 mb-2">
-                        <label>Observações</label>
-                        <textarea id="editObs" class="form-control"></textarea>
-                    </div>
-
+                <div class="row g-3">
+                    <div class="col-md-6"><label class="form-label">Nome</label><input id="editNome" class="form-control" /></div>
+                    <div class="col-md-6"><label class="form-label">Contato</label><input id="editContato" class="form-control" /></div>
+                    <div class="col-md-6"><label class="form-label">CNPJ</label><input id="editCnpj" class="form-control" /></div>
+                    <div class="col-md-6"><label class="form-label">Inscrição Estadual</label><input id="editIe" class="form-control" /></div>
+                    <div class="col-md-6"><label class="form-label">Razão Social</label><input id="editRazao" class="form-control" /></div>
+                    <div class="col-md-6"><label class="form-label">Nome Fantasia</label><input id="editFantasia" class="form-control" /></div>
+                    <div class="col-md-4"><label class="form-label">Logradouro</label><input id="editLogradouro" class="form-control" /></div>
+                    <div class="col-md-2"><label class="form-label">Número</label><input id="editNumero" class="form-control" /></div>
+                    <div class="col-md-3"><label class="form-label">Complemento</label><input id="editComplemento" class="form-control" /></div>
+                    <div class="col-md-3"><label class="form-label">Bairro</label><input id="editBairro" class="form-control" /></div>
+                    <div class="col-md-4"><label class="form-label">Cidade</label><input id="editCidade" class="form-control" /></div>
+                    <div class="col-md-2"><label class="form-label">UF</label><input id="editUf" class="form-control" /></div>
+                    <div class="col-md-2"><label class="form-label">CEP</label><input id="editCep" class="form-control" /></div>
+                    <div class="col-md-4"><label class="form-label">Banco</label><input id="editBanco" class="form-control" /></div>
+                    <div class="col-md-2"><label class="form-label">Agência</label><input id="editAgencia" class="form-control" /></div>
+                    <div class="col-md-3"><label class="form-label">Conta</label><input id="editConta" class="form-control" /></div>
+                    <div class="col-md-3"><label class="form-label">Tipo Conta</label><input id="editTipoConta" class="form-control" /></div>
+                    <div class="col-12"><label class="form-label">Observações</label><textarea id="editObs" class="form-control" rows="2"></textarea></div>
                 </div>
-
             </div>
-
-            <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">
-                    Cancelar
-                </button>
-
-                <button class="btn btn-primary" onclick="salvarEdicao()">
-                    ✅ Salvar Alterações
-                </button>
+            <div class="modal-footer border-0">
+                <button class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-success px-4" onclick="salvarEdicao()">Salvar</button>
             </div>
-
         </div>
     </div>
 </div>
 
-<!-- ✅ SCRIPT AJAX -->
+<!-- MODAL EXCLUIR -->
+<div class="modal fade" id="modalExcluir" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white border-0"><h5>Confirmar exclusão</h5></div>
+            <div class="modal-body text-center">
+                <p>Deseja excluir este fornecedor?</p>
+                <input type="hidden" id="excluirId" />
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-danger" id="btnExcluir">Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="toast" class="toast align-items-center text-white border-0">
+        <div class="d-flex align-items-center">
+            <div id="toastMsg" class="toast-body"></div>
+            <button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
 <script>
-    let modalEditar;
+    let modalEditar, modalExcluir;
 
     document.addEventListener("DOMContentLoaded", function () {
-        modalEditar = new bootstrap.Modal(
-            document.getElementById("modalEditarFornecedor")
-        );
+        modalEditar  = new bootstrap.Modal(document.getElementById("modalEditarFornecedor"));
+        modalExcluir = new bootstrap.Modal(document.getElementById("modalExcluir"));
     });
 
+    function getToken() { return $('input[name="__RequestVerificationToken"]').first().val(); }
+
+    function toast(msg, tipo) {
+        let t = $("#toast");
+        t.removeClass("bg-success bg-danger bg-warning");
+        t.addClass(tipo);
+        $("#toastMsg").text(msg);
+        new bootstrap.Toast(t[0], { delay: 3000 }).show();
+    }
+
     function editarFornecedor(id) {
-
         let row = document.getElementById("row-" + id);
-
-        document.getElementById("editId").value = id;
-
-        document.getElementById("editNome").value = row.dataset.nome;
-        document.getElementById("editContato").value = row.dataset.contato;
-        document.getElementById("editCnpj").value = row.dataset.cnpj;
-        document.getElementById("editIe").value = row.dataset.ie;
-        document.getElementById("editRazao").value = row.dataset.razao;
-        document.getElementById("editFantasia").value = row.dataset.fantasia;
-
+        document.getElementById("editId").value         = id;
+        document.getElementById("editNome").value       = row.dataset.nome;
+        document.getElementById("editContato").value    = row.dataset.contato;
+        document.getElementById("editCnpj").value       = row.dataset.cnpj;
+        document.getElementById("editIe").value         = row.dataset.ie;
+        document.getElementById("editRazao").value      = row.dataset.razao;
+        document.getElementById("editFantasia").value   = row.dataset.fantasia;
         document.getElementById("editLogradouro").value = row.dataset.logradouro;
-        document.getElementById("editNumero").value = row.dataset.numero;
-        document.getElementById("editComplemento").value = row.dataset.complemento;
-        document.getElementById("editBairro").value = row.dataset.bairro;
-        document.getElementById("editCidade").value = row.dataset.cidade;
-        document.getElementById("editUf").value = row.dataset.uf;
-        document.getElementById("editCep").value = row.dataset.cep;
-
-        document.getElementById("editBanco").value = row.dataset.banco;
-        document.getElementById("editAgencia").value = row.dataset.agencia;
-        document.getElementById("editConta").value = row.dataset.conta;
-        document.getElementById("editTipoConta").value = row.dataset.tipoconta;
-
-        document.getElementById("editObs").value = row.dataset.observacoes;
-
+        document.getElementById("editNumero").value     = row.dataset.numero;
+        document.getElementById("editComplemento").value= row.dataset.complemento;
+        document.getElementById("editBairro").value     = row.dataset.bairro;
+        document.getElementById("editCidade").value     = row.dataset.cidade;
+        document.getElementById("editUf").value         = row.dataset.uf;
+        document.getElementById("editCep").value        = row.dataset.cep;
+        document.getElementById("editBanco").value      = row.dataset.banco;
+        document.getElementById("editAgencia").value    = row.dataset.agencia;
+        document.getElementById("editConta").value      = row.dataset.conta;
+        document.getElementById("editTipoConta").value  = row.dataset.tipoconta;
+        document.getElementById("editObs").value        = row.dataset.observacoes;
         modalEditar.show();
     }
 
     function salvarEdicao() {
-
         let id = document.getElementById("editId").value;
+        let fd = new FormData();
+        fd.append("Id",                id);
+        fd.append("Nome",              document.getElementById("editNome").value);
+        fd.append("Contato",           document.getElementById("editContato").value);
+        fd.append("CNPJ",              document.getElementById("editCnpj").value);
+        fd.append("InscricaoEstadual", document.getElementById("editIe").value);
+        fd.append("RazaoSocial",       document.getElementById("editRazao").value);
+        fd.append("NomeFantasia",      document.getElementById("editFantasia").value);
+        fd.append("Logradouro",        document.getElementById("editLogradouro").value);
+        fd.append("Numero",            document.getElementById("editNumero").value);
+        fd.append("Complemento",       document.getElementById("editComplemento").value);
+        fd.append("Bairro",            document.getElementById("editBairro").value);
+        fd.append("Cidade",            document.getElementById("editCidade").value);
+        fd.append("UF",                document.getElementById("editUf").value);
+        fd.append("CEP",               document.getElementById("editCep").value);
+        fd.append("Banco",             document.getElementById("editBanco").value);
+        fd.append("Agencia",           document.getElementById("editAgencia").value);
+        fd.append("Conta",             document.getElementById("editConta").value);
+        fd.append("TipoConta",         document.getElementById("editTipoConta").value);
+        fd.append("Observacoes",       document.getElementById("editObs").value);
+        fd.append("__RequestVerificationToken", getToken());
 
-        fetch("/Fornecedores/EditAjax", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body:
-                "Id=" + id +
-                "&Nome=" + document.getElementById("editNome").value +
-                "&Contato=" + document.getElementById("editContato").value +
-                "&CNPJ=" + document.getElementById("editCnpj").value +
-                "&InscricaoEstadual=" + document.getElementById("editIe").value +
-                "&RazaoSocial=" + document.getElementById("editRazao").value +
-                "&NomeFantasia=" + document.getElementById("editFantasia").value +
-                "&Logradouro=" + document.getElementById("editLogradouro").value +
-                "&Numero=" + document.getElementById("editNumero").value +
-                "&Complemento=" + document.getElementById("editComplemento").value +
-                "&Bairro=" + document.getElementById("editBairro").value +
-                "&Cidade=" + document.getElementById("editCidade").value +
-                "&UF=" + document.getElementById("editUf").value +
-                "&CEP=" + document.getElementById("editCep").value +
-                "&Banco=" + document.getElementById("editBanco").value +
-                "&Agencia=" + document.getElementById("editAgencia").value +
-                "&Conta=" + document.getElementById("editConta").value +
-                "&TipoConta=" + document.getElementById("editTipoConta").value +
-                "&Observacoes=" + document.getElementById("editObs").value
-        })
-        .then(r => r.text())
-        .then(html => {
-            document.getElementById("row-" + id).outerHTML = html;
-            modalEditar.hide();
+        $.ajax({
+            url: "/Fornecedores/EditAjax", type: "POST", data: fd,
+            processData: false, contentType: false,
+            success: function (html) { $("#row-" + id).replaceWith(html); modalEditar.hide(); toast("Fornecedor editado", "bg-success"); },
+            error: function () { toast("Erro ao editar", "bg-danger"); }
         });
     }
 
     function toggleStatus(id) {
-        fetch("/Fornecedores/ToggleStatusAjax", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: "id=" + id
-        })
-        .then(() => location.reload());
+        let fd = new FormData();
+        fd.append("id", id);
+        fd.append("__RequestVerificationToken", getToken());
+        $.ajax({
+            url: "/Fornecedores/ToggleStatusAjax", type: "POST", data: fd,
+            processData: false, contentType: false,
+            success: function (html) { $("#row-" + id).replaceWith(html); toast("Status alterado", "bg-warning"); },
+            error: function () { toast("Erro ao alterar status", "bg-danger"); }
+        });
     }
 
-    function excluirFornecedor(id) {
-        if (!confirm("Excluir este fornecedor?")) return;
+    function confirmarExcluir(id) { $("#excluirId").val(id); modalExcluir.show(); }
 
-        fetch("/Fornecedores/Delete", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: "id=" + id
-        })
-        .then(() => location.reload());
-    }
+    $("#btnExcluir").click(function () {
+        let id  = $("#excluirId").val();
+        let btn = $(this).html("Excluindo...").prop("disabled", true);
+        let fd  = new FormData();
+        fd.append("id", id);
+        fd.append("__RequestVerificationToken", getToken());
+        $.ajax({
+            url: "/Fornecedores/Delete", type: "POST", data: fd,
+            processData: false, contentType: false,
+            success: function () { $("#row-" + id).fadeOut(300, function () { $(this).remove(); }); modalExcluir.hide(); toast("Fornecedor excluído", "bg-success"); },
+            error: function () { toast("Erro ao excluir", "bg-danger"); },
+            complete: function () { btn.html("Excluir").prop("disabled", false); }
+        });
+    });
 </script>

@@ -4,106 +4,86 @@
     ViewData["Title"] = "Vendas Realizadas";
 }
 
-<h2>📌 Vendas Realizadas</h2>
-<br />
-
-<!-- ✅ FILTRO MÊS -->
-<form method="get" class="row g-3 mb-4">
-
-    <div class="col-md-2">
-        <label>Mês</label>
-        <input type="number" name="mes"
-               value="@ViewBag.Mes"
-               class="form-control" min="1" max="12" />
-    </div>
-
-    <div class="col-md-2">
-        <label>Ano</label>
-        <input type="number" name="ano"
-               value="@ViewBag.Ano"
-               class="form-control" />
-    </div>
-
-    <div class="col-md-3 align-self-end">
-        <button class="btn btn-primary w-100">
-            🔍 Filtrar
-        </button>
-    </div>
-
-</form>
-
-<hr />
-
-<!-- ✅ RESUMO DO MÊS -->
-<div class="row mb-4">
-
-    <div class="col-md-4">
-        <div class="card shadow-sm p-3 rounded-4">
-            <h5 class="text-muted">Total Vendido</h5>
-            <h3 class="text-primary fw-bold">
-                R$ @ViewBag.TotalVendas.ToString("N2")
-            </h3>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card shadow-sm p-3 rounded-4">
-            <h5 class="text-muted">Lucro Total</h5>
-            <h3 class="text-success fw-bold">
-                R$ @ViewBag.TotalLucro.ToString("N2")
-            </h3>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card shadow-sm p-3 rounded-4">
-            <h5 class="text-muted">Comissões Pagas</h5>
-            <h3 class="text-danger fw-bold">
-                R$ @ViewBag.TotalComissoes.ToString("N2")
-            </h3>
-        </div>
-    </div>
-
+<div class="page-header">
+    <div class="page-title">Vendas Realizadas</div>
+    <div class="page-sub">Histórico e resumo de vendas por período</div>
 </div>
 
-<hr />
+<!-- FILTRO -->
+<div class="section-card">
+    <div class="section-label">Filtrar período</div>
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-2">
+            <label class="form-label">Mês</label>
+            <input type="number" name="mes" value="@ViewBag.Mes" class="form-control" min="1" max="12" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Ano</label>
+            <input type="number" name="ano" value="@ViewBag.Ano" class="form-control" />
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary w-100">Filtrar</button>
+        </div>
+    </form>
+</div>
 
-<!-- ✅ GRID -->
-<table class="table table-bordered table-striped align-middle">
-    <thead class="table-light">
-        <tr>
-            <th>Cliente</th>
-            <th>Produto</th>
-            <th>Qtd</th>
-            <th>Preço</th>
-            <th>Lucro</th>
-            <th>Comissões</th>
-            <th>Data</th>
-        </tr>
-    </thead>
+<!-- CARDS RESUMO -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;">
+            <div style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Total Vendido</div>
+            <div style="font-size:24px;font-weight:700;color:#2563eb;margin-top:4px;">R$ @ViewBag.TotalVendas.ToString("N2")</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;">
+            <div style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Lucro Total</div>
+            <div style="font-size:24px;font-weight:700;color:#16a34a;margin-top:4px;">R$ @ViewBag.TotalLucro.ToString("N2")</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;">
+            <div style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Comissões Pagas</div>
+            <div style="font-size:24px;font-weight:700;color:#dc2626;margin-top:4px;">R$ @ViewBag.TotalComissoes.ToString("N2")</div>
+        </div>
+    </div>
+</div>
 
-    <tbody>
-        @foreach (var v in Model)
-        {
-            <tr>
-                <td>@v.ClienteNome</td>
-                <td>@v.ProdutoNome</td>
-                <td>@v.QuantidadeGramas</td>
-
-                <td class="fw-bold text-primary">
-                    R$ @v.PrecoVenda?.ToString("N2")
-                </td>
-
-                <td class="fw-bold text-success">
-                    R$ @v.LucroTotal?.ToString("N2")
-                </td>
-
-                <td class="text-danger">
-                    R$ @(v.ValorComissaoVendedora + v.ValorComissaoCabeleireira)
-                </td>
-
-                <td>@v.DataVenda.ToShortDateString()</td>
-            </tr>
-        }
-    </tbody>
-</table>
+<!-- TABELA -->
+<div class="table-card">
+    <div class="table-card-header">
+        <span class="table-card-title">Vendas do período</span>
+        <span class="table-count">@Model.Count() registros</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Produto</th>
+                    <th class="text-end">Qtd</th>
+                    <th class="text-end">Preço</th>
+                    <th class="text-end">Lucro</th>
+                    <th class="text-end">Comissões</th>
+                    <th>Data</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var v in Model)
+                {
+                    <tr>
+                        <td style="font-weight:600;">@v.ClienteNome</td>
+                        <td style="font-size:12px;color:#64748b;">@v.ProdutoNome</td>
+                        <td class="text-end" style="font-size:13px;">@v.QuantidadeGramas g</td>
+                        <td class="text-end" style="font-weight:600;color:#2563eb;">R$ @v.PrecoVenda?.ToString("N2")</td>
+                        <td class="text-end" style="font-weight:600;color:#16a34a;">R$ @v.LucroTotal?.ToString("N2")</td>
+                        <td class="text-end" style="color:#dc2626;font-size:13px;">
+                            R$ @((v.ValorComissaoVendedora + v.ValorComissaoCabeleireira).ToString("N2"))
+                        </td>
+                        <td style="font-size:12px;color:#64748b;">@v.DataVenda.ToString("dd/MM/yyyy")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

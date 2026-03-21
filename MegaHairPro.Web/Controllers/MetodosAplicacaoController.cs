@@ -1,6 +1,7 @@
 ﻿using MegaHairPro.Web.Data;
 using MegaHairPro.Web.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
 using System.Linq;
 
 namespace MegaHairPro.Web.Controllers
@@ -25,17 +26,24 @@ namespace MegaHairPro.Web.Controllers
             return View(metodos);
         }
 
-        // ✅ CREATE
+        // ✅ CREATE AJAX
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Index(MetodoAplicacao metodo)
+        public IActionResult CreateAjax(MetodoAplicacao metodo)
         {
             metodo.Status = true;
+
+            // ValorPorGrama chega como string com ponto (enviado pelo JS com parseBR)
+            // O model binding já deve ter feito o parse, mas garantimos via InvariantCulture
+            if (Request.Form.TryGetValue("ValorPorGrama", out var valorStr))
+            {
+                if (decimal.TryParse(valorStr, NumberStyles.Any, CultureInfo.InvariantCulture, out var valor))
+                    metodo.ValorPorGrama = valor;
+            }
 
             _context.MetodosAplicacao.Add(metodo);
             _context.SaveChanges();
 
-            return RedirectToAction("Index");
+            return PartialView("_MetodoRow", metodo);
         }
 
         // ✅ EDIT AJAX
@@ -48,6 +56,13 @@ namespace MegaHairPro.Web.Controllers
                 return Json(new { success = false });
 
             original.Nome = metodo.Nome;
+
+            // Garante parse correto do valor
+            if (Request.Form.TryGetValue("ValorPorGrama", out var valorStr))
+            {
+                if (decimal.TryParse(valorStr, NumberStyles.Any, CultureInfo.InvariantCulture, out var valor))
+                    original.ValorPorGrama = valor;
+            }
 
             _context.SaveChanges();
 
@@ -66,7 +81,7 @@ namespace MegaHairPro.Web.Controllers
             metodo.Status = !metodo.Status;
             _context.SaveChanges();
 
-            return Json(new { success = true });
+            return PartialView("_MetodoRow", metodo);
         }
 
         // ✅ DELETE
@@ -75,13 +90,13 @@ namespace MegaHairPro.Web.Controllers
         {
             var metodo = _context.MetodosAplicacao.Find(id);
 
-            if (metodo == null)
-                return RedirectToAction("Index");
+            if (metodo != null)
+            {
+                _context.MetodosAplicacao.Remove(metodo);
+                _context.SaveChanges();
+            }
 
-            _context.MetodosAplicacao.Remove(metodo);
-            _context.SaveChanges();
-
-            return RedirectToAction("Index");
+            return Ok();
         }
     }
 }

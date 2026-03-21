@@ -1,83 +1,262 @@
-﻿@model IEnumerable<MegaHairPro.Web.Models.ViewModels.UsuarioAdminVM>
+@model IEnumerable<MegaHairPro.Web.Models.ViewModels.UsuarioAdminVM>
 
-<h2 class="mb-4">👥 Usuários do Sistema</h2>
-
-@if (TempData["Msg"] != null)
-{
-    <div class="alert alert-warning">
-        @TempData["Msg"]
-    </div>
+@{
+    ViewData["Title"] = "Gerenciar Usuários";
 }
 
-<a href="/AdminUsuarios/Create" class="btn btn-primary mb-3">
-    ➕ Novo Usuário
-</a>
+<h2 class="mb-4">🛡️ Gerenciar Usuários</h2>
 
-<table class="table table-bordered table-striped align-middle">
-    <thead>
-        <tr>
-            <th>Nome</th>
-            <th>Email</th>
-            <th>Perfil</th>
-            <th>Status</th>
-            <th width="280">Ações</th>
-        </tr>
-    </thead>
+<!-- CADASTRO -->
+<div class="card-premium mb-4">
+    <h5><i class="bi bi-person-plus"></i> Novo Usuário</h5>
 
-    <tbody>
-        @foreach (var u in Model)
-        {
-            <tr>
-                <td>@u.Nome</td>
-                <td>@u.Email</td>
-                <td>
-                    <span class="badge bg-secondary">
-                        @u.Perfil
-                    </span>
-                </td>
+    <form id="formUsuario">
+        @Html.AntiForgeryToken()
+        <div class="row g-3 align-items-end">
 
-                <td>
-                    @if (u.Ativo)
+            <div class="col-md-3">
+                <label class="form-label">Nome</label>
+                <input id="novoNome" class="form-control" placeholder="Nome completo" required />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">E-mail</label>
+                <input id="novoEmail" type="email" class="form-control" placeholder="email@exemplo.com" required />
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label">Senha inicial</label>
+                <input id="novaSenha" type="password" class="form-control" placeholder="Mín. 6 caracteres" required />
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label">Perfil</label>
+                <select id="novoPerfil" class="form-select">
+                    @foreach (var r in ViewBag.Roles)
                     {
-                        <span class="badge bg-success">Ativo</span>
+                        <option value="@r.Name">@r.Name</option>
                     }
-                    else
-                    {
-                        <span class="badge bg-danger">Bloqueado</span>
-                    }
-                </td>
+                </select>
+            </div>
 
-                <td>
+            <div class="col-md-2">
+                <button id="btnSalvar" class="btn btn-success w-100">
+                    <i class="bi bi-plus-circle"></i> Criar
+                </button>
+            </div>
 
-                    <!-- ✅ BLOQUEAR -->
-                    <form action="/AdminUsuarios/ToggleStatus" method="post" style="display:inline-block;">
-                        @Html.AntiForgeryToken()
+        </div>
+        <div id="erroForm" class="alert alert-danger mt-3" style="display:none"></div>
+    </form>
+</div>
 
-                        <input type="hidden" name="id" value="@u.Id" />
+<!-- LISTAGEM -->
+<div class="card shadow">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th>Perfil</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center" width="280">Ações</th>
+                </tr>
+            </thead>
+            <tbody id="usuariosBody">
+                @foreach (var u in Model)
+                {
+                    @Html.Partial("_UsuarioRow", u)
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
 
-                        <button type="submit" class="btn btn-warning btn-sm">
-                            @(u.Ativo ? "Bloquear" : "Ativar")
-                        </button>
-                    </form>
+<!-- MODAL RESET SENHA -->
+<div class="modal fade" id="modalResetSenha" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-info text-white border-0">
+                <h5 class="modal-title">🔑 Senha Resetada</h5>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <p class="mb-2">A nova senha do usuário é:</p>
+                <h3 class="fw-bold text-info" id="novaSenhaTexto"></h3>
+                <p class="text-muted small mt-2">Informe ao usuário para alterar no próximo acesso.</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-info text-white" data-bs-dismiss="modal">Ok, entendido</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-                    <!-- ✅ RESET -->
-                    <form action="/AdminUsuarios/ResetSenha"
-                          method="post"
-                          style="display:inline-block;">
+<!-- MODAL EXCLUIR -->
+<div class="modal fade" id="modalExcluir" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white">
+                <h5>Confirmar exclusão</h5>
+            </div>
+            <div class="modal-body text-center">
+                <h6>Deseja excluir este usuário?</h6>
+                <p class="text-muted small">Esta ação não pode ser desfeita.</p>
+                <input type="hidden" id="excluirId" />
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-danger" id="btnExcluir">Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-                        @Html.AntiForgeryToken()
+<!-- TOAST -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="toast" class="toast align-items-center text-white border-0" role="alert">
+        <div class="d-flex align-items-center">
+            <div id="toastMsg" class="toast-body"></div>
+            <button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
 
-                        <input type="hidden" name="id" value="@u.Id" />
+<script>
+    let modalResetSenha, modalExcluir;
 
-                        <button type="submit"
-                                class="btn btn-danger btn-sm"
-                                onclick="return confirm('Deseja resetar a senha deste usuário?')">
-                            🔑 Resetar Senha
-                        </button>
-                    </form>
+    document.addEventListener("DOMContentLoaded", function () {
+        modalResetSenha = new bootstrap.Modal(document.getElementById("modalResetSenha"));
+        modalExcluir    = new bootstrap.Modal(document.getElementById("modalExcluir"));
+    });
 
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+    function getToken() {
+        return $('input[name="__RequestVerificationToken"]').first().val();
+    }
+
+    function toast(msg, tipo) {
+        let t = $("#toast");
+        t.removeClass("bg-success bg-danger bg-warning bg-info");
+        t.addClass(tipo);
+        $("#toastMsg").text(msg);
+        new bootstrap.Toast(t[0], { delay: 4000 }).show();
+    }
+
+    // ── Criar ─────────────────────────────────────────────────────────────────
+    $("#formUsuario").submit(function (e) {
+        e.preventDefault();
+        $("#erroForm").hide();
+
+        let btn = $("#btnSalvar");
+        btn.html("Criando...").prop("disabled", true);
+
+        let fd = new FormData();
+        fd.append("nome",  $("#novoNome").val());
+        fd.append("email", $("#novoEmail").val());
+        fd.append("senha", $("#novaSenha").val());
+        fd.append("role",  $("#novoPerfil").val());
+        fd.append("__RequestVerificationToken", getToken());
+
+        $.ajax({
+            url: "/AdminUsuarios/CreateAjax",
+            type: "POST",
+            data: fd,
+            processData: false,
+            contentType: false,
+            success: function (html) {
+                $("#usuariosBody").prepend(html);
+                toast("Usuário criado com sucesso", "bg-success");
+                $("#formUsuario")[0].reset();
+            },
+            error: function (xhr) {
+                $("#erroForm").text(xhr.responseText || "Erro ao criar usuário.").show();
+            },
+            complete: function () { btn.html('<i class="bi bi-plus-circle"></i> Criar').prop("disabled", false); }
+        });
+    });
+
+    // ── Toggle Status ─────────────────────────────────────────────────────────
+    function toggleStatus(id) {
+        let fd = new FormData();
+        fd.append("id", id);
+        fd.append("__RequestVerificationToken", getToken());
+
+        $.ajax({
+            url: "/AdminUsuarios/ToggleStatus",
+            type: "POST",
+            data: fd,
+            processData: false,
+            contentType: false,
+            success: function (data) {
+                let row = $("#row-" + id);
+                // Atualiza badge de status
+                row.find("td:nth-child(4)").html(
+                    data.ativo
+                        ? '<span class="badge bg-success">Ativo</span>'
+                        : '<span class="badge bg-secondary">Inativo</span>'
+                );
+                // Atualiza botão
+                row.find("button:first").text(data.ativo ? "Bloquear" : "Ativar");
+                // Aplica classe muted
+                row.toggleClass("table-secondary text-muted", !data.ativo);
+                toast(data.ativo ? "Usuário ativado" : "Usuário bloqueado", "bg-warning");
+            },
+            error: function (xhr) { toast(xhr.responseText || "Erro ao alterar status", "bg-danger"); }
+        });
+    }
+
+    // ── Reset Senha ───────────────────────────────────────────────────────────
+    function resetSenha(id) {
+        let fd = new FormData();
+        fd.append("id", id);
+        fd.append("__RequestVerificationToken", getToken());
+
+        $.ajax({
+            url: "/AdminUsuarios/ResetSenha",
+            type: "POST",
+            data: fd,
+            processData: false,
+            contentType: false,
+            success: function (data) {
+                document.getElementById("novaSenhaTexto").textContent = data.novaSenha;
+                modalResetSenha.show();
+            },
+            error: function (xhr) { toast(xhr.responseText || "Erro ao resetar senha", "bg-danger"); }
+        });
+    }
+
+    // ── Excluir ───────────────────────────────────────────────────────────────
+    function confirmarExcluir(id) {
+        $("#excluirId").val(id);
+        modalExcluir.show();
+    }
+
+    $("#btnExcluir").click(function () {
+        let id  = $("#excluirId").val();
+        let btn = $(this);
+        btn.html("Excluindo...").prop("disabled", true);
+
+        let fd = new FormData();
+        fd.append("id", id);
+        fd.append("__RequestVerificationToken", getToken());
+
+        $.ajax({
+            url: "/AdminUsuarios/Delete",
+            type: "POST",
+            data: fd,
+            processData: false,
+            contentType: false,
+            success: function () {
+                $("#row-" + id).fadeOut(300, function () { $(this).remove(); });
+                modalExcluir.hide();
+                toast("Usuário excluído", "bg-success");
+            },
+            error: function (xhr) {
+                modalExcluir.hide();
+                toast(xhr.responseText || "Erro ao excluir", "bg-danger");
+            },
+            complete: function () { btn.html("Excluir").prop("disabled", false); }
+        });
+    });
+</script>

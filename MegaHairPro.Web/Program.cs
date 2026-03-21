@@ -1,6 +1,5 @@
 using DinkToPdf;
 using DinkToPdf.Contracts;
-using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using MegaHairPro.Web;
 using MegaHairPro.Web.Data;
 using MegaHairPro.Web.Infrastructure.Transactions;
@@ -8,10 +7,12 @@ using MegaHairPro.Web.Models;
 using MegaHairPro.Web.Services;
 using MegaHairPro.Web.Services.Implementations;
 using MegaHairPro.Web.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,7 +34,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     )
 );
 
-
 // ✅ SERVICES
 builder.Services.AddScoped<ISimulacaoService, SimulacaoService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -44,19 +44,17 @@ builder.Services.AddScoped<IViewRenderService, ViewRenderService>();
 builder.Services.AddScoped<INotificationService, EmailNotificationService>();
 builder.Services.AddScoped<AgendamentoService>();
 
+builder.Services.AddControllersWithViews(options =>
+{
+    var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+    options.Filters.Add(new AuthorizeFilter(policy));
+});
+
 builder.Services.AddSingleton(typeof(IConverter),
     new SynchronizedConverter(new PdfTools()));
 
 var context = new CustomAssemblyLoadContext();
-context.LoadUnmanagedLibrary(
-    Path.Combine(
-        Directory.GetCurrentDirectory(),
-        "libwkhtmltox.dll"));
-
-var culture = new CultureInfo("pt-BR");
-CultureInfo.DefaultThreadCurrentCulture = culture;
-CultureInfo.DefaultThreadCurrentUICulture = culture;
-
+context.LoadUnmanagedLibrary(Path.Combine(Directory.GetCurrentDirectory(), "libwkhtmltox.dll"));
 
 // ✅ IDENTITY COMPLETO
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -70,26 +68,23 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
-
-// ✅ LOGIN PATH (IMPORTANTE)
+// ✅ LOGIN PATH
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login";
     options.AccessDeniedPath = "/Account/AcessoNegado";
 });
 
-
-
-
 var app = builder.Build();
 
-var cultureInfo = new CultureInfo("pt-BR");
-
+// ✅ CULTURA: InvariantCulture para model binding receber ponto decimal do JS
+//    A exibição em pt-BR é feita via .ToString("N2") nas views
+var invariantCulture = new CultureInfo("en-US");
 app.UseRequestLocalization(new RequestLocalizationOptions
 {
-    DefaultRequestCulture = new RequestCulture(cultureInfo),
-    SupportedCultures = new[] { cultureInfo },
-    SupportedUICultures = new[] { cultureInfo }
+    DefaultRequestCulture = new RequestCulture(invariantCulture),
+    SupportedCultures = new[] { invariantCulture },
+    SupportedUICultures = new[] { invariantCulture }
 });
 
 app.UseStaticFiles();
@@ -119,4 +114,3 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
-

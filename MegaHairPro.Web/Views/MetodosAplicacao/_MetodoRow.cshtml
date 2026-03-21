@@ -1,29 +1,27 @@
-﻿@model MegaHairPro.Web.Models.MetodoAplicacao
+@model MegaHairPro.Web.Models.MetodoAplicacao
 
 <tr id="row-@Model.Id"
     data-nome="@Model.Nome"
-    data-valorgrama="@Model.ValorPorGrama"
-    class="@(Model.Status ? "" : "table-secondary text-muted")">
+    data-valorgrama="@Model.ValorPorGrama.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)"
+    class="@(!Model.Status ? "table-secondary text-muted" : "")">
 
-    <td>@Model.Nome</td>
-    <td>@Model.ValorPorGrama</td>
-
+    <td style="font-weight:600;">@Model.Nome</td>
+    <td class="text-end" style="font-weight:600;">R$ @Model.ValorPorGrama.ToString("N2")</td>
     <td class="text-center">
-
-        <button class="btn btn-sm btn-outline-primary"
-                onclick="editarMetodo(@Model.Id)">
-            Editar
-        </button>
-
-        <button class="btn btn-sm btn-outline-warning"
-                onclick="toggleStatus(@Model.Id)">
-            @(Model.Status ? "Inativar" : "Ativar")
-        </button>
-
-        <button class="btn btn-sm btn-outline-danger"
-                onclick="excluirMetodo(@Model.Id)">
-            Excluir
-        </button>
-
+        @if (Model.Status)
+        {
+            <span class="badge bg-success-soft">Ativo</span>
+        }
+        else
+        {
+            <span class="badge bg-danger-soft">Inativo</span>
+        }
+    </td>
+    <td class="text-center">
+        <div class="d-flex gap-1 justify-content-center">
+            <button class="btn-act btn-act-blue" onclick="editarMetodo(@Model.Id)">Editar</button>
+            <button class="btn-act btn-act-warn" onclick="toggleStatus(@Model.Id)">@(Model.Status ? "Inativar" : "Ativar")</button>
+            <button class="btn-act btn-act-red"  onclick="confirmarExcluir(@Model.Id)">Excluir</button>
+        </div>
     </td>
 </tr>

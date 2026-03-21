@@ -1,88 +1,37 @@
-﻿@model MegaHairPro.Web.Models.Despesas
+@model MegaHairPro.Web.Models.Despesas
 
 <tr id="row-@Model.Id">
-
-
-<tr id="row-@Model.Id"  class="fade-in">
-
     <td>
         <span class="categoria-badge">
             <span class="dot @Model.CorCategoria"></span>
-            @Model.Categoria
+            <span style="font-size:13px;">@Model.Categoria</span>
         </span>
     </td>
-    <td>
-
-        @Model.Descricao
-
-    </td>
-
-
-    <td>
-
-        R$ @Model.Valor.ToString("N2")
-
-    </td>
-
-
-    <td>
-
-        @Model.DataCadastro.ToString("dd-MM-yyyy")
-
-    </td>
-
-
-    <td>
-
+    <td style="font-size:13px;">@Model.Descricao</td>
+    <td class="text-end" style="font-weight:600;">R$ @Model.Valor.ToString("N2")</td>
+    <td style="font-size:12px;color:#64748b;">@Model.DataCadastro.ToString("dd/MM/yyyy")</td>
+    <td class="text-center">
         @if (Model.Ratear)
         {
-            <span class="badge bg-info">
-                Sim
-            </span>
+            <span class="badge bg-blue-soft">Sim</span>
         }
         else
         {
-            <span class="badge bg-secondary">
-                Não
-            </span>
+            <span class="badge" style="background:#f1f5f9;color:#94a3b8;">Não</span>
         }
-
     </td>
-
-
     <td>
-
-        <button class="btn btn-sm btn-outline-primary"
-                onclick="abrirModalEditar(
-
-'@Model.Id',
-
-'@Model.Categoria',
-
-'@Model.Descricao',
-
-'@Model.Valor',
-
-'@Model.DataCadastro.ToString("yyyy-MM-dd")',
-
-@Model.Ratear.ToString().ToLower()
-
-)">
-
-            Editar
-
-        </button>
-
-
-
-        <button class="btn btn-sm btn-outline-danger"
-                onclick="confirmarExcluir(@Model.Id)">
-
-            Excluir
-
-        </button>
-
+        <div class="d-flex gap-1">
+            <button class="btn-act btn-act-blue"
+                    onclick="abrirModalEditar(
+                        '@Model.Id',
+                        '@Model.Categoria',
+                        '@Model.Descricao',
+                        '@Model.Valor.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)',
+                        '@Model.DataCadastro.ToString("yyyy-MM-dd")',
+                        @Model.Ratear.ToString().ToLower()
+                    )">Editar</button>
+            <button class="btn-act btn-act-red" onclick="confirmarExcluir(@Model.Id)">Excluir</button>
+        </div>
     </td>
-
-
 </tr>

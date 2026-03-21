@@ -1,109 +1,41 @@
-﻿@model MegaHairPro.Web.Models.SimulacaoVenda
+@model MegaHairPro.Web.Models.SimulacaoVenda
 
 <tr id="row-@Model.Id"
-    data-cliente="@Model.ClienteNome"
-    data-produto="@Model.ProdutoNome"
-    data-qtd="@Model.QuantidadeGramas"
-    data-preco="@Model.PrecoVenda"
-    data-precodesconto="@Model.ValorDesconto"
-    data-custo="@Model.CustoTotal">
+    data-preco="@(Model.PrecoVenda?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "0")"
+    data-custo="@(Model.CustoTotal?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "0")">
 
-    <!-- ✅ Cliente -->
-    <td>@Model.ClienteNome</td>
-    <!-- ✅ Produto -->
-    <td>@Model.ProdutoNome</td>
-    <!-- ✅ Quantidade Vendida -->
-    <td>@Model.QuantidadeGramas.ToString("N0")</td>
-    <!-- ✅ Custo -->
+    <td style="font-weight:600;">@Model.ClienteNome</td>
+    <td style="color:#64748b;font-size:12px;">@Model.ProdutoNome</td>
+    <td>@Model.QuantidadeGramas.ToString("N0") g</td>
     <td>R$ @Model.CustoTotal?.ToString("N2")</td>
-    <!-- ✅ Preço -->
-    <td>R$ @Model.PrecoVenda?.ToString("N2")</td>
-
-    <!-- Preco desconto/%-->
-    <td class="text-warning fw-bold">
-        R$ @Model.ValorDesconto?.ToString("N2")
-        <small class="text-muted">
-            (@((Model.PercentualDesconto ?? 0).ToString("N0"))%)
-        </small>
-    </td>
-    <!-- ✅ Lucro + Margem -->
+    <td style="font-weight:600;">R$ @Model.PrecoVenda?.ToString("N2")</td>
     <td>
-        @{
-            decimal? margem = 0;
-
-            if (Model.PrecoVenda > 0)
-            {
-                margem = (Model.LucroTotal / Model.PrecoVenda) * 100;
-            }
-        }
-
-        @if (Model.LucroTotal > 200)
+        @if ((Model.ValorDesconto ?? 0) > 0)
         {
-            <span class="badge bg-success fs-6">
-                ✅ R$ @Model.LucroTotal?.ToString("N2")
+            <span style="color:#dc2626;font-size:12px;font-weight:600;">
+                −@Model.PercentualDesconto?.ToString("N0")% / R$ @Model.ValorDesconto?.ToString("N2")
             </span>
-            <br />
-            <small class="text-success">
-                Margem: @margem?.ToString("N1")%
-            </small>
-        }
-        else if (Model.LucroTotal > 0)
-        {
-            <span class="badge bg-warning text-dark fs-6">
-                ⚠️ R$ @Model.LucroTotal?.ToString("N2")
-            </span>
-            <br />
-            <small class="text-warning">
-                Margem: @margem?.ToString("N1")%
-            </small>
         }
         else
         {
-            <span class="badge bg-danger fs-6">
-                ❌ R$ @Model.LucroTotal?.ToString("N2")
-            </span>
-            <br />
-            <small class="text-danger">
-                Margem: @margem?.ToString("N1")%
-            </small>
+            <span style="color:#94a3b8;font-size:12px;">—</span>
         }
     </td>
-
-    <!-- ✅ Data -->
-    <td>@Model.DataCadastro.ToShortDateString()</td>
-
-    <!-- ✅ Ações -->
     <td>
-        <button class="btn btn-danger btn-sm"
-                onclick="excluirSimulacao(@Model.Id)">
-            ❌ Excluir
-        </button>
-        <button class="btn btn-primary btn-sm"
-                onclick="confirmarVenda(@Model.Id)">
-            ✅ Confirmar Venda
-        </button>
-        @* <a class="btn btn-secondary btn-sm"
-           target="_blank"
-           href="@Url.Action("GerarPdf","Simulacao",
-                        new { id = Model.Id })">
-            🖨️ Imprimir
-        </a> *@
-        <a class="btn btn-dark btn-sm"
-           target="_blank"
-           href="@Url.Action("GerarPdf","Simulacao",
-                    new { id = Model.Id })">
-            🧾 PDF
-        </a>
-
-        <a class="btn btn-secondary btn-sm"
-           target="_blank"
-           href="@Url.Action(
-                   "GerarPdf",
-                   "Simulacao",
-                   new { id = Model.Id })">
-
-            🖨️ Imprimir
-
-        </a>
+        @{
+            decimal? margem = Model.PrecoVenda > 0 ? (Model.LucroTotal / Model.PrecoVenda) * 100 : 0;
+            string badgeClass = Model.LucroTotal > 200 ? "badge bg-success-soft" : Model.LucroTotal > 0 ? "badge bg-warning-soft" : "badge bg-danger-soft";
+        }
+        <span class="@badgeClass">R$ @Model.LucroTotal?.ToString("N2")</span>
+        <div style="font-size:10px;color:#94a3b8;margin-top:2px;">Margem: @margem?.ToString("N1")%</div>
+    </td>
+    <td style="color:#64748b;font-size:12px;">@Model.DataCadastro.ToString("dd/MM/yyyy")</td>
+    <td>
+        <div class="d-flex gap-1 flex-wrap">
+            <button class="btn-act btn-act-red" onclick="excluirSimulacao(@Model.Id)">Excluir</button>
+            <button class="btn-act btn-act-green" onclick="confirmarVenda(@Model.Id)">Confirmar</button>
+            <a class="btn-act btn-act-dark" target="_blank" href="@Url.Action("GerarPdf","Simulacao", new { id = Model.Id })">PDF</a>
+            <a class="btn-act btn-act-blue" target="_blank" href="@Url.Action("Imprimir","Simulacao", new { id = Model.Id })">Imprimir</a>
+        </div>
     </td>
 </tr>

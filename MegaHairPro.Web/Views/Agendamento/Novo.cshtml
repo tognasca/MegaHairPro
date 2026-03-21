@@ -1,0 +1,219 @@
+@model MegaHairPro.Web.Models.Agendamento
+
+@{
+    ViewData["Title"] = "Novo Agendamento";
+}
+
+<div class="page-header">
+    <div>
+        <div class="page-title">Novo Agendamento</div>
+        <div class="page-sub">Preencha os dados para criar um novo agendamento</div>
+    </div>
+    <a href="@Url.Action("Index")" class="btn-header-back">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+        Voltar
+    </a>
+</div>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-3">
+        <ul class="mb-0">
+            @foreach (var erro in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            { <li>@erro.ErrorMessage</li> }
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<form asp-action="Novo" method="post">
+    @Html.AntiForgeryToken()
+
+    <!-- CLIENTE E PROFISSIONAL -->
+    <div class="section-card">
+        <div class="section-label">Cliente e Profissional</div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Cliente</label>
+                <select asp-for="ClienteId" asp-items="ViewBag.Clientes" class="form-select" required id="clienteSelect">
+                    <option value="">Selecione o cliente...</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Profissional</label>
+                <select asp-for="ProfissionalId" asp-items="ViewBag.Profissionais" class="form-select" required id="profissionalSelect">
+                    <option value="">Selecione o profissional...</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- DATA E HORÁRIO -->
+    <div class="section-card">
+        <div class="section-label">Data e Horário</div>
+        <div class="row g-3 align-items-start">
+            <div class="col-md-3">
+                <label class="form-label">Data</label>
+                <input type="date" id="dataSelecionada" class="form-control"
+                       min="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Horário Disponível</label>
+                <select id="horarioSelect" class="form-select" disabled>
+                    <option value="">Selecione a data e profissional primeiro</option>
+                </select>
+                <input type="hidden" asp-for="DataHora" id="DataHoraHidden" />
+            </div>
+            <div class="col-md-4 pt-4" id="avisoSemHorario" style="display:none">
+                <div class="alert alert-warning mb-0" style="font-size:.85rem">
+                    Nenhum horário disponível para esta data.
+                </div>
+            </div>
+        </div>
+        <div id="loadingHorarios" class="mt-3" style="display:none">
+            <div class="spinner-border spinner-border-sm" style="color:var(--navy,#1a2e4a)"></div>
+            <span class="ms-2 text-muted" style="font-size:.85rem">Verificando disponibilidade...</span>
+        </div>
+    </div>
+
+    <!-- SERVIÇOS -->
+    <div class="section-card">
+        <div class="section-label">Serviços</div>
+        <p class="text-muted mb-3" style="font-size:.85rem">Selecione um ou mais serviços:</p>
+
+        <div class="row g-3">
+            @foreach (var s in (List<MegaHairPro.Web.Models.Servico>)ViewBag.Servicos)
+            {
+                <div class="col-md-4">
+                    <label class="servico-card-label" id="card-@s.Id" for="servico-@s.Id">
+                        <input class="servico-check"
+                               type="checkbox"
+                               name="servicosSelecionados"
+                               value="@s.Id"
+                               id="servico-@s.Id"
+                               data-valor="@s.ValorFinal.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                               data-duracao="@s.DuracaoMinutos" />
+                        <div class="servico-card-body">
+                            <div class="servico-nome">@s.Nome</div>
+                            <div class="servico-info">
+                                <span class="servico-duracao">⏱ @s.DuracaoMinutos min</span>
+                                @if (s.ValorPromocional.HasValue && s.ValorPromocional > 0)
+                                {
+                                    <span class="text-decoration-line-through text-muted ms-2" style="font-size:.8rem">R$ @s.Valor.ToString("N2")</span>
+                                    <span class="servico-preco preco-promo ms-1">R$ @s.ValorPromocional.Value.ToString("N2")</span>
+                                }
+                                else
+                                {
+                                    <span class="servico-preco ms-2">R$ @s.Valor.ToString("N2")</span>
+                                }
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            }
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <label class="form-label">Duração Total</label>
+                <input id="duracaoTotal" class="form-control" readonly value="0 min" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Valor Total</label>
+                <input id="valorTotal" class="form-control fw-bold" style="color:#16a34a" readonly value="R$ 0,00" />
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" id="btnAgendar" class="btn w-100 py-3" style="background:var(--navy,#1a2e4a);color:#fff;border-radius:10px;font-weight:600;font-size:.95rem;opacity:.5;cursor:not-allowed" disabled>
+        Confirmar Agendamento
+    </button>
+</form>
+
+<style>
+    .servico-card-label {
+        display: block;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 14px 16px;
+        cursor: pointer;
+        transition: border-color .2s, background .2s;
+        position: relative;
+    }
+    .servico-card-label:hover { border-color: #9ca3af; background: #fafafa; }
+    .servico-card-label:has(.servico-check:checked) {
+        border-color: var(--navy,#1a2e4a);
+        background: #f0f4f8;
+    }
+    .servico-check { position:absolute; top:14px; right:14px; width:16px; height:16px; accent-color: var(--navy,#1a2e4a); }
+    .servico-nome { font-weight: 600; font-size: .9rem; margin-bottom: 6px; padding-right: 24px; }
+    .servico-info { font-size: .82rem; color: #6b7280; }
+    .servico-duracao { }
+    .servico-preco { font-weight: 600; color: #374151; }
+    .preco-promo { color: #16a34a !important; }
+    #btnAgendar:not([disabled]) { opacity:1 !important; cursor:pointer !important; }
+</style>
+
+<script>
+    const profissionalSelect = document.getElementById("profissionalSelect");
+    const clienteSelect      = document.getElementById("clienteSelect");
+    const dataSelecionada    = document.getElementById("dataSelecionada");
+    const horarioSelect      = document.getElementById("horarioSelect");
+    const dataHoraHidden     = document.getElementById("DataHoraHidden");
+    const btnAgendar         = document.getElementById("btnAgendar");
+    const loading            = document.getElementById("loadingHorarios");
+    const avisoSemHorario    = document.getElementById("avisoSemHorario");
+
+    profissionalSelect.addEventListener("change", buscarHorarios);
+    dataSelecionada.addEventListener("change", buscarHorarios);
+    clienteSelect.addEventListener("change", validarFormulario);
+    horarioSelect.addEventListener("change", function () {
+        dataHoraHidden.value = (dataSelecionada.value && this.value) ? dataSelecionada.value + "T" + this.value : "";
+        validarFormulario();
+    });
+
+    function buscarHorarios() {
+        let profId = profissionalSelect.value, data = dataSelecionada.value;
+        horarioSelect.innerHTML = '<option value="">Selecione...</option>';
+        horarioSelect.disabled = true;
+        dataHoraHidden.value = "";
+        avisoSemHorario.style.display = "none";
+        validarFormulario();
+        if (!profId || !data) return;
+        loading.style.display = "block";
+        fetch(`/Agendamento/HorariosDisponiveis?profissionalId=${profId}&data=${data}`)
+            .then(r => r.json())
+            .then(horarios => {
+                loading.style.display = "none";
+                if (!horarios.length) { avisoSemHorario.style.display = "block"; return; }
+                horarios.forEach(h => {
+                    let opt = document.createElement("option");
+                    opt.value = h.valor; opt.textContent = h.label;
+                    horarioSelect.appendChild(opt);
+                });
+                horarioSelect.disabled = false;
+            })
+            .catch(() => { loading.style.display = "none"; });
+    }
+
+    document.querySelectorAll('.servico-check').forEach(chk => {
+        chk.addEventListener('change', function () { recalcular(); validarFormulario(); });
+    });
+
+    function recalcular() {
+        let duracao = 0, valor = 0;
+        document.querySelectorAll('.servico-check:checked').forEach(chk => {
+            duracao += parseInt(chk.dataset.duracao || 0);
+            valor   += parseFloat(chk.dataset.valor || 0);
+        });
+        document.getElementById('duracaoTotal').value = duracao + ' min';
+        document.getElementById('valorTotal').value   = 'R$ ' + valor.toFixed(2).replace('.', ',');
+    }
+
+    function validarFormulario() {
+        let ok = !!dataHoraHidden.value &&
+                 document.querySelectorAll('.servico-check:checked').length > 0 &&
+                 !!clienteSelect.value;
+        btnAgendar.disabled = !ok;
+    }
+</script>

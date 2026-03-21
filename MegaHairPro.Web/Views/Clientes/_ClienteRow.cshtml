@@ -2,43 +2,40 @@
 
 <tr id="row-@Model.Id"
     data-nome="@Model.Nome"
-    data-telefone="@Model.Telefone"
-    data-whatsapp="@Model.WhatsApp"
-    data-email="@Model.Email"
-    data-cpf="@Model.CPF"
+    data-telefone="@(Model.Telefone ?? "")"
+    data-whatsapp="@(Model.WhatsApp ?? "")"
+    data-email="@(Model.Email ?? "")"
+    data-cpf="@(Model.CPF ?? "")"
     data-nascimento="@Model.DataNascimento?.ToString("yyyy-MM-dd")"
-    data-endereco="@Model.Endereco"
-    data-obs="@Model.Observacoes"
-    class="@(Model.Status ? "" : "table-secondary text-muted")">
+    data-endereco="@(Model.Endereco ?? "")"
+    data-obs="@(Model.Observacoes ?? "")"
+    class="@(!Model.Status ? "table-secondary text-muted" : "")">
 
-    <td>@Model.Nome</td>
-    <td>@Model.Telefone</td>
-    <td>@Model.WhatsApp</td>
-    <td>@Model.Email</td>
-
-    <td class="text-center">
-
-        <a asp-controller="Anamnese"
-           asp-action="Index"
-           asp-route-clienteId="@Model.Id"
-           class="btn btn-sm btn-outline-dark">
-            Anamnese
-        </a>
-
-        <button class="btn btn-sm btn-outline-primary"
-                onclick="editarCliente(@Model.Id)">
-            Editar
-        </button>
-
-        <button class="btn btn-sm btn-outline-warning"
-                onclick="toggleStatus(@Model.Id)">
-            @(Model.Status ? "Inativar" : "Ativar")
-        </button>
-
-        <button class="btn btn-sm btn-outline-danger"
-                onclick="excluirCliente(@Model.Id)">
-            Excluir
-        </button>
-
+    <td style="font-weight:600;">@Model.Nome</td>
+    <td style="font-size:12px;color:#64748b;">@(Model.CPF ?? "—")</td>
+    <td style="font-size:12px;">@(Model.Telefone ?? "—")</td>
+    <td style="font-size:12px;">@(Model.WhatsApp ?? "—")</td>
+    <td style="font-size:12px;color:#64748b;">@(Model.Email ?? "—")</td>
+    <td>
+        @if (Model.Status)
+        {
+            <span class="badge bg-success-soft">Ativo</span>
+        }
+        else
+        {
+            <span class="badge bg-danger-soft">Inativo</span>
+        }
+    </td>
+    <td>
+        <div class="d-flex gap-1 flex-wrap">
+            <a asp-controller="Anamnese" asp-action="Index"
+               asp-route-clienteId="@Model.Id"
+               class="btn-act btn-act-dark">Anamnese</a>
+            <button class="btn-act btn-act-blue" onclick="editarCliente(@Model.Id)">Editar</button>
+            <button class="btn-act btn-act-warn" onclick="toggleStatus(@Model.Id)">
+                @(Model.Status ? "Inativar" : "Ativar")
+            </button>
+            <button class="btn-act btn-act-red" onclick="confirmarExcluir(@Model.Id)">Excluir</button>
+        </div>
     </td>
 </tr>

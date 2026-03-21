@@ -1,4 +1,4 @@
-using MegaHairPro.Web.Data;
+﻿using MegaHairPro.Web.Data;
 using MegaHairPro.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -16,7 +16,75 @@ public class FinanceiroController : Controller
     }
 
     [HttpGet]
-    public IActionResult Index(DateTime? inicio, DateTime? fim)
+    public IActionResult Index(DateTime? inicio, DateTime? fim, string? tipo, string? status)
+    {
+        inicio ??= DateTime.Today.AddDays(-7);
+        fim ??= DateTime.Today;
+
+        var query = _context.ContasFinanceiras
+            .Where(c => c.DataCompetencia.Date >= inicio.Value.Date &&
+                        c.DataCompetencia.Date <= fim.Value.Date);
+
+        if (!string.IsNullOrEmpty(tipo) && Enum.TryParse<TipoContaFinanceira>(tipo, out var tipoEnum))
+            query = query.Where(c => c.Tipo == tipoEnum);
+
+        if (!string.IsNullOrEmpty(status) && Enum.TryParse<StatusContaFinanceira>(status, out var statusEnum))
+            query = query.Where(c => c.Status == statusEnum);
+
+        var contas = query.OrderByDescending(c => c.DataCompetencia).ToList();
+
+        // Força decimal para evitar o bug do 0 virar int no ViewBag
+        decimal entradas = contas
+            .Where(c => c.Tipo == TipoContaFinanceira.Receber && c.Status == StatusContaFinanceira.Paga)
+            .Sum(c => (decimal?)c.Valor) ?? 0m;
+
+        decimal saidas = contas
+            .Where(c => c.Tipo == TipoContaFinanceira.Pagar && c.Status == StatusContaFinanceira.Paga)
+            .Sum(c => (decimal?)c.Valor) ?? 0m;
+
+        ViewBag.Inicio = inicio.Value.ToString("yyyy-MM-dd");
+        ViewBag.Fim = fim.Value.ToString("yyyy-MM-dd");
+        ViewBag.TotalEntradas = entradas;
+        ViewBag.TotalSaidas = saidas;
+        ViewBag.Saldo = entradas - saidas;
+        ViewBag.FiltroTipo = tipo ?? "";
+        ViewBag.FiltroStatus = status ?? "";
+
+        return View(contas);
+    }
+
+    // ✅ AJAX — Marcar como pago
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult MarcarComoPagoAjax(int id)
+    {
+        var conta = _context.ContasFinanceiras.FirstOrDefault(c => c.Id == id);
+        if (conta == null) return Json(new { success = false });
+
+        conta.Status = StatusContaFinanceira.Paga;
+        conta.DataPagamento = DateTime.Now;
+        _context.SaveChanges();
+
+        return Json(new { success = true });
+    }
+
+    // ✅ AJAX — Cancelar
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult CancelarAjax(int id)
+    {
+        var conta = _context.ContasFinanceiras.FirstOrDefault(c => c.Id == id);
+        if (conta == null) return Json(new { success = false });
+
+        conta.Status = StatusContaFinanceira.Cancelada;
+        _context.SaveChanges();
+
+        return Json(new { success = true });
+    }
+
+    // ✅ AJAX — Retorna totais atualizados
+    [HttpGet]
+    public IActionResult Totais(DateTime? inicio, DateTime? fim)
     {
         inicio ??= DateTime.Today.AddDays(-7);
         fim ??= DateTime.Today;
@@ -24,56 +92,24 @@ public class FinanceiroController : Controller
         var contas = _context.ContasFinanceiras
             .Where(c => c.DataCompetencia.Date >= inicio.Value.Date &&
                         c.DataCompetencia.Date <= fim.Value.Date)
-            .OrderBy(c => c.DataCompetencia)
             .ToList();
 
-        ViewBag.Inicio = inicio.Value.ToString("yyyy-MM-dd");
-        ViewBag.Fim = fim.Value.ToString("yyyy-MM-dd");
+        decimal entradas = contas
+            .Where(c => c.Tipo == TipoContaFinanceira.Receber && c.Status == StatusContaFinanceira.Paga)
+            .Sum(c => (decimal?)c.Valor) ?? 0m;
 
-        ViewBag.TotalEntradas = contas
-            .Where(c => c.Tipo == TipoContaFinanceira.Receber &&
-                        c.Status == StatusContaFinanceira.Paga)
-            .Sum(c => c.Valor);
+        decimal saidas = contas
+            .Where(c => c.Tipo == TipoContaFinanceira.Pagar && c.Status == StatusContaFinanceira.Paga)
+            .Sum(c => (decimal?)c.Valor) ?? 0m;
 
-        ViewBag.TotalSaidas = contas
-            .Where(c => c.Tipo == TipoContaFinanceira.Pagar &&
-                        c.Status == StatusContaFinanceira.Paga)
-            .Sum(c => c.Valor);
+        var culture = new System.Globalization.CultureInfo("pt-BR");
 
-        ViewBag.Saldo = (decimal)ViewBag.TotalEntradas - (decimal)ViewBag.TotalSaidas;
-
-        return View(contas);
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public IActionResult MarcarComoPago(int id, string? formaPagamento)
-    {
-        var conta = _context.ContasFinanceiras.FirstOrDefault(c => c.Id == id);
-        if (conta == null)
-            return NotFound();
-
-        conta.Status = StatusContaFinanceira.Paga;
-        conta.DataPagamento = DateTime.Now;
-        conta.FormaPagamento = formaPagamento;
-
-        _context.SaveChanges();
-
-        return RedirectToAction("Index");
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public IActionResult Cancelar(int id)
-    {
-        var conta = _context.ContasFinanceiras.FirstOrDefault(c => c.Id == id);
-        if (conta == null)
-            return NotFound();
-
-        conta.Status = StatusContaFinanceira.Cancelada;
-        _context.SaveChanges();
-
-        return RedirectToAction("Index");
+        return Json(new
+        {
+            entradas = entradas.ToString("N2", culture),
+            saidas = saidas.ToString("N2", culture),
+            saldo = (entradas - saidas).ToString("N2", culture),
+            saldoNegativo = (entradas - saidas) < 0
+        });
     }
 }
-

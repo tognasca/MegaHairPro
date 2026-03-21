@@ -1,20 +1,113 @@
 @model List<MegaHairPro.Web.Models.Agendamento>
 
-<h2>Meus Agendamentos</h2>
-
-<table>
-@foreach (var a in Model)
-{
-    <tr>
-        <td>@a.DataHora</td>
-        <td>@a.Profissional.Nome</td>
-        <td>
-            @foreach (var s in a.AgendamentosServicos)
-            {
-                <div>@s.Servico.Nome - R$ @s.Servico.Valor</div>
-            }
-        </td>
-        <td>R$ @a.ValorTotal</td>
-    </tr>
+@{
+    ViewData["Title"] = "Painel do Cliente";
 }
-</table>
+
+<div class="page-header">
+    <div>
+        <div class="page-title">@ViewBag.ClienteNome</div>
+        <div class="page-sub">Histórico de agendamentos do cliente</div>
+    </div>
+    <a href="@Url.Action("Index")" class="btn-header-back">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+        Voltar à Agenda
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="section-card text-center py-5">
+        <div style="font-size:2.5rem;margin-bottom:12px">📅</div>
+        <div style="font-weight:600;font-size:1rem;color:#374151">Nenhum agendamento encontrado</div>
+        <div class="text-muted mt-1" style="font-size:.85rem">Este cliente ainda não possui agendamentos registrados.</div>
+        <a href="@Url.Action("Novo")" class="btn mt-3" style="background:var(--navy,#1a2e4a);color:#fff;border-radius:8px;font-size:.85rem">
+            Criar Agendamento
+        </a>
+    </div>
+}
+else
+{
+    <div class="table-card">
+        <div class="table-card-header">
+            <span class="table-card-title">Agendamentos</span>
+            <span class="table-count">@Model.Count() registros</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Data / Hora</th>
+                        <th>Profissional</th>
+                        <th>Serviços</th>
+                        <th class="text-end">Total</th>
+                        <th class="text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var a in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div style="font-weight:500">@a.DataHora.ToString("dd/MM/yyyy")</div>
+                                <div class="text-muted" style="font-size:.8rem">@a.DataHora.ToString("HH:mm") até @a.DataFim.ToString("HH:mm")</div>
+                            </td>
+                            <td>@a.Profissional?.Nome</td>
+                            <td>
+                                @foreach (var s in a.AgendamentosServicos)
+                                {
+                                    <span class="badge me-1" style="background:#f3f4f6;color:#374151;font-weight:500;font-size:.75rem;padding:4px 8px;border-radius:6px">
+                                        @s.Servico.Nome
+                                    </span>
+                                }
+                            </td>
+                            <td class="text-end fw-bold" style="color:#16a34a">
+                                R$ @a.AgendamentosServicos.Sum(s => s.Servico.ValorFinal).ToString("N2")
+                            </td>
+                            <td class="text-center">
+                                @if (a.Cancelado)
+                                {
+                                    <span class="badge" style="background:#fef2f2;color:#b91c1c;font-size:.75rem;padding:4px 10px;border-radius:6px">Cancelado</span>
+                                }
+                                else if (a.DataHora < DateTime.Now)
+                                {
+                                    <span class="badge" style="background:#f0fdf4;color:#15803d;font-size:.75rem;padding:4px 10px;border-radius:6px">Concluído</span>
+                                }
+                                else
+                                {
+                                    <span class="badge" style="background:#eff6ff;color:#1d4ed8;font-size:.75rem;padding:4px 10px;border-radius:6px">Agendado</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- RESUMO -->
+    <div class="row g-3 mt-1">
+        <div class="col-md-4">
+            <div class="section-card mb-0">
+                <div class="section-label">Total de Agendamentos</div>
+                <div style="font-size:1.6rem;font-weight:700;color:var(--navy,#1a2e4a);margin-top:4px">@Model.Count()</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="section-card mb-0">
+                <div class="section-label">Agendamentos Concluídos</div>
+                <div style="font-size:1.6rem;font-weight:700;color:#16a34a;margin-top:4px">
+                    @Model.Count(a => !a.Cancelado && a.DataHora < DateTime.Now)
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="section-card mb-0">
+                <div class="section-label">Total Gasto</div>
+                <div style="font-size:1.6rem;font-weight:700;color:#16a34a;margin-top:4px">
+                    R$ @Model.Where(a => !a.Cancelado).SelectMany(a => a.AgendamentosServicos).Sum(s => s.Servico.ValorFinal).ToString("N2")
+                </div>
+            </div>
+        </div>
+    </div>
+}

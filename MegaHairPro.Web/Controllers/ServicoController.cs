@@ -1,90 +1,86 @@
-﻿using MegaHairPro.Web.Data;
+using MegaHairPro.Web.Data;
 using MegaHairPro.Web.Models;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.IO;
+using System.Globalization;
 using System.Linq;
 
 namespace MegaHairPro.Web.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class ServicoController : Controller
     {
         private readonly AppDbContext _context;
-        private readonly IWebHostEnvironment _env;
 
-        public ServicoController(AppDbContext context, IWebHostEnvironment env)
+        public ServicoController(AppDbContext context)
         {
             _context = context;
-            _env = env;
         }
 
+        [HttpGet]
         public IActionResult Index()
         {
-            return View(_context.Servicos.ToList());
-        }
-
-        public IActionResult Create() => View();
-
-        [HttpPost]
-        public IActionResult Create(Servico model, IFormFile imagem)
-        {
-            if (!ModelState.IsValid)
-                return View(model);
-
-            if (imagem != null && imagem.Length > 0)
-            {
-                var pasta = Path.Combine(_env.WebRootPath, "uploads");
-                Directory.CreateDirectory(pasta);
-
-                var nome = Guid.NewGuid() + Path.GetExtension(imagem.FileName);
-
-                var caminho = Path.Combine(pasta, nome);
-
-                using (var stream = new FileStream(caminho, FileMode.Create))
-                    imagem.CopyTo(stream);
-
-                model.ImagemUrl = "/uploads/" + nome;
-            }
-
-            _context.Add(model);
-            _context.SaveChanges();
-
-            return RedirectToAction(nameof(Index));
-        }
-
-        public IActionResult Edit(int id)
-        {
-            return View(_context.Servicos.Find(id));
+            var lista = _context.Servicos.OrderBy(s => s.Nome).ToList();
+            return View(lista);
         }
 
         [HttpPost]
-        public IActionResult Edit(Servico model, IFormFile imagem)
+        [ValidateAntiForgeryToken]
+        public IActionResult CreateAjax(Servico model)
         {
-            if (imagem != null)
-            {
-                var pasta = Path.Combine(_env.WebRootPath, "uploads");
-                var caminho = Path.Combine(pasta, imagem.FileName);
+            if (Request.Form.TryGetValue("Valor", out var valorStr))
+                if (decimal.TryParse(valorStr, NumberStyles.Any, CultureInfo.InvariantCulture, out var v))
+                    model.Valor = v;
 
-                using (var stream = new FileStream(caminho, FileMode.Create))
-                    imagem.CopyTo(stream);
+            if (Request.Form.TryGetValue("ValorPromocional", out var promStr) && !string.IsNullOrWhiteSpace(promStr))
+                if (decimal.TryParse(promStr, NumberStyles.Any, CultureInfo.InvariantCulture, out var vp))
+                    model.ValorPromocional = vp > 0 ? vp : null;
 
-                model.ImagemUrl = "/uploads/" + imagem.FileName;
-            }
-
-            _context.Update(model);
+            _context.Servicos.Add(model);
             _context.SaveChanges();
-
-            return RedirectToAction(nameof(Index));
+            return PartialView("_ServicoRow", model);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult EditAjax(Servico model)
+        {
+            var original = _context.Servicos.Find(model.Id);
+            if (original == null) return NotFound();
+
+            original.Nome          = model.Nome;
+            original.Descricao     = model.Descricao;
+            original.Categoria     = model.Categoria;
+            original.DuracaoMinutos = model.DuracaoMinutos;
+
+            if (Request.Form.TryGetValue("Valor", out var valorStr))
+                if (decimal.TryParse(valorStr, NumberStyles.Any, CultureInfo.InvariantCulture, out var v))
+                    original.Valor = v;
+
+            if (Request.Form.TryGetValue("ValorPromocional", out var promStr) && !string.IsNullOrWhiteSpace(promStr))
+                if (decimal.TryParse(promStr, NumberStyles.Any, CultureInfo.InvariantCulture, out var vp))
+                    original.ValorPromocional = vp > 0 ? vp : null;
+                else
+                    original.ValorPromocional = null;
+
+            _context.SaveChanges();
+            return PartialView("_ServicoRow", original);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Delete(int id)
         {
-            var s = _context.Servicos.Find(id);
-            _context.Remove(s);
+            var servico = _context.Servicos.Find(id);
+            if (servico == null) return Ok();
+
+            bool temAgendamentos = _context.AgendamentoServicos.Any(a => a.ServicoId == id);
+            if (temAgendamentos)
+                return BadRequest("Serviço possui agendamentos e não pode ser excluído.");
+
+            _context.Servicos.Remove(servico);
             _context.SaveChanges();
-            return RedirectToAction(nameof(Index));
+            return Ok();
         }
     }
 }

@@ -2,16 +2,15 @@ using MegaHairPro.Web.Data;
 using MegaHairPro.Web.Models;
 using MegaHairPro.Web.Services;
 using MegaHairPro.Web.Services.Interfaces;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace MegaHairPro.Web.Controllers
 {
-    //[Authorize]
     public class SimulacaoController : Controller
     {
         private readonly AppDbContext _context;
@@ -23,7 +22,7 @@ namespace MegaHairPro.Web.Controllers
             AppDbContext context,
             IViewRenderService viewRender,
             IPdfService pdfService,
-            ISimulacaoService simulacao )
+            ISimulacaoService simulacao)
         {
             _context = context;
             _viewRender = viewRender;
@@ -35,34 +34,27 @@ namespace MegaHairPro.Web.Controllers
         [HttpGet]
         public IActionResult Index()
         {
-            CarregarCliente();
-            CarregarProdutos();
-            CarregarMetodos();
-            CarregarDespesas();
-            var lista = _context.Simulacao.Where(x => x.Status == true)
+            CarregarViewBags();
+            var lista = _context.Simulacao
+                .Where(x => x.Status == true)
                 .OrderByDescending(x => x.DataCadastro)
                 .ToList();
-
-            return View(lista); // ✅ SEMPRE LISTA
+            return View(lista);
         }
 
-        private void CarregarMetodos()
-        {
-            ViewBag.Metodos =
-                _context.MetodosAplicacao
-                .Where(x => x.Status)
-                .ToList();
-
-
-        }
-        //[Authorize(Roles = "Admin")]
-        // ✅ POST (CORRIGIDO: NÃO PODE RETORNAR OBJETO ÚNICO)
+        // ✅ POST — parse manual de todos os decimais para evitar erro de cultura
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Index(SimulacaoVenda model)
         {
+            // Parse manual — campos que chegam com vírgula do JS
+            model.PrecoVenda = ParseDecimal(Request.Form["PrecoVenda"]);
+            model.PercentualLucroCabelo = ParseDecimal(Request.Form["PercentualLucroCabelo"]);
+            model.PercentualDesconto = ParseDecimal(Request.Form["PercentualDesconto"]);
+            model.TotalDespesasSelecionadas = ParseDecimal(Request.Form["TotalDespesasSelecionadas"]);
+
             // ================= DESPESAS =================
             decimal totalDespesas = 0;
-
             int mediaAtendimentosMes = 50;
 
             var despesasSelecionadas = _context.Despesas
@@ -70,19 +62,25 @@ namespace MegaHairPro.Web.Controllers
                 .ToList();
 
             foreach (var desp in despesasSelecionadas)
-            {
-                if (desp.Ratear)
-                    totalDespesas += desp.Valor / mediaAtendimentosMes;
-                else
-                    totalDespesas += desp.Valor;
-            }
+                totalDespesas += desp.Ratear ? desp.Valor / mediaAtendimentosMes : desp.Valor;
 
-            // 🔴 IMPORTANTE: passa despesa UMA ÚNICA VEZ
             model.DespesaSalaoRateada = totalDespesas;
             model.TotalDespesasSelecionadas = totalDespesas;
 
             // ================= SIMULAÇÃO =================
-            var resultado = _simulacao.Calcular(model);
+            SimulacaoVenda resultado;
+            try
+            {
+                resultado = _simulacao.Calcular(model);
+            }
+            catch (Exception ex)
+            {
+                CarregarViewBags();
+                ModelState.AddModelError("", ex.Message);
+                var lista = _context.Simulacao.Where(x => x.Status == true)
+                    .OrderByDescending(x => x.DataCadastro).ToList();
+                return View(lista);
+            }
 
             resultado.Status = true;
             resultado.DataCadastro = DateTime.Now;
@@ -91,68 +89,166 @@ namespace MegaHairPro.Web.Controllers
             var cliente = _context.Clientes.FirstOrDefault(c => c.Id == model.ClienteId);
             var produto = _context.Produtos.FirstOrDefault(p => p.Id == model.ProdutoId);
             var metodo = _context.MetodosAplicacao.FirstOrDefault(m => m.Id == model.MetodoId);
+
             resultado.ClienteNome = cliente?.Nome;
             resultado.ProdutoNome = produto?.Nome;
             resultado.MetodoNome = metodo?.Nome;
+
             if (metodo != null)
-            {
-                resultado.ValorTotalConfeccao =
-                    metodo.ValorPorGrama *
-                    model.QuantidadeGramas;
-            }
+                resultado.ValorTotalConfeccao = metodo.ValorPorGrama * model.QuantidadeGramas;
 
-
-            var logoPath =
-    Path.Combine(
-        Directory.GetCurrentDirectory(),
-        "wwwroot/Imagem/LogoMegaHairPro.png");
-
+            var logoPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/Imagem/LogoMegaHairPro.png");
             resultado.LogoCaminho = logoPath;
 
-
-            // ================= SALVA =================
             _context.Simulacao.Add(resultado);
             _context.SaveChanges();
 
+            // PRG — evita double submit ao recarregar
             return RedirectToAction("Index");
         }
 
-
-
-        // ✅ CARREGAR PRODUTOS
-        private void CarregarProdutos()
+        // ✅ EDIT AJAX
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult EditAjax(SimulacaoVenda model)
         {
-            ViewBag.Produtos = _context.Produtos
-                .Select(p => new
-                {
-                    p.Id,
-                    p.Codigo,
-                    p.Nome,
-                    p.EstoqueGramas,
-                    p.UnidadeMedida,
-                    p.Status
-                })
-                .Where(x => x.Status == true)
+            var simulacao = _context.Simulacao.FirstOrDefault(x => x.Id == model.Id);
+            if (simulacao == null) return NotFound();
+
+            simulacao.PrecoVenda = ParseDecimal(Request.Form["PrecoVenda"]);
+            simulacao.CustoTotal = ParseDecimal(Request.Form["CustoTotal"]);
+            simulacao.LucroLiquido = simulacao.PrecoVenda - simulacao.CustoTotal;
+            simulacao.LucroTotal = simulacao.LucroLiquido;
+
+            _context.SaveChanges();
+            return PartialView("_SimulacaoRow", simulacao);
+        }
+
+        // ✅ DELETE
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Delete(int id)
+        {
+            var simulacao = _context.Simulacao.FirstOrDefault(x => x.Id == id);
+            if (simulacao == null) return NotFound();
+            _context.Simulacao.Remove(simulacao);
+            _context.SaveChanges();
+            return Ok();
+        }
+
+        // ✅ TOGGLE STATUS
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ToggleStatusAjax(int id)
+        {
+            var simulacao = _context.Simulacao.FirstOrDefault(x => x.Id == id);
+            if (simulacao == null) return NotFound();
+            simulacao.Status = !simulacao.Status;
+            _context.SaveChanges();
+            return Ok();
+        }
+
+        // ✅ CONFIRMAR VENDA
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ConfirmarVenda(int id)
+        {
+            var sim = _context.Simulacao.FirstOrDefault(x => x.Id == id);
+            if (sim == null) return NotFound();
+
+            var venda = new Venda
+            {
+                ClienteId = sim.ClienteId,
+                ClienteNome = sim.ClienteNome,
+                ProdutoId = sim.ProdutoId,
+                ProdutoNome = sim.ProdutoNome,
+                QuantidadeGramas = sim.QuantidadeGramas,
+                PrecoVenda = sim.PrecoVenda,
+                CustoTotal = sim.CustoTotal,
+                LucroTotal = sim.LucroTotal,
+                ValorComissaoVendedora = sim.ValorComissaoVendedora ?? 0,
+                ValorComissaoCabeleireira = sim.ValorComissaoCabeleireira ?? 0,
+                DataVenda = DateTime.Now
+            };
+
+            _context.Vendas.Add(venda);
+
+            _context.ContasFinanceiras.Add(new ContaFinanceira
+            {
+                Tipo = TipoContaFinanceira.Receber,
+                Origem = OrigemContaFinanceira.Venda,
+                Descricao = $"Venda - {venda.ProdutoNome} ({venda.QuantidadeGramas}g)",
+                Valor = venda.PrecoVenda ?? 0,
+                DataCompetencia = venda.DataVenda,
+                DataVencimento = venda.DataVenda,
+                Status = StatusContaFinanceira.Aberta,
+                Venda = venda
+            });
+
+            // Baixa estoque FIFO
+            decimal restante = sim.QuantidadeGramas;
+            var compras = _context.Compras
+                .Where(c => c.ProdutoId == sim.ProdutoId && c.QuantidadeGramas > 0)
+                .OrderBy(c => c.DataCompra)
                 .ToList();
-        }
-        private void CarregarDespesas()
-        {
-            ViewBag.Despesas = _context.Despesas.Where(x => x.Status == true).ToList();
-        }
-        // ✅ CARREGAR CLIENTES
-        private void CarregarCliente()
-        {
-            ViewBag.Clientes = _context.Clientes
-                .Select(p => new
+
+            foreach (var c in compras)
+            {
+                if (restante <= 0) break;
+                if (c.QuantidadeGramas >= restante)
                 {
-                    p.Id,
-                    p.CPF,
-                    p.Nome
+                    c.QuantidadeGramas -= restante;
+                    restante = 0;
+                }
+                else
+                {
+                    restante -= c.QuantidadeGramas.Value;
+                    c.QuantidadeGramas = 0;
+                }
+            }
+
+            if (restante > 0)
+                return BadRequest("Estoque insuficiente para concluir a venda.");
+
+            var produto = _context.Produtos.FirstOrDefault(p => p.Id == sim.ProdutoId);
+            if (produto != null)
+            {
+                produto.EstoqueGramas -= sim.QuantidadeGramas;
+                if (produto.EstoqueGramas < 0) produto.EstoqueGramas = 0;
+            }
+
+            if (venda.ValorComissaoVendedora > 0)
+                _context.Comissoes.Add(new Comissao
+                {
+                    VendaId = venda.Id,
+                    Profissional = "Vendedora",
+                    Valor = venda.ValorComissaoVendedora,
+                    Pago = false
+                });
+
+            if (venda.ValorComissaoCabeleireira > 0)
+                _context.Comissoes.Add(new Comissao
+                {
+                    VendaId = venda.Id,
+                    Profissional = "Cabeleireira",
+                    Valor = venda.ValorComissaoCabeleireira,
+                    Pago = false
+                });
+
+            sim.Status = false;
+            _context.SaveChanges();
+
+            return Json(new
+            {
+                redirectUrl = Url.Action("Index", "Venda", new
+                {
+                    mes = DateTime.Now.Month,
+                    ano = DateTime.Now.Year
                 })
-                .ToList();
+            });
         }
 
-        // ✅ AJAX – ESTOQUE (CORRIGIDO: SOMA TOTAL)
+        // ✅ AJAX — Estoque
         [HttpGet]
         public IActionResult ObterEstoqueProduto(int produtoId)
         {
@@ -160,34 +256,26 @@ namespace MegaHairPro.Web.Controllers
                 .Where(p => p.Id == produtoId)
                 .Select(p => p.EstoqueGramas)
                 .FirstOrDefault();
-
             return Json(new { estoque });
         }
 
-        // ✅ AJAX – CUSTO DO CABELO
+        // ✅ AJAX — Custo médio
         [HttpGet]
         public IActionResult ObterCustoCabelo(int produtoId, decimal quantidadeGramas)
         {
-            if (quantidadeGramas <= 0)
-                return Json(new { custo = 0 });
+            if (quantidadeGramas <= 0) return Json(new { custo = 0 });
 
             var compras = _context.Compras
                 .Where(c => c.ProdutoId == produtoId && c.QuantidadeGramas > 0)
                 .ToList();
 
-            if (!compras.Any())
-                return Json(new { custo = 0 });
+            if (!compras.Any()) return Json(new { custo = 0 });
 
-            var totalValor = compras.Sum(c => c.ValorTotal);
-            var totalGramas = compras.Sum(c => c.QuantidadeGramas.Value);
-
-            var custoMedioPorGrama = totalValor / totalGramas;
-            var custoCabelo = custoMedioPorGrama * quantidadeGramas;
-
-            return Json(new { custo = custoCabelo });
+            var custo = (compras.Sum(c => c.ValorTotal) / compras.Sum(c => c.QuantidadeGramas!.Value)) * quantidadeGramas;
+            return Json(new { custo });
         }
 
-        // ✅ AJAX – CUSTO + LUCRO
+        // ✅ AJAX — Custo + Lucro
         [HttpGet]
         public IActionResult ObterLucroCabelo(int produtoId, decimal quantidadeGramas, decimal percentualLucro)
         {
@@ -198,218 +286,71 @@ namespace MegaHairPro.Web.Controllers
                 .Where(c => c.ProdutoId == produtoId && c.QuantidadeGramas > 0)
                 .ToList();
 
-            if (!compras.Any())
-                return Json(new { custo = 0m, lucro = 0m });
+            if (!compras.Any()) return Json(new { custo = 0m, lucro = 0m });
 
-            var totalValor = compras.Sum(c => c.ValorTotal);
-            var totalGramas = compras.Sum(c => c.QuantidadeGramas!.Value);
-
-            var custoMedioGrama = totalValor / totalGramas;
-            var custo = custoMedioGrama * quantidadeGramas;
+            var custoMedio = compras.Sum(c => c.ValorTotal) / compras.Sum(c => c.QuantidadeGramas!.Value);
+            var custo = custoMedio * quantidadeGramas;
             var lucro = custo * (percentualLucro / 100m);
 
             return Json(new { custo, lucro });
         }
 
-        // ✅ EDIT AJAX (CORRIGIDO: ATUALIZA LUCRO TOTAL TAMBÉM)
-        [HttpPost]
-        public IActionResult EditAjax(SimulacaoVenda model)
-        {
-            var simulacao = _context.Simulacao
-                .FirstOrDefault(x => x.Id == model.Id);
-
-            if (simulacao == null)
-                return NotFound();
-
-            simulacao.PrecoVenda = model.PrecoVenda;
-            simulacao.CustoTotal = model.CustoTotal;
-
-            simulacao.LucroLiquido = simulacao.PrecoVenda - simulacao.CustoTotal;
-
-            // ✅ IMPORTANTE: SE SUA VIEW MOSTRA LucroTotal
-            simulacao.LucroTotal = simulacao.LucroLiquido;
-
-            _context.SaveChanges();
-
-            return PartialView("_SimulacaoRow", simulacao);
-        }
-
-        // ✅ DELETE
-        [HttpPost]
-        public IActionResult Delete(int id)
-        {
-            var simulacao = _context.Simulacao
-                .FirstOrDefault(x => x.Id == id);
-
-            if (simulacao == null)
-                return NotFound();
-
-            _context.Simulacao.Remove(simulacao);
-            _context.SaveChanges();
-
-            return Ok();
-        }
-
-        // ✅ TOGGLE STATUS
-        [HttpPost]
-        public IActionResult ToggleStatusAjax(int id)
-        {
-            var simulacao = _context.Simulacao
-                .FirstOrDefault(x => x.Id == id);
-
-            if (simulacao == null)
-                return NotFound();
-
-            simulacao.Status = !simulacao.Status;
-            _context.SaveChanges();
-
-            return Ok();
-        }
-
-        [HttpPost]
-        public IActionResult ConfirmarVenda(int id)
-        {
-            // ✅ Busca simulação
-            var sim = _context.Simulacao.FirstOrDefault(x => x.Id == id);
-
-            if (sim == null)
-                return NotFound();
-
-            // ✅ Criar Venda real
-            var venda = new Venda
-            {
-                ClienteId = sim.ClienteId,
-                ClienteNome = sim.ClienteNome,
-
-                ProdutoId = sim.ProdutoId,
-                ProdutoNome = sim.ProdutoNome,
-
-                QuantidadeGramas = sim.QuantidadeGramas,
-
-                PrecoVenda = sim.PrecoVenda,
-                CustoTotal = sim.CustoTotal,
-                LucroTotal = sim.LucroTotal,
-
-                ValorComissaoVendedora = sim.ValorComissaoVendedora ?? 0,
-                ValorComissaoCabeleireira = sim.ValorComissaoCabeleireira ?? 0,
-
-                DataVenda = DateTime.Now
-            };
-
-            _context.Vendas.Add(venda);
-            _context.ContasFinanceiras.Add(new ContaFinanceira
-            {
-                Tipo = TipoContaFinanceira.Receber,
-                Origem = OrigemContaFinanceira.Venda,
-                Descricao = $"Venda #{venda.Id} - {venda.ProdutoNome}",
-                Valor = venda.PrecoVenda ?? 0,
-                DataCompetencia = venda.DataVenda,
-                DataVencimento = venda.DataVenda,
-                Status = StatusContaFinanceira.Aberta,
-                Venda = venda
-            });
-
-            // ✅ Baixar estoque do produto
-            var produto = _context.Produtos.FirstOrDefault(p => p.Id == sim.ProdutoId);
-
-            if (produto != null)
-            {
-                produto.EstoqueGramas -= sim.QuantidadeGramas;
-            }
-
-            decimal quantidadeRestante = sim.QuantidadeGramas;
-
-            var compras = _context.Compras
-                .Where(c => c.ProdutoId == sim.ProdutoId && c.QuantidadeGramas > 0)
-                .OrderBy(c => c.DataCompra)
-                .ToList();
-
-            foreach (var c in compras)
-            {
-                if (quantidadeRestante <= 0)
-                    break;
-
-                if (c.QuantidadeGramas >= quantidadeRestante)
-                {
-                    c.QuantidadeGramas -= quantidadeRestante;
-                    quantidadeRestante = 0;
-                }
-                else
-                {
-                    quantidadeRestante -= c.QuantidadeGramas.Value;
-                    c.QuantidadeGramas = 0;
-                }
-            }
-
-            if (quantidadeRestante > 0)
-                return BadRequest("Estoque insuficiente para concluir a venda.");
-
-
-            // ✅ Marcar simulação como vendida
-            sim.Status = false;
-
-           
-
-            if (venda.ValorComissaoVendedora > 0)
-            {
-                _context.Comissoes.Add(new Comissao
-                {
-                    VendaId = venda.Id,
-                    Profissional = "Vendedora",
-                    Valor = venda.ValorComissaoVendedora,
-                    Pago = false
-                });
-            }
-
-            if (venda.ValorComissaoCabeleireira > 0)
-            {
-                _context.Comissoes.Add(new Comissao
-                {
-                    VendaId = venda.Id,
-                    Profissional = "Cabeleireira",
-                    Valor = venda.ValorComissaoCabeleireira,
-                    Pago = false
-                });
-            }
-            _context.SaveChanges();
-            var mes = DateTime.Now.Month;
-            var ano = DateTime.Now.Year;
-
-            return Json(new
-            {
-                redirectUrl = Url.Action("Index", "Venda", new { mes, ano })
-            });
-        }
-
+        // ✅ GERAR PDF
         public async Task<IActionResult> GerarPdf(int id)
         {
-            var caminhoLogo =
-    Path.Combine(
-        Directory.GetCurrentDirectory(),
-        "wwwroot/imagem/logomegahairpro.png");
+            var sim = _context.Simulacao.FirstOrDefault(x => x.Id == id);
+            if (sim == null) return NotFound();
 
-
-            var sim = _context.Simulacao
-                .FirstOrDefault(x => x.Id == id);
-
-            if (sim == null)
-                return NotFound();
-
-            var html =
-                await _viewRender.RenderToStringAsync(
-                    "~/Views/Simulacao/Imprimir.cshtml",
-                    sim);
-
+            var html = await _viewRender.RenderToStringAsync("~/Views/Simulacao/Imprimir.cshtml", sim);
             var pdf = _pdfService.GerarPdf(html);
+            return File(pdf, "application/pdf");
+        }
 
-            //return File(
-            //    pdf,
-            //    "application/pdf",
-            //    $"Simulacao_{sim.Id}.pdf");
+        [HttpGet]
+        public IActionResult Imprimir(int id)
+        {
+            var sim = _context.Simulacao.FirstOrDefault(x => x.Id == id);
+            if (sim == null) return NotFound();
 
-            return File(
-    pdf,
-    "application/pdf");
+            // Converte logo para base64 para exibir no browser
+            var logoPath = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "wwwroot/Imagem/LogoMegaHairPro.png");
+
+            if (System.IO.File.Exists(logoPath))
+            {
+                var bytes = System.IO.File.ReadAllBytes(logoPath);
+                sim.LogoCaminho = "data:image/png;base64," + Convert.ToBase64String(bytes);
+            }
+
+            return View(sim);
+        }
+
+        // ── Helpers ───────────────────────────────────────────────────────────
+        private void CarregarViewBags()
+        {
+            ViewBag.Clientes = _context.Clientes
+                .Select(p => new { p.Id, p.CPF, p.Nome }).ToList();
+
+            ViewBag.Produtos = _context.Produtos
+                .Where(x => x.Status == true)
+                .Select(p => new { p.Id, p.Codigo, p.Nome, p.EstoqueGramas, p.UnidadeMedida, p.Status })
+                .ToList();
+
+            ViewBag.Metodos = _context.MetodosAplicacao
+                .Where(x => x.Status).ToList();
+
+            ViewBag.Despesas = _context.Despesas
+                .Where(x => x.Status == true).ToList();
+        }
+
+        private static decimal ParseDecimal(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return 0;
+            // aceita "1.234,56" (pt-BR) ou "1234.56" (en-US)
+            var normalized = value.Replace(".", "").Replace(",", ".");
+            return decimal.TryParse(normalized, NumberStyles.Any, CultureInfo.InvariantCulture, out var result)
+                ? result : 0;
         }
     }
 }

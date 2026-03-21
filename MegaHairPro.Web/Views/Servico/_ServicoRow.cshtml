@@ -1,0 +1,49 @@
+@model MegaHairPro.Web.Models.Servico
+
+<tr id="row-@Model.Id"
+    data-nome="@Model.Nome"
+    data-descricao="@(Model.Descricao ?? "")"
+    data-categoria="@((int)Model.Categoria)"
+    data-valor="@Model.Valor.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+    data-valorpromocional="@(Model.ValorPromocional?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "")"
+    data-duracao="@Model.DuracaoMinutos">
+
+    <td>
+        <span style="font-weight:600;">@Model.Nome</span>
+        @if (!string.IsNullOrEmpty(Model.Descricao))
+        {
+            <br /><small style="color:#94a3b8;font-size:11px;">@Model.Descricao</small>
+        }
+    </td>
+    <td>
+        @switch (Model.Categoria)
+        {
+            case MegaHairPro.Web.Models.CategoriaServico.Cabelo:
+                <span class="badge bg-blue-soft">Cabelo</span> break;
+            case MegaHairPro.Web.Models.CategoriaServico.Unha:
+                <span class="badge" style="background:#e0f2fe;color:#0369a1;">Unha</span> break;
+            case MegaHairPro.Web.Models.CategoriaServico.Tratamento:
+                <span class="badge bg-success-soft">Tratamento</span> break;
+            case MegaHairPro.Web.Models.CategoriaServico.MegaHair:
+                <span class="badge bg-warning-soft">Mega Hair</span> break;
+        }
+    </td>
+    <td class="text-end">
+        @if (Model.ValorPromocional.HasValue && Model.ValorPromocional > 0)
+        {
+            <span style="text-decoration:line-through;color:#94a3b8;font-size:11px;margin-right:4px;">R$ @Model.Valor.ToString("N2")</span>
+            <span style="color:#16a34a;font-weight:600;">R$ @Model.ValorPromocional.Value.ToString("N2")</span>
+        }
+        else
+        {
+            <span style="font-weight:600;">R$ @Model.Valor.ToString("N2")</span>
+        }
+    </td>
+    <td class="text-center" style="color:#64748b;font-size:12px;">@Model.DuracaoMinutos min</td>
+    <td class="text-center">
+        <div class="d-flex gap-1 justify-content-center">
+            <button class="btn-act btn-act-blue" onclick="editarServico(@Model.Id)">Editar</button>
+            <button class="btn-act btn-act-red"  onclick="confirmarExcluir(@Model.Id)">Excluir</button>
+        </div>
+    </td>
+</tr>

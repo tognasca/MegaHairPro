@@ -1,0 +1,35 @@
+@model IEnumerable<MegaHairPro.Web.Models.Profissional>
+@{ ViewData["Title"] = "Profissionais"; }
+<div class="page-header"><div class="page-title">Profissionais</div><div class="page-sub">Cadastro de profissionais do salão</div></div>
+<div class="section-card"><div class="section-label">Novo profissional</div>
+<form id="formProfissional">@Html.AntiForgeryToken()
+<div class="row g-3 align-items-end">
+<div class="col-md-4"><label class="form-label">Nome</label><input id="novoNome" name="Nome" class="form-control" placeholder="Nome completo" required /></div>
+<div class="col-md-4"><label class="form-label">Especialidade</label><input id="novaEspecialidade" name="Especialidade" class="form-control" placeholder="Ex: Cabeleireira, Manicure..." /></div>
+<div class="col-md-2"><button id="btnSalvar" class="btn btn-success w-100">Salvar</button></div>
+</div></form></div>
+<div class="table-card"><div class="table-card-header"><span class="table-card-title">Profissionais registrados</span><span class="table-count">@Model.Count() registros</span></div>
+<div class="table-responsive"><table class="table"><thead><tr><th>Nome</th><th>Especialidade</th><th class="text-center" width="150">Ações</th></tr></thead>
+<tbody id="profissionaisBody">@foreach (var p in Model) { @Html.Partial("_ProfissionalRow", p) }</tbody></table></div></div>
+<div class="modal fade" id="modalEditar" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg rounded-4">
+<div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">Editar Profissional</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+<div class="modal-body"><input type="hidden" id="editId" /><div class="mb-3"><label class="form-label">Nome</label><input id="editNome" class="form-control" /></div><div class="mb-3"><label class="form-label">Especialidade</label><input id="editEspecialidade" class="form-control" /></div></div>
+<div class="modal-footer border-0"><button class="btn btn-light" data-bs-dismiss="modal">Cancelar</button><button class="btn btn-success px-4" onclick="salvarEdicao()">Salvar</button></div>
+</div></div></div>
+<div class="modal fade" id="modalExcluir" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow">
+<div class="modal-header bg-danger text-white border-0"><h5>Confirmar exclusão</h5></div>
+<div class="modal-body text-center"><p>Deseja excluir este profissional?</p><input type="hidden" id="excluirId" /></div>
+<div class="modal-footer border-0"><button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button class="btn btn-danger" id="btnExcluir">Excluir</button></div>
+</div></div></div>
+<div class="toast-container position-fixed bottom-0 end-0 p-3"><div id="toast" class="toast align-items-center text-white border-0"><div class="d-flex align-items-center"><div id="toastMsg" class="toast-body"></div><button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div></div></div>
+<script>
+let modalEditar,modalExcluir;
+document.addEventListener("DOMContentLoaded",function(){modalEditar=new bootstrap.Modal(document.getElementById("modalEditar"));modalExcluir=new bootstrap.Modal(document.getElementById("modalExcluir"));});
+function getToken(){return $('input[name="__RequestVerificationToken"]').first().val();}
+function toast(msg,tipo){let t=$("#toast");t.removeClass("bg-success bg-danger bg-warning");t.addClass(tipo);$("#toastMsg").text(msg);new bootstrap.Toast(t[0],{delay:3000}).show();}
+$("#formProfissional").submit(function(e){e.preventDefault();let btn=$("#btnSalvar").html("Salvando...").prop("disabled",true);$.ajax({url:"/Profissional/CreateAjax",type:"POST",data:new FormData(this),processData:false,contentType:false,success:function(html){$("#profissionaisBody").prepend(html);toast("Profissional salvo","bg-success");$("#formProfissional")[0].reset();},error:function(){toast("Erro ao salvar","bg-danger");},complete:function(){btn.html("Salvar").prop("disabled",false);}});});
+function editarProfissional(id){let row=document.getElementById("row-"+id);$("#editId").val(id);$("#editNome").val(row.dataset.nome);$("#editEspecialidade").val(row.dataset.especialidade);modalEditar.show();}
+function salvarEdicao(){let id=$("#editId").val();let fd=new FormData();fd.append("Id",id);fd.append("Nome",$("#editNome").val());fd.append("Especialidade",$("#editEspecialidade").val());fd.append("__RequestVerificationToken",getToken());$.ajax({url:"/Profissional/EditAjax",type:"POST",data:fd,processData:false,contentType:false,success:function(html){$("#row-"+id).replaceWith(html);modalEditar.hide();toast("Editado","bg-success");},error:function(){toast("Erro ao editar","bg-danger");}});}
+function confirmarExcluir(id){$("#excluirId").val(id);modalExcluir.show();}
+$("#btnExcluir").click(function(){let id=$("#excluirId").val();let btn=$(this).html("Excluindo...").prop("disabled",true);let fd=new FormData();fd.append("id",id);fd.append("__RequestVerificationToken",getToken());$.ajax({url:"/Profissional/Delete",type:"POST",data:fd,processData:false,contentType:false,success:function(){$("#row-"+id).fadeOut(300,function(){$(this).remove();});modalExcluir.hide();toast("Excluído","bg-success");},error:function(xhr){modalExcluir.hide();toast(xhr.responseText||"Erro","bg-danger");},complete:function(){btn.html("Excluir").prop("disabled",false);}});});
+</script>

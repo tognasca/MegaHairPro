@@ -17,23 +17,19 @@ namespace MegaHairPro.Web.Services
 
         public SimulacaoVenda Calcular(SimulacaoVenda model)
         {
-            // ================= PRODUTO / ESTOQUE =================
-            var compra = _context.Compras
-                .FirstOrDefault(p => p.ProdutoId == model.ProdutoId)
-                ?? throw new Exception("Produto na compra não encontrado.");
+            // ================= ESTOQUE =================
+            var produto = _context.Produtos.FirstOrDefault(p => p.Id == model.ProdutoId)
+                ?? throw new Exception("Produto não encontrado.");
 
-            model.EstoqueAtualGramas = compra.QuantidadeGramas ?? 0;
+            model.EstoqueAtualGramas = produto.EstoqueGramas;
+            model.EstoquePosVendaGramas = produto.EstoqueGramas - model.QuantidadeGramas;
 
             if (model.QuantidadeGramas > model.EstoqueAtualGramas)
                 throw new Exception("Quantidade maior que o estoque disponível.");
 
-            model.EstoquePosVendaGramas =
-                (compra.QuantidadeGramas - model.QuantidadeGramas) ?? 0;
-
             // ================= CUSTO MÉDIO CABELO =================
             var compras = _context.Compras
-                .Where(c => c.ProdutoId == model.ProdutoId &&
-                            c.QuantidadeGramas > 0)
+                .Where(c => c.ProdutoId == model.ProdutoId && c.QuantidadeGramas > 0)
                 .ToList();
 
             if (!compras.Any())
@@ -43,125 +39,71 @@ namespace MegaHairPro.Web.Services
             var totalGramas = compras.Sum(c => c.QuantidadeGramas!.Value);
 
             var custoMedioGrama = totalValor / totalGramas;
-
-            model.CustoCabelo =
-                custoMedioGrama * model.QuantidadeGramas;
+            model.CustoCabelo = custoMedioGrama * model.QuantidadeGramas;
 
             // ================= LUCRO CABELO =================
-            model.ValorLucroCabelo =
-                model.CustoCabelo *
-                (model.PercentualLucroCabelo / 100m);
+            model.ValorLucroCabelo = model.CustoCabelo * (model.PercentualLucroCabelo / 100m);
 
-            var precoCabelo =
-                model.CustoCabelo +
-                model.ValorLucroCabelo;
+            var precoCabelo = model.CustoCabelo + model.ValorLucroCabelo;
 
-            // =====================================================
-            // 🔥 NOVO BLOCO — CONFECÇÃO POR MÉTODO
-            // =====================================================
-
+            // ================= CONFECÇÃO =================
             decimal valorPorGramaMetodo = 0;
-
             if (model.MetodoId > 0)
             {
-                var metodo = _context.MetodosAplicacao
-                    .FirstOrDefault(x => x.Id == model.MetodoId);
-
+                var metodo = _context.MetodosAplicacao.FirstOrDefault(x => x.Id == model.MetodoId);
                 if (metodo != null)
-                {
-                    valorPorGramaMetodo =
-                        metodo.ValorPorGrama;
-                }
+                    valorPorGramaMetodo = metodo.ValorPorGrama;
             }
+            model.ValorTotalConfeccao = valorPorGramaMetodo * model.QuantidadeGramas;
 
-            model.ValorTotalConfeccao =
-                valorPorGramaMetodo *
-                model.QuantidadeGramas;
+            // ================= SERVIÇOS ADICIONAIS =================
+            model.CustoServico = model.MaoDeObra + model.Tinta + model.CorteEscova;
 
-            // =====================================================
-            // SERVIÇOS ADICIONAIS (mantido)
-            // =====================================================
-
-            model.CustoServico =
-                model.MaoDeObra +
-                model.Tinta +
-                model.CorteEscova;
-
-            // =====================================================
-            // PREÇO CHEIO (SEM DESCONTO)
-            // =====================================================
-
+            // ================= PREÇO CHEIO =================
             model.PrecoVendaOriginal =
                 precoCabelo +
-                model.ValorTotalConfeccao +   // 🔥 entrou aqui
+                model.ValorTotalConfeccao +
                 model.CustoServico +
                 model.DespesaSalaoRateada;
-
-            model.PrecoVenda =
-                model.PrecoVendaOriginal;
 
             // ================= DESCONTO =================
             if (model.PercentualDesconto > 0)
             {
-                model.ValorDesconto =
-                    model.PrecoVendaOriginal *
-                    (model.PercentualDesconto / 100m);
-
-                model.PrecoVenda =
-                    model.PrecoVendaOriginal -
-                    model.ValorDesconto;
+                model.ValorDesconto = model.PrecoVendaOriginal * (model.PercentualDesconto / 100m);
+                model.PrecoVenda = model.PrecoVendaOriginal - model.ValorDesconto;
             }
             else
             {
                 model.ValorDesconto = 0;
+                model.PrecoVenda = model.PrecoVendaOriginal;
             }
 
-            // ================= COMISSÕES =================
+            // ================= COMISSÕES (sobre PrecoVenda) =================
             model.ValorComissaoVendedora =
-                (model.PercentualComissaoVendedora ?? 0) *
-                precoCabelo / 100m;
+                (model.PercentualComissaoVendedora ?? 0) * model.PrecoVenda / 100m;
 
             model.ValorComissaoCabeleireira =
-                (model.PercentualComissaoCabeleireira ?? 0) *
-                precoCabelo / 100m;
+                (model.PercentualComissaoCabeleireira ?? 0) * model.PrecoVenda / 100m;
 
             // ================= CUSTO TOTAL =================
             model.CustoTotal =
                 model.CustoCabelo +
-                model.ValorTotalConfeccao +   // 🔥 entrou aqui
+                model.ValorTotalConfeccao +
                 model.CustoServico +
                 model.DespesaSalaoRateada +
                 model.ValorComissaoVendedora.Value +
                 model.ValorComissaoCabeleireira.Value;
 
-            // ================= LUCRO CABELO =================
-            model.LucroCabelo =
-                precoCabelo - model.CustoCabelo;
-
-            // ================= LUCRO VENDA =================
-            model.LucroVenda =
-                (precoCabelo +
-                 model.ValorTotalConfeccao +
-                 model.CustoServico) -
-                (model.CustoCabelo +
-                 model.ValorTotalConfeccao +
-                 model.CustoServico);
-
-            // ================= LUCRO LÍQUIDO =================
-            model.LucroLiquido =
-                model.PrecoVenda -
-                model.CustoTotal;
-
-            model.LucroTotal =
-                model.LucroLiquido;
+            // ================= LUCRO =================
+            model.LucroCabelo = precoCabelo - model.CustoCabelo;   // lucro só do cabelo
+            model.LucroLiquido = model.PrecoVenda - model.CustoTotal;
+            model.LucroTotal = model.LucroLiquido;
+            model.LucroVenda = model.LucroLiquido;
 
             // ================= MARGEM % =================
-            if (model.PrecoVenda > 0)
-                model.MargemPercentual =
-                    (model.LucroLiquido /
-                     model.PrecoVenda) * 100m;
-            else
-                model.MargemPercentual = 0;
+            model.MargemPercentual = model.PrecoVenda > 0
+                ? (model.LucroLiquido / model.PrecoVenda) * 100m
+                : 0;
 
             return model;
         }

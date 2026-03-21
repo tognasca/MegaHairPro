@@ -4,315 +4,254 @@
     ViewData["Title"] = "Compras";
 }
 
-<h2>📦 Controle de Compras</h2>
+<div class="page-header">
+    <div class="page-title">Compras</div>
+    <div class="page-sub">Registro de compras e controle de estoque</div>
+</div>
 
-<hr />
-
-<!-- ✅ Mostrar erros de validação -->
 @if (!ViewData.ModelState.IsValid)
 {
-    <div class="alert alert-danger">
-        <strong>Erro ao salvar:</strong>
-        <ul>
+    <div class="alert alert-danger alert-dismissible fade show mb-3">
+        <ul class="mb-0">
             @foreach (var erro in ViewData.ModelState.Values.SelectMany(v => v.Errors))
             {
                 <li>@erro.ErrorMessage</li>
             }
         </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 }
 
-<!-- ✅ FORMULÁRIO DE CADASTRO -->
-<div class="card p-3 mb-4">
-    <h4>➕ Nova Compra</h4>
-
+<div class="section-card">
+    <div class="section-label">Nova compra</div>
     <form asp-action="Index" method="post">
-
-        <!-- AntiForgery (recomendado) -->
-    @Html.AntiForgeryToken() 
-
-        <div class="row">
-
-            <!-- ✅ Produto -->
+        @Html.AntiForgeryToken()
+        <div class="row g-3 align-items-end">
             <div class="col-md-3">
-                <label>Produto</label>
-                <select name="ProdutoId" class="form-control" required>
+                <label class="form-label">Produto</label>
+                <select name="ProdutoId" class="form-select" required>
                     <option value="">Selecione...</option>
-                    @foreach (var p in ViewBag.Produtos)
-                    {
-                        <option value="@p.Id">@p.Nome</option>
-                    }
+                    @foreach (var p in ViewBag.Produtos) { <option value="@p.Id">@p.Nome</option> }
                 </select>
             </div>
-
-            <!-- ✅ Fornecedor -->
-            <div class="col-md-3">
-                <label>Fornecedor</label>
-                <select name="FornecedorId" class="form-control" required>
+            <div class="col-md-2">
+                <label class="form-label">Fornecedor</label>
+                <select name="FornecedorId" class="form-select" required>
                     <option value="">Selecione...</option>
-                    @foreach (var f in ViewBag.Fornecedores)
-                    {
-                        <option value="@f.Id">@f.Nome</option>
-                    }
+                    @foreach (var f in ViewBag.Fornecedores) { <option value="@f.Id">@f.Nome</option> }
                 </select>
             </div>
-
-            <!-- ✅ Quantidade -->
             <div class="col-md-2">
-                <label>Quantidade</label>
-                <input type="number"
-                       step="0.01"
-                       name="QuantidadeGramas"
-                       class="form-control"
-                       required />
+                <label class="form-label">Quantidade (g)</label>
+                <input type="text" id="inputQtd" name="QuantidadeGramas" class="form-control" placeholder="0,00" required />
             </div>
-
-            <!-- ✅ Valor -->
             <div class="col-md-2">
-                <label>Valor Total</label>
-                <input type="number" 
-                       step="0.01"
-                       name="ValorTotal"
-                       class="form-control decimal"
-                       required />
+                <label class="form-label">Valor Total</label>
+                <input type="text" id="inputValor" name="ValorTotal" class="form-control" placeholder="0,00" required />
             </div>
-
-            <!-- ✅ Data -->
             <div class="col-md-2">
-                <label>Data</label>
-                <input type="date"
-                       name="DataCompra"
-                       class="form-control"
-                       value="@DateTime.Now.ToString("yyyy-MM-dd")"
-                       required />
+                <label class="form-label">Data</label>
+                <input type="date" name="DataCompra" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
             </div>
-
+            <div class="col-md-1">
+                <button type="button" class="btn btn-success w-100" onclick="submeterForm()">Salvar</button>
+            </div>
         </div>
-
-        <br />
-
-        <button type="submit" class="btn btn-success">
-            ✅ Salvar Compra
-        </button>
     </form>
 </div>
 
-<hr />
+<div class="table-card">
+    <div class="table-card-header">
+        <span class="table-card-title">Compras registradas</span>
+        <span class="table-count">@Model.Count() registros</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Produto</th>
+                    <th>Fornecedor</th>
+                    <th class="text-end">Quantidade</th>
+                    <th class="text-end">Valor Total</th>
+                    <th class="text-center">Data</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center" width="200">Ações</th>
+                </tr>
+            </thead>
+            <tbody id="comprasBody">
+                @foreach (var compra in Model) { @Html.Partial("_CompraRow", compra) }
+            </tbody>
+        </table>
+    </div>
+</div>
 
-<!-- ✅ LISTA DE COMPRAS -->
-<h4>📋 Compras Registradas</h4>
-
-<table class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th>Produto</th>
-            <th>Fornecedor</th>
-            <th>Qtd</th>
-            <th>Valor</th>
-            <th>Data</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-
-    <tbody id="comprasBody">
-        @foreach (var compra in Model)
-        {
-            @Html.Partial("_CompraRow", compra)
-        }
-    </tbody>
-</table>
-
-<!-- ✅ MODAL EDITAR COMPRA -->
+<!-- MODAL EDITAR -->
 <div class="modal fade" id="modalEditarCompra" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-
-            <div class="modal-header">
-                <h5 class="modal-title">✏️ Editar Compra</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Editar Compra</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
             <div class="modal-body">
-
                 <input type="hidden" id="editId" />
-
-                <div class="mb-2">
-                    <label>Produto</label>
-                    <select id="editProdutoId" class="form-control">
-                        @foreach (var p in ViewBag.Produtos)
-                        {
-                            <option value="@p.Id">@p.Nome</option>
-                        }
-                    </select>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Produto</label>
+                        <select id="editProdutoId" class="form-select">
+                            @foreach (var p in ViewBag.Produtos) { <option value="@p.Id">@p.Nome</option> }
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Fornecedor</label>
+                        <select id="editFornecedorId" class="form-select">
+                            @foreach (var f in ViewBag.Fornecedores) { <option value="@f.Id">@f.Nome</option> }
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Quantidade (g)</label>
+                        <input type="text" id="editQtd" class="form-control" placeholder="0,00" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Valor Total</label>
+                        <input type="text" id="editValor" class="form-control" placeholder="0,00" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Data</label>
+                        <input type="date" id="editData" class="form-control" />
+                    </div>
                 </div>
-
-                <div class="mb-2">
-                    <label>Fornecedor</label>
-                    <select id="editFornecedorId" class="form-control">
-                        @foreach (var f in ViewBag.Fornecedores)
-                        {
-                            <option value="@f.Id">@f.Nome</option>
-                        }
-                    </select>
-                </div>
-
-                <div class="mb-2">
-                    <label>Quantidade (g)</label>
-                    <input type="number" step="0.01"
-                           id="editQtd"
-                           class="form-control" />
-                </div>
-
-                <div class="mb-2">
-                    <label>Valor Total</label>
-                    <input type="number" step="0.01"
-                           id="editValor"
-                           class="form-control" />
-                </div>
-
-                <div class="mb-2">
-                    <label>Data</label>
-                    <input type="date"
-                           id="editData"
-                           class="form-control" />
-                </div>
-
             </div>
-
-            <div class="modal-footer">
-                <button class="btn btn-secondary"
-                        data-bs-dismiss="modal">
-                    Cancelar
-                </button>
-
-                <button class="btn btn-primary"
-                        onclick="salvarEdicao()">
-                    ✅ Salvar Alterações
-                </button>
+            <div class="modal-footer border-0">
+                <button class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-success px-4" onclick="salvarEdicao()">Salvar</button>
             </div>
-
         </div>
     </div>
 </div>
+
+<!-- MODAL EXCLUIR -->
+<div class="modal fade" id="modalExcluir" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white border-0"><h5>Confirmar exclusão</h5></div>
+            <div class="modal-body text-center">
+                <p>Deseja excluir esta compra?</p>
+                <input type="hidden" id="excluirId" />
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-danger" id="btnExcluir">Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="toast" class="toast align-items-center text-white border-0">
+        <div class="d-flex align-items-center">
+            <div id="toastMsg" class="toast-body"></div>
+            <button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
 <script>
-    let modalEditar;
+    let modalEditar, modalExcluir;
 
     document.addEventListener("DOMContentLoaded", function () {
-        modalEditar = new bootstrap.Modal(document.getElementById("modalEditarCompra"));
+        modalEditar  = new bootstrap.Modal(document.getElementById("modalEditarCompra"));
+        modalExcluir = new bootstrap.Modal(document.getElementById("modalExcluir"));
+        aplicarMascara(document.getElementById("inputQtd"));
+        aplicarMascara(document.getElementById("inputValor"));
     });
 
-    // ✅ ABRIR MODAL EDITAR
-    function EditAjax(id) {
+    function submeterForm() {
+        let qtd = document.getElementById("inputQtd");
+        let val = document.getElementById("inputValor");
+        qtd.value = parseBR(qtd.value).toString();
+        val.value = parseBR(val.value).toString();
+        qtd.form.submit();
+    }
 
+    function aplicarMascara(input) {
+        if (!input || input._mascaraAplicada) return;
+        input._mascaraAplicada = true;
+        input.addEventListener("input", function () {
+            let v = this.value.replace(/\D/g, "");
+            v = (parseInt(v || "0", 10) / 100).toFixed(2);
+            this.value = v.replace(".", ",");
+        });
+    }
+
+    function parseBR(val) { return parseFloat((val || "0").replace(/\./g, "").replace(",", ".")) || 0; }
+    function getToken()   { return $('input[name="__RequestVerificationToken"]').first().val(); }
+
+    function toast(msg, tipo) {
+        let t = $("#toast");
+        t.removeClass("bg-success bg-danger bg-warning");
+        t.addClass(tipo);
+        $("#toastMsg").text(msg);
+        new bootstrap.Toast(t[0], { delay: 3000 }).show();
+    }
+
+    function editarCompra(id) {
         let row = document.getElementById("row-" + id);
-        console.log(row);
-        document.getElementById("editId").value = id;
-
-        document.getElementById("editProdutoId").value = row.dataset.produto;
+        document.getElementById("editId").value           = id;
+        document.getElementById("editProdutoId").value    = row.dataset.produto;
         document.getElementById("editFornecedorId").value = row.dataset.fornecedor;
-
-        document.getElementById("editQtd").value = row.dataset.qtd;
-        document.getElementById("editValor").value = row.dataset.valor;
-        document.getElementById("editData").value = row.dataset.data;
-
+        document.getElementById("editData").value         = row.dataset.data;
+        let iq = document.getElementById("editQtd");
+        iq.value = parseFloat(row.dataset.qtd || 0).toFixed(2).replace(".", ",");
+        aplicarMascara(iq);
+        let iv = document.getElementById("editValor");
+        iv.value = parseFloat(row.dataset.valor || 0).toFixed(2).replace(".", ",");
+        aplicarMascara(iv);
         modalEditar.show();
     }
 
-        function editarProduto(id) {
-
-        let row = document.getElementById("row-" + id);
-
-        document.getElementById("editId").value = id;
-
-        document.getElementById("editTipo").value = row.dataset.tipo;
-        document.getElementById("editNome").value = row.dataset.nome;
-
-        document.getElementById("editOrigem").value = row.dataset.origem;
-        document.getElementById("editTamanho").value = row.dataset.tamanho;
-        document.getElementById("editCor").value = row.dataset.cor;
-
-        modalEditar.show();
-    }
-
-
-    // ✅ SALVAR EDIÇÃO VIA AJAX
     function salvarEdicao() {
-
         let id = document.getElementById("editId").value;
-
-        let produtoId = document.getElementById("editProdutoId").value;
-        let fornecedorId = document.getElementById("editFornecedorId").value;
-
-        let qtd = document.getElementById("editQtd").value;
-        let valor = document.getElementById("editValor").value;
-        let data = document.getElementById("editData").value;
-
-        fetch("/Compras/EditAjax", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
-            body:
-                "Id=" + id +
-                "&ProdutoId=" + produtoId +
-                "&FornecedorId=" + fornecedorId +
-                "&QuantidadeGramas=" + qtd +
-                "&ValorTotal=" + valor +
-                "&DataCompra=" + data
-        })
-            .then(r => r.text())
-            .then(html => {
-
-                // ✅ Atualiza linha na tabela
-                let row = document.getElementById("row-" + id);
-                row.outerHTML = html;
-
-                // ✅ Fecha modal
-                modalEditar.hide();
-            });
+        let fd = new FormData();
+        fd.append("Id", id);
+        fd.append("ProdutoId",        document.getElementById("editProdutoId").value);
+        fd.append("FornecedorId",     document.getElementById("editFornecedorId").value);
+        fd.append("QuantidadeGramas", parseBR(document.getElementById("editQtd").value).toString());
+        fd.append("ValorTotal",       parseBR(document.getElementById("editValor").value).toString());
+        fd.append("DataCompra",       document.getElementById("editData").value);
+        fd.append("__RequestVerificationToken", getToken());
+        $.ajax({
+            url: "/Compras/EditAjax", type: "POST", data: fd, processData: false, contentType: false,
+            success: function (html) { $("#row-" + id).replaceWith(html); modalEditar.hide(); toast("Compra editada", "bg-success"); },
+            error: function () { toast("Erro ao editar", "bg-danger"); }
+        });
     }
 
-    // ✅ ATIVAR / INATIVAR
     function toggleStatus(id) {
-
-        fetch("/Compras/ToggleStatusAjax", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
-            body: "id=" + id
-        })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                }
-            });
+        let fd = new FormData();
+        fd.append("id", id);
+        fd.append("__RequestVerificationToken", getToken());
+        $.ajax({
+            url: "/Compras/ToggleStatusAjax", type: "POST", data: fd, processData: false, contentType: false,
+            success: function (html) { $("#row-" + id).replaceWith(html); toast("Status alterado", "bg-warning"); },
+            error: function () { toast("Erro ao alterar status", "bg-danger"); }
+        });
     }
 
-    // ✅ EXCLUIR
-    function excluirCompra(id) {
+    function confirmarExcluir(id) { $("#excluirId").val(id); modalExcluir.show(); }
 
-        if (!confirm("Deseja excluir esta compra?"))
-            return;
-
-        fetch("/Compras/Delete", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
-            body: "id=" + id
-        })
-            .then(() => location.reload());
-    }
-
-    $('.decimal').maskMoney({
-        prefix: 'R$ ',
-        allowNegative: false,
-        thousands: '.',
-        decimal: ',',
-        affixesStay: true
+    $("#btnExcluir").click(function () {
+        let id  = $("#excluirId").val();
+        let btn = $(this).html("Excluindo...").prop("disabled", true);
+        let fd  = new FormData();
+        fd.append("id", id);
+        fd.append("__RequestVerificationToken", getToken());
+        $.ajax({
+            url: "/Compras/Delete", type: "POST", data: fd, processData: false, contentType: false,
+            success: function () { $("#row-" + id).fadeOut(300, function () { $(this).remove(); }); modalExcluir.hide(); toast("Compra excluída", "bg-success"); },
+            error: function () { toast("Erro ao excluir", "bg-danger"); },
+            complete: function () { btn.html("Excluir").prop("disabled", false); }
+        });
     });
-
 </script>
-

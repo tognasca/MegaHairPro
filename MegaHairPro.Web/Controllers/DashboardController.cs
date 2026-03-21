@@ -20,38 +20,20 @@ namespace MegaHairPro.Web.Controllers
             var amanha = hoje.AddDays(1);
 
             var vendasHoje = _context.Vendas
-                .Where(v => v.DataVenda >= hoje &&
-                            v.DataVenda < amanha)
+                .Where(v => v.DataVenda >= hoje && v.DataVenda < amanha)
                 .ToList();
 
-            ViewBag.TotalHoje =
-                vendasHoje.Any()
-                    ? vendasHoje.Sum(x => x.PrecoVenda)
-                    : 0;
+            ViewBag.TotalHoje = vendasHoje.Sum(x => x.PrecoVenda);
+            ViewBag.LucroHoje = vendasHoje.Sum(x => x.LucroTotal);
 
-            ViewBag.LucroHoje =
-                vendasHoje.Any()
-                    ? vendasHoje.Sum(x => x.LucroTotal)
-                    : 0;
+            ViewBag.ComissoesPendentes = _context.Comissoes
+                .Where(c => !c.Pago)
+                .Sum(c => (decimal?)c.Valor) ?? 0;
 
-            ViewBag.ComissoesPendentes =
-                _context.Comissoes.Any()
-                    ? _context.Comissoes
-                        .Where(c => !c.Pago)
-                        .Sum(c => c.Valor)
-                    : 0;
-
-            var estoqueBaixo = _context.Compras
+            ViewBag.EstoqueBaixo = _context.Compras
                 .GroupBy(c => c.ProdutoId)
-                .Select(g => new
-                {
-                    ProdutoId = g.Key,
-                    TotalGramas = g.Sum(x => x.QuantidadeGramas)
-                })
-                .Where(x => x.TotalGramas < 100)
-                .Count();
-
-            ViewBag.EstoqueBaixo = estoqueBaixo;
+                .Select(g => new { Total = g.Sum(x => x.QuantidadeGramas) })
+                .Count(x => x.Total < 100);
 
             return View();
         }

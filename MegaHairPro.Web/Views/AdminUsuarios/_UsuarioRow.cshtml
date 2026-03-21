@@ -1,0 +1,38 @@
+@model MegaHairPro.Web.Models.ViewModels.UsuarioAdminVM
+
+<tr id="row-@Model.Id" data-ativo="@Model.Ativo.ToString().ToLower()"
+    class="@(!Model.Ativo ? "table-secondary text-muted" : "")">
+    <td>@Model.Nome</td>
+    <td>@Model.Email</td>
+    <td>
+        @if (Model.Perfil == "Admin")
+        {
+            <span class="badge bg-danger">Admin</span>
+        }
+        else
+        {
+            <span class="badge bg-primary">Usuário</span>
+        }
+    </td>
+    <td class="text-center">
+        @if (Model.Ativo)
+        {
+            <span class="badge bg-success">Ativo</span>
+        }
+        else
+        {
+            <span class="badge bg-secondary">Inativo</span>
+        }
+    </td>
+    <td class="text-center">
+        <button class="btn btn-sm btn-outline-warning" onclick="toggleStatus('@Model.Id')">
+            @(Model.Ativo ? "Bloquear" : "Ativar")
+        </button>
+        <button class="btn btn-sm btn-outline-info" onclick="resetSenha('@Model.Id')">
+            🔑 Reset Senha
+        </button>
+        <button class="btn btn-sm btn-outline-danger" onclick="confirmarExcluir('@Model.Id')">
+            Excluir
+        </button>
+    </td>
+</tr>

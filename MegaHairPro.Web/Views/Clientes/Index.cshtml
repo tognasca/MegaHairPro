@@ -1,237 +1,269 @@
-﻿@model IEnumerable<MegaHairPro.Web.Models.Cliente>
+@model IEnumerable<MegaHairPro.Web.Models.Cliente>
 
 @{
     ViewData["Title"] = "Clientes";
 }
 
-<h2>👩‍🦰 Controle de Clientes</h2>
-<hr />
+<div class="page-header">
+    <div class="page-title">Clientes</div>
+    <div class="page-sub">Cadastro e gerenciamento de clientes</div>
+</div>
 
-<!-- ✅ CADASTRO -->
-<div class="card p-3 mb-4">
-    <h4>➕ Novo Cliente</h4>
-
+<!-- CADASTRO -->
+<div class="section-card">
+    <div class="section-label">Novo cliente</div>
     <form asp-action="Index" method="post">
-        @* @Html.AntiForgeryToken() *@
-
-        <div class="row">
-
-            <div class="col-md-6">
-                <label>Nome</label>
-                <input name="Nome" class="form-control" required />
+        @Html.AntiForgeryToken()
+        <div class="row g-3">
+            <div class="col-md-5">
+                <label class="form-label">Nome</label>
+                <input name="Nome" class="form-control" placeholder="Nome completo" required />
             </div>
-
-            <div class="col-md-3">
-                <label>Telefone</label>
-                <input name="Telefone" class="form-control" />
+            <div class="col-md-2">
+                <label class="form-label">CPF</label>
+                <input name="CPF" class="form-control" placeholder="000.000.000-00" />
             </div>
-
-            <div class="col-md-3">
-                <label>WhatsApp</label>
-                <input name="WhatsApp" class="form-control" />
+            <div class="col-md-2">
+                <label class="form-label">Telefone</label>
+                <input name="Telefone" class="form-control" placeholder="(00) 0000-0000" />
             </div>
-
+            <div class="col-md-2">
+                <label class="form-label">WhatsApp</label>
+                <input name="WhatsApp" class="form-control" placeholder="(00) 00000-0000" />
+            </div>
+            <div class="col-md-1 d-flex align-items-end">
+                <button class="btn btn-success w-100">Salvar</button>
+            </div>
             <div class="col-md-4">
-                <label>Email</label>
-                <input name="Email" class="form-control" />
+                <label class="form-label">E-mail</label>
+                <input name="Email" type="email" class="form-control" placeholder="email@exemplo.com" />
             </div>
-
-            <div class="col-md-4">
-                <label>CPF</label>
-                <input name="CPF" class="form-control" />
-            </div>
-
-            <div class="col-md-4">
-                <label>Data Nascimento</label>
+            <div class="col-md-2">
+                <label class="form-label">Data Nascimento</label>
                 <input name="DataNascimento" type="date" class="form-control" />
             </div>
-
-            <div class="col-md-12">
-                <label>Endereço</label>
-                <input name="Endereco" class="form-control" />
+            <div class="col-md-6">
+                <label class="form-label">Endereço</label>
+                <input name="Endereco" class="form-control" placeholder="Rua, número, bairro..." />
             </div>
-
             <div class="col-md-12">
-                <label>Observações</label>
-                <textarea name="Observacoes" class="form-control"></textarea>
+                <label class="form-label">Observações</label>
+                <textarea name="Observacoes" class="form-control" rows="2" placeholder="Informações adicionais..."></textarea>
             </div>
-
         </div>
-
-        <br />
-
-        <button class="btn btn-success">
-            ✅ Salvar Cliente
-        </button>
     </form>
 </div>
 
-<hr />
+<!-- LISTAGEM -->
+<div class="table-card">
+    <div class="table-card-header">
+        <span class="table-card-title">Clientes registrados</span>
+        <span class="table-count">@Model.Count() registros</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>CPF</th>
+                    <th>Telefone</th>
+                    <th>WhatsApp</th>
+                    <th>E-mail</th>
+                    <th>Status</th>
+                    <th width="220"></th>
+                </tr>
+            </thead>
+            <tbody id="clientesBody">
+                @foreach (var c in Model)
+                {
+                    @Html.Partial("_ClienteRow", c)
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
 
-<!-- ✅ LISTAGEM -->
-<h4>📋 Clientes Registrados</h4>
-
-<table class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th>Nome</th>
-            <th>Telefone</th>
-            <th>WhatsApp</th>
-            <th>Email</th>
-            <th>Ações</th>
-        </tr>
-    </thead>
-
-    <tbody id="clientesBody">
-        @foreach (var c in Model)
-        {
-            @Html.Partial("_ClienteRow", c)
-        }
-    </tbody>
-</table>
-
-<!-- ✅ MODAL EDITAR -->
+<!-- MODAL EDITAR -->
 <div class="modal fade" id="modalEditarCliente" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-
-            <div class="modal-header">
-                <h5 class="modal-title">✏️ Editar Cliente</h5>
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Editar Cliente</h5>
                 <button class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
             <div class="modal-body">
-
                 <input type="hidden" id="editId" />
-
-                <div class="row">
-
-                    <div class="col-md-6 mb-2">
-                        <label>Nome</label>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Nome</label>
                         <input id="editNome" class="form-control" />
                     </div>
-
-                    <div class="col-md-3 mb-2">
-                        <label>Telefone</label>
+                    <div class="col-md-3">
+                        <label class="form-label">Telefone</label>
                         <input id="editTelefone" class="form-control" />
                     </div>
-
-                    <div class="col-md-3 mb-2">
-                        <label>WhatsApp</label>
+                    <div class="col-md-3">
+                        <label class="form-label">WhatsApp</label>
                         <input id="editWhats" class="form-control" />
                     </div>
-
-                    <div class="col-md-4 mb-2">
-                        <label>Email</label>
-                        <input id="editEmail" class="form-control" />
+                    <div class="col-md-4">
+                        <label class="form-label">E-mail</label>
+                        <input id="editEmail" type="email" class="form-control" />
                     </div>
-
-                    <div class="col-md-4 mb-2">
-                        <label>CPF</label>
+                    <div class="col-md-4">
+                        <label class="form-label">CPF</label>
                         <input id="editCpf" class="form-control" />
                     </div>
-
-                    <div class="col-md-4 mb-2">
-                        <label>Nascimento</label>
+                    <div class="col-md-4">
+                        <label class="form-label">Nascimento</label>
                         <input id="editNascimento" type="date" class="form-control" />
                     </div>
-
-                    <div class="col-md-12 mb-2">
-                        <label>Endereço</label>
+                    <div class="col-md-12">
+                        <label class="form-label">Endereço</label>
                         <input id="editEndereco" class="form-control" />
                     </div>
-
-                    <div class="col-md-12 mb-2">
-                        <label>Observações</label>
-                        <textarea id="editObs" class="form-control"></textarea>
+                    <div class="col-md-12">
+                        <label class="form-label">Observações</label>
+                        <textarea id="editObs" class="form-control" rows="2"></textarea>
                     </div>
-
                 </div>
             </div>
-
-            <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">
-                    Cancelar
-                </button>
-
-                <button class="btn btn-primary" onclick="salvarEdicao()">
-                    ✅ Salvar
-                </button>
+            <div class="modal-footer border-0">
+                <button class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-success px-4" onclick="salvarEdicao()">Salvar</button>
             </div>
+        </div>
+    </div>
+</div>
 
+<!-- MODAL EXCLUIR -->
+<div class="modal fade" id="modalExcluir" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white border-0">
+                <h5>Confirmar exclusão</h5>
+            </div>
+            <div class="modal-body text-center">
+                <p>Deseja excluir este cliente?</p>
+                <input type="hidden" id="excluirId" />
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-danger" id="btnExcluir">Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="toast" class="toast align-items-center text-white border-0">
+        <div class="d-flex align-items-center">
+            <div id="toastMsg" class="toast-body"></div>
+            <button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
         </div>
     </div>
 </div>
 
 <script>
-    let modalEditar;
+    let modalEditar, modalExcluir;
 
     document.addEventListener("DOMContentLoaded", function () {
-        modalEditar = new bootstrap.Modal(
-            document.getElementById("modalEditarCliente")
-        );
+        modalEditar  = new bootstrap.Modal(document.getElementById("modalEditarCliente"));
+        modalExcluir = new bootstrap.Modal(document.getElementById("modalExcluir"));
     });
 
+    function getToken() {
+        return $('input[name="__RequestVerificationToken"]').first().val();
+    }
+
+    function toast(msg, tipo) {
+        let t = $("#toast");
+        t.removeClass("bg-success bg-danger bg-warning");
+        t.addClass(tipo);
+        $("#toastMsg").text(msg);
+        new bootstrap.Toast(t[0], { delay: 3000 }).show();
+    }
+
     function editarCliente(id) {
-
         let row = document.getElementById("row-" + id);
-
-        document.getElementById("editId").value = id;
-        document.getElementById("editNome").value = row.dataset.nome;
-        document.getElementById("editTelefone").value = row.dataset.telefone;
-        document.getElementById("editWhats").value = row.dataset.whatsapp;
-        document.getElementById("editEmail").value = row.dataset.email;
-        document.getElementById("editCpf").value = row.dataset.cpf;
+        document.getElementById("editId").value         = id;
+        document.getElementById("editNome").value       = row.dataset.nome;
+        document.getElementById("editTelefone").value   = row.dataset.telefone;
+        document.getElementById("editWhats").value      = row.dataset.whatsapp;
+        document.getElementById("editEmail").value      = row.dataset.email;
+        document.getElementById("editCpf").value        = row.dataset.cpf;
         document.getElementById("editNascimento").value = row.dataset.nascimento;
-        document.getElementById("editEndereco").value = row.dataset.endereco;
-        document.getElementById("editObs").value = row.dataset.obs;
-
+        document.getElementById("editEndereco").value   = row.dataset.endereco;
+        document.getElementById("editObs").value        = row.dataset.obs;
         modalEditar.show();
     }
 
     function salvarEdicao() {
-
         let id = document.getElementById("editId").value;
+        let fd = new FormData();
+        fd.append("Id",             id);
+        fd.append("Nome",           document.getElementById("editNome").value);
+        fd.append("Telefone",       document.getElementById("editTelefone").value);
+        fd.append("WhatsApp",       document.getElementById("editWhats").value);
+        fd.append("Email",          document.getElementById("editEmail").value);
+        fd.append("CPF",            document.getElementById("editCpf").value);
+        fd.append("DataNascimento", document.getElementById("editNascimento").value);
+        fd.append("Endereco",       document.getElementById("editEndereco").value);
+        fd.append("Observacoes",    document.getElementById("editObs").value);
+        fd.append("__RequestVerificationToken", getToken());
 
-        fetch("/Clientes/EditAjax", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body:
-                "Id=" + id +
-                "&Nome=" + document.getElementById("editNome").value +
-                "&Telefone=" + document.getElementById("editTelefone").value +
-                "&WhatsApp=" + document.getElementById("editWhats").value +
-                "&Email=" + document.getElementById("editEmail").value +
-                "&CPF=" + document.getElementById("editCpf").value +
-                "&DataNascimento=" + document.getElementById("editNascimento").value +
-                "&Endereco=" + document.getElementById("editEndereco").value +
-                "&Observacoes=" + document.getElementById("editObs").value
-        })
-        .then(r => r.text())
-        .then(html => {
-            document.getElementById("row-" + id).outerHTML = html;
-            modalEditar.hide();
+        $.ajax({
+            url: "/Clientes/EditAjax", type: "POST", data: fd,
+            processData: false, contentType: false,
+            success: function (html) {
+                $("#row-" + id).replaceWith(html);
+                modalEditar.hide();
+                toast("Cliente editado com sucesso", "bg-success");
+            },
+            error: function () { toast("Erro ao editar", "bg-danger"); }
         });
     }
 
     function toggleStatus(id) {
-        fetch("/Clientes/ToggleStatusAjax", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: "id=" + id
-        })
-        .then(() => location.reload());
+        let fd = new FormData();
+        fd.append("id", id);
+        fd.append("__RequestVerificationToken", getToken());
+
+        $.ajax({
+            url: "/Clientes/ToggleStatusAjax", type: "POST", data: fd,
+            processData: false, contentType: false,
+            success: function (html) {
+                $("#row-" + id).replaceWith(html);
+                toast("Status alterado", "bg-warning");
+            },
+            error: function () { toast("Erro ao alterar status", "bg-danger"); }
+        });
     }
 
-    function excluirCliente(id) {
-
-        if (!confirm("Excluir este cliente?")) return;
-
-        fetch("/Clientes/Delete", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: "id=" + id
-        })
-        .then(() => location.reload());
+    function confirmarExcluir(id) {
+        $("#excluirId").val(id);
+        modalExcluir.show();
     }
+
+    $("#btnExcluir").click(function () {
+        let id  = $("#excluirId").val();
+        let btn = $(this).html("Excluindo...").prop("disabled", true);
+
+        let fd = new FormData();
+        fd.append("id", id);
+        fd.append("__RequestVerificationToken", getToken());
+
+        $.ajax({
+            url: "/Clientes/Delete", type: "POST", data: fd,
+            processData: false, contentType: false,
+            success: function () {
+                $("#row-" + id).fadeOut(300, function () { $(this).remove(); });
+                modalExcluir.hide();
+                toast("Cliente excluído", "bg-success");
+            },
+            error: function () { toast("Erro ao excluir", "bg-danger"); },
+            complete: function () { btn.html("Excluir").prop("disabled", false); }
+        });
+    });
 </script>

@@ -1,160 +1,207 @@
-﻿@model IEnumerable<MegaHairPro.Web.Models.MetodoAplicacao>
+@model IEnumerable<MegaHairPro.Web.Models.MetodoAplicacao>
 
 @{
     ViewData["Title"] = "Métodos de Aplicação";
 }
 
-<h2>✨ Métodos de Aplicação</h2>
-<hr />
+<div class="page-header">
+    <div class="page-title">Métodos de Aplicação</div>
+    <div class="page-sub">Métodos e valores de confecção por grama</div>
+</div>
 
-<!-- ✅ CADASTRO -->
-<div class="card p-3 mb-4">
-    <h4>➕ Novo Método</h4>
-
-    <form asp-action="Index" method="post">
+<div class="section-card">
+    <div class="section-label">Novo método</div>
+    <form id="formMetodo">
         @Html.AntiForgeryToken()
-
-        <div class="row">
-
-            <div class="col-md-4">
-                <label>Nome</label>
-                <input name="Nome" class="form-control" required />
+        <div class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label">Nome</label>
+                <input name="Nome" class="form-control" placeholder="Nome do método" required />
             </div>
-
-            <div class="col-md-6">
-                <label>Valor por Grama</label>
-                <input name="ValorPorGrama" class="form-control" />
+            <div class="col-md-3">
+                <label class="form-label">Valor por Grama (R$)</label>
+                <input name="ValorPorGrama" id="novoValorGrama" class="form-control" placeholder="0,00" />
             </div>
-
+            <div class="col-md-2">
+                <button id="btnSalvar" class="btn btn-success w-100">Salvar</button>
+            </div>
         </div>
-
-        <br />
-
-        <button class="btn btn-success">
-            ✅ Salvar Método
-        </button>
     </form>
 </div>
 
-<hr />
+<div class="table-card">
+    <div class="table-card-header">
+        <span class="table-card-title">Métodos registrados</span>
+        <span class="table-count">@Model.Count() registros</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th class="text-end">Valor/g</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center" width="200">Ações</th>
+                </tr>
+            </thead>
+            <tbody id="metodosBody">
+                @foreach (var m in Model) { @Html.Partial("_MetodoRow", m) }
+            </tbody>
+        </table>
+    </div>
+</div>
 
-<!-- ✅ LISTAGEM -->
-<h4>📋 Métodos Registrados</h4>
-
-<table class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th>Nome</th>
-            <th>Descrição</th>
-            <th>Ações</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        @foreach (var m in Model)
-        {
-            @Html.Partial("_MetodoRow", m)
-        }
-    </tbody>
-</table>
-
-<!-- ✅ MODAL EDITAR -->
+<!-- MODAL EDITAR -->
 <div class="modal fade" id="modalEditarMetodo" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-
-            <div class="modal-header">
-                <h5 class="modal-title">✏️ Editar Método</h5>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Editar Método</h5>
                 <button class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
             <div class="modal-body">
-
                 <input type="hidden" id="editId" />
-
-                <div class="mb-2">
-                    <label>Nome</label>
-                    <input id="editNome" class="form-control" />
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Nome</label>
+                        <input id="editNome" class="form-control" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Valor por Grama</label>
+                        <input id="editValorGrama" class="form-control" placeholder="0,00" />
+                    </div>
                 </div>
-
-                <div class="mb-2">
-                    <label>Descrição</label>
-                    <input id="editDescricao" class="form-control" />
-                </div>
-
             </div>
-
-            <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">
-                    Cancelar
-                </button>
-
-                <button class="btn btn-primary" onclick="salvarEdicao()">
-                    ✅ Salvar
-                </button>
+            <div class="modal-footer border-0">
+                <button class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-success px-4" onclick="salvarEdicao()">Salvar</button>
             </div>
+        </div>
+    </div>
+</div>
 
+<!-- MODAL EXCLUIR -->
+<div class="modal fade" id="modalExcluir" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white border-0"><h5>Confirmar exclusão</h5></div>
+            <div class="modal-body text-center">
+                <p>Deseja excluir este método?</p>
+                <input type="hidden" id="excluirId" />
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-danger" id="btnExcluir">Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="toast" class="toast align-items-center text-white border-0">
+        <div class="d-flex align-items-center">
+            <div id="toastMsg" class="toast-body"></div>
+            <button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
         </div>
     </div>
 </div>
 
 <script>
-    let modalEditar;
+    let modalEditarMetodo, modalExcluir;
 
     document.addEventListener("DOMContentLoaded", function () {
-        modalEditar = new bootstrap.Modal(
-            document.getElementById("modalEditarMetodo")
-        );
+        modalEditarMetodo = new bootstrap.Modal(document.getElementById("modalEditarMetodo"));
+        modalExcluir      = new bootstrap.Modal(document.getElementById("modalExcluir"));
+        aplicarMascara(document.getElementById("novoValorGrama"));
+    });
+
+    function aplicarMascara(input) {
+        if (!input || input._mascaraAplicada) return;
+        input._mascaraAplicada = true;
+        input.addEventListener("input", function () {
+            let v = this.value.replace(/\D/g, "");
+            v = (parseInt(v || "0", 10) / 100).toFixed(2);
+            this.value = v.replace(".", ",");
+        });
+    }
+
+    function parseBR(val) { return parseFloat((val || "0").replace(/\./g, "").replace(",", ".")) || 0; }
+    function getToken()   { return $('input[name="__RequestVerificationToken"]').first().val(); }
+
+    function toast(msg, tipo) {
+        let t = $("#toast");
+        t.removeClass("bg-success bg-danger bg-warning");
+        t.addClass(tipo);
+        $("#toastMsg").text(msg);
+        new bootstrap.Toast(t[0], { delay: 3000 }).show();
+    }
+
+    $("#formMetodo").submit(function (e) {
+        e.preventDefault();
+        let btn = $("#btnSalvar").html("Salvando...").prop("disabled", true);
+        let fd  = new FormData(this);
+        fd.set("ValorPorGrama", parseBR($("#novoValorGrama").val()).toString());
+        $.ajax({
+            url: "/MetodosAplicacao/CreateAjax", type: "POST", data: fd,
+            processData: false, contentType: false,
+            success: function (html) { $("#metodosBody").prepend(html); toast("Método salvo", "bg-success"); $("#formMetodo")[0].reset(); },
+            error: function () { toast("Erro ao salvar", "bg-danger"); },
+            complete: function () { btn.html("Salvar").prop("disabled", false); }
+        });
     });
 
     function editarMetodo(id) {
-
         let row = document.getElementById("row-" + id);
-
-        document.getElementById("editId").value = id;
-        document.getElementById("editNome").value = row.dataset.nome;
-        document.getElementById("editDescricao").value = row.dataset.descricao;
-
-        modalEditar.show();
+        $("#editId").val(id);
+        $("#editNome").val(row.dataset.nome);
+        let inputVG = document.getElementById("editValorGrama");
+        inputVG.value = parseFloat(row.dataset.valorgrama || 0).toFixed(2).replace(".", ",");
+        aplicarMascara(inputVG);
+        modalEditarMetodo.show();
     }
 
     function salvarEdicao() {
-
-        let id = document.getElementById("editId").value;
-
-        fetch("/MetodosAplicacao/EditAjax", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body:
-                "Id=" + id +
-                "&Nome=" + document.getElementById("editNome").value +
-                "&Descricao=" + document.getElementById("editDescricao").value
-        })
-        .then(r => r.text())
-        .then(html => {
-            document.getElementById("row-" + id).outerHTML = html;
-            modalEditar.hide();
+        let id = $("#editId").val();
+        let fd = new FormData();
+        fd.append("Id",           id);
+        fd.append("Nome",         $("#editNome").val());
+        fd.append("ValorPorGrama", parseBR($("#editValorGrama").val()).toString());
+        fd.append("__RequestVerificationToken", getToken());
+        $.ajax({
+            url: "/MetodosAplicacao/EditAjax", type: "POST", data: fd,
+            processData: false, contentType: false,
+            success: function (html) { $("#row-" + id).replaceWith(html); modalEditarMetodo.hide(); toast("Método editado", "bg-success"); },
+            error: function () { toast("Erro ao editar", "bg-danger"); }
         });
     }
 
     function toggleStatus(id) {
-        fetch("/MetodosAplicacao/ToggleStatusAjax", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: "id=" + id
-        })
-        .then(() => location.reload());
+        let fd = new FormData();
+        fd.append("Id", id);
+        fd.append("__RequestVerificationToken", getToken());
+        $.ajax({
+            url: "/MetodosAplicacao/ToggleStatusAjax", type: "POST", data: fd,
+            processData: false, contentType: false,
+            success: function (html) { $("#row-" + id).replaceWith(html); toast("Status alterado", "bg-warning"); },
+            error: function () { toast("Erro ao alterar status", "bg-danger"); }
+        });
     }
 
-    function excluirMetodo(id) {
+    function confirmarExcluir(id) { $("#excluirId").val(id); modalExcluir.show(); }
 
-        if (!confirm("Excluir este método?")) return;
-
-        fetch("/MetodosAplicacao/Delete", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: "id=" + id
-        })
-        .then(() => location.reload());
-    }
+    $("#btnExcluir").click(function () {
+        let id  = $("#excluirId").val();
+        let btn = $(this).html("Excluindo...").prop("disabled", true);
+        let fd  = new FormData();
+        fd.append("id", id);
+        fd.append("__RequestVerificationToken", getToken());
+        $.ajax({
+            url: "/MetodosAplicacao/Delete", type: "POST", data: fd,
+            processData: false, contentType: false,
+            success: function () { $("#row-" + id).fadeOut(300, function () { $(this).remove(); }); modalExcluir.hide(); toast("Método excluído", "bg-success"); },
+            error: function () { toast("Erro ao excluir", "bg-danger"); },
+            complete: function () { btn.html("Excluir").prop("disabled", false); }
+        });
+    });
 </script>

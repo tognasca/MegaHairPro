@@ -1,22 +1,28 @@
 @model IEnumerable<MegaHairPro.Web.Models.Venda>
+
 @{
     ViewData["Title"] = "Relatório de Vendas";
 }
 
-<h2 class="mb-3">Relatório de Vendas</h2>
+<div class="page-header">
+    <div class="page-title">Relatório de Vendas</div>
+    <div class="page-sub">Análise de vendas por período, produto e cliente</div>
+</div>
 
-<div class="card-premium mb-3">
-    <form method="get" class="row g-3">
-        <div class="col-md-3">
-            <label>Início</label>
+<!-- FILTRO -->
+<div class="section-card">
+    <div class="section-label">Filtros</div>
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-2">
+            <label class="form-label">Início</label>
             <input type="date" name="inicio" class="form-control" value="@ViewBag.Inicio" />
         </div>
-        <div class="col-md-3">
-            <label>Fim</label>
+        <div class="col-md-2">
+            <label class="form-label">Fim</label>
             <input type="date" name="fim" class="form-control" value="@ViewBag.Fim" />
         </div>
         <div class="col-md-3">
-            <label>Produto</label>
+            <label class="form-label">Produto</label>
             <select name="produtoId" class="form-select">
                 <option value="">Todos</option>
                 @foreach (var p in (IEnumerable<MegaHairPro.Web.Models.Produto>)ViewBag.Produtos)
@@ -26,7 +32,7 @@
             </select>
         </div>
         <div class="col-md-3">
-            <label>Cliente</label>
+            <label class="form-label">Cliente</label>
             <select name="clienteId" class="form-select">
                 <option value="">Todos</option>
                 @foreach (var c in (IEnumerable<MegaHairPro.Web.Models.Cliente>)ViewBag.Clientes)
@@ -35,62 +41,96 @@
                 }
             </select>
         </div>
-        <div class="col-md-3 mt-3">
+        <div class="col-md-1">
             <button class="btn btn-primary w-100">Filtrar</button>
         </div>
-        <div class="col-md-3 mt-3">
+        <div class="col-md-1">
             <a asp-action="ExportarVendas"
                asp-route-inicio="@ViewBag.Inicio"
                asp-route-fim="@ViewBag.Fim"
                class="btn btn-success w-100">
-                Exportar Excel
+                Excel
             </a>
         </div>
     </form>
 </div>
 
-<div class="row mb-3">
-    <div class="col-md-6">
-        <div class="card shadow-sm p-3 rounded-4">
-            <h6 class="text-muted">Total Vendido</h6>
-            <h3 class="fw-bold text-primary">
-                R$ @((decimal)ViewBag.TotalVendido).ToString("N2")
-            </h3>
+<!-- CARDS RESUMO -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;">
+            <div style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Total Vendido</div>
+            <div style="font-size:24px;font-weight:700;color:#2563eb;margin-top:4px;">
+                @{
+                    decimal TotalVendido = (decimal)ViewBag.TotalVendido;
+                }
+                R$ @TotalVendido.ToString("N2")
+
+            </div>
         </div>
     </div>
-    <div class="col-md-6">
-        <div class="card shadow-sm p-3 rounded-4">
-            <h6 class="text-muted">Lucro Total</h6>
-            <h3 class="fw-bold text-success">
-                R$ @((decimal)ViewBag.TotalLucro).ToString("N2")
-            </h3>
+    <div class="col-md-3">
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;">
+            <div style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Lucro Total</div>
+            <div style="font-size:24px;font-weight:700;color:#16a34a;margin-top:4px;">
+                @{
+                    decimal ticket1 = (decimal)ViewBag.TotalLucro;
+                }
+                R$ @ticket1.ToString("N2")
+
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;">
+            <div style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Nº de Vendas</div>
+            <div style="font-size:24px;font-weight:700;color:#0f172a;margin-top:4px;">@Model.Count()</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;">
+            <div style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Ticket Médio</div>
+            <div style="font-size:24px;font-weight:700;color:#7c3aed;margin-top:4px;">
+                @{
+                    decimal ticket = Model.Any() ? (decimal)ViewBag.TotalVendido / Model.Count() : 0;
+                }
+                R$ @ticket.ToString("N2")
+            </div>
         </div>
     </div>
 </div>
 
-<table class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th>Data</th>
-            <th>Cliente</th>
-            <th>Produto</th>
-            <th>Qtd</th>
-            <th>Preço</th>
-            <th>Lucro</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var v in Model)
-        {
-            <tr>
-                <td>@v.DataVenda.ToString("dd/MM/yyyy")</td>
-                <td>@v.ClienteNome</td>
-                <td>@v.ProdutoNome</td>
-                <td>@v.QuantidadeGramas</td>
-                <td>R$ @v.PrecoVenda?.ToString("N2")</td>
-                <td>R$ @v.LucroTotal?.ToString("N2")</td>
-            </tr>
-        }
-    </tbody>
-</table>
-
+<!-- TABELA -->
+<div class="table-card">
+    <div class="table-card-header">
+        <span class="table-card-title">Vendas do período</span>
+        <span class="table-count">@Model.Count() registros</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Cliente</th>
+                    <th>Produto</th>
+                    <th class="text-end">Qtd</th>
+                    <th class="text-end">Preço</th>
+                    <th class="text-end">Lucro</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var v in Model)
+                {
+                    <tr>
+                        <td style="font-size:12px;color:#64748b;">@v.DataVenda.ToString("dd/MM/yyyy")</td>
+                        <td style="font-weight:600;">@v.ClienteNome</td>
+                        <td style="font-size:12px;color:#64748b;">@v.ProdutoNome</td>
+                        <td class="text-end" style="font-size:13px;">@v.QuantidadeGramas g</td>
+                        <td class="text-end" style="font-weight:600;color:#2563eb;">R$ @v.PrecoVenda?.ToString("N2")</td>
+                        <td class="text-end" style="font-weight:600;color:#16a34a;">R$ @v.LucroTotal?.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

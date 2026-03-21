@@ -21,39 +21,28 @@ namespace MegaHairPro.Web.Controllers
         public IActionResult Index()
         {
             CarregarViewBags();
-
-            var comprasVM = _context.Compras
-                .Include(c => c.Produto)
-                .Include(c => c.Fornecedor)
-                .OrderByDescending(c => c.DataCompra)
-                .Select(c => new CompraViewModel
-                {
-                    Id = c.Id,
-                    ProdutoId = c.ProdutoId,
-                    FornecedorId = c.FornecedorId,
-                    ProdutoNome = c.Produto.Nome,
-                    FornecedorNome = c.Fornecedor.Nome,
-                    QuantidadeGramas = c.QuantidadeGramas ?? 0,
-                    ValorTotal = c.ValorTotal,
-                    DataCompra = c.DataCompra,
-                    Ativo = c.Ativo
-                })
-                .ToList();
-
-            return View(comprasVM);
+            return View(ObterComprasVM());
         }
 
-        // ✅ CREATE CORRETO (não é Index)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Index(Compra compra)
         {
+            // Parse manual garante valor correto independente do model binding
+            if (decimal.TryParse(Request.Form["QuantidadeGramas"],
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out var qtd))
+                compra.QuantidadeGramas = qtd;
+
+            if (decimal.TryParse(Request.Form["ValorTotal"],
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out var valor))
+                compra.ValorTotal = valor;
+
             if (compra.ProdutoId == 0)
                 ModelState.AddModelError("", "Selecione um Produto.");
-
             if (compra.FornecedorId == 0)
                 ModelState.AddModelError("", "Selecione um Fornecedor.");
-
             if (compra.QuantidadeGramas == null || compra.QuantidadeGramas <= 0)
                 ModelState.AddModelError("", "Informe a quantidade em gramas.");
 
@@ -64,18 +53,15 @@ namespace MegaHairPro.Web.Controllers
             }
 
             compra.Ativo = true;
-
             _context.Compras.Add(compra);
-
             AtualizarEstoque(compra.ProdutoId, compra.QuantidadeGramas ?? 0, true);
-
             _context.SaveChanges();
 
             return RedirectToAction("Index");
         }
-
         // ✅ EDITAR VIA AJAX
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult EditAjax(Compra compra)
         {
             var original = _context.Compras.FirstOrDefault(c => c.Id == compra.Id);
@@ -83,10 +69,9 @@ namespace MegaHairPro.Web.Controllers
             if (original == null)
                 return Json(new { success = false });
 
-            // Remove estoque antigo
+            // Reverte estoque antigo
             AtualizarEstoque(original.ProdutoId, original.QuantidadeGramas ?? 0, false);
 
-            // Atualiza dados
             original.ProdutoId = compra.ProdutoId;
             original.FornecedorId = compra.FornecedorId;
             original.QuantidadeGramas = compra.QuantidadeGramas;
@@ -95,30 +80,16 @@ namespace MegaHairPro.Web.Controllers
 
             // Aplica novo estoque
             AtualizarEstoque(original.ProdutoId, original.QuantidadeGramas ?? 0, true);
-
             _context.SaveChanges();
 
-            var vm = new CompraViewModel
-            {
-                Id = original.Id,
-
-                ProdutoId = original.ProdutoId,
-                FornecedorId = original.FornecedorId,
-
-                ProdutoNome = _context.Produtos.Find(original.ProdutoId)?.Nome,
-                FornecedorNome = _context.Fornecedores.Find(original.FornecedorId)?.Nome,
-
-                QuantidadeGramas = original.QuantidadeGramas ?? 0,
-                ValorTotal = original.ValorTotal,
-                DataCompra = original.DataCompra,
-                Ativo = original.Ativo
-            };
-
+            // Retorna ViewModel com nomes incluídos
+            var vm = ObterCompraVM(original.Id);
             return PartialView("_CompraRow", vm);
         }
 
-        // ✅ ATIVAR/DESATIVAR
+        // ✅ TOGGLE STATUS
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult ToggleStatusAjax(int id)
         {
             var compra = _context.Compras.FirstOrDefault(c => c.Id == id);
@@ -135,34 +106,63 @@ namespace MegaHairPro.Web.Controllers
 
             _context.SaveChanges();
 
-            return Json(new { success = true, ativo = compra.Ativo });
+            var vm = ObterCompraVM(compra.Id);
+            return PartialView("_CompraRow", vm);
         }
 
         // ✅ EXCLUIR
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Delete(int id)
         {
             var compra = _context.Compras.Find(id);
 
             if (compra == null)
-                return RedirectToAction("Index");
+                return Ok();
 
             AtualizarEstoque(compra.ProdutoId, compra.QuantidadeGramas ?? 0, false);
-
             _context.Compras.Remove(compra);
             _context.SaveChanges();
 
-            return RedirectToAction("Index");
+            return Ok();
         }
 
-        // ==========================
-        // ✅ HELPERS
-        // ==========================
+        // ── Helpers ───────────────────────────────────────────────────────────
 
         private void CarregarViewBags()
         {
-            ViewBag.Produtos = _context.Produtos.Where(p => p.Status == true).ToList();
-            ViewBag.Fornecedores = _context.Fornecedores.Where(f => f.Status == true).ToList();
+            // Exibe código + nome no combo: "CAB-0001 - Cabelo Natural"
+            ViewBag.Produtos = _context.Produtos
+                .Where(p => p.Status == true)
+                .OrderBy(p => p.Codigo)
+                .Select(p => new { p.Id, Nome = p.Codigo + " - " + p.Nome })
+                .ToList();
+
+            ViewBag.Fornecedores = _context.Fornecedores
+                .Where(f => f.Status == true)
+                .OrderBy(f => f.Nome)
+                .ToList();
+        }
+
+        private CompraViewModel ObterCompraVM(int id)
+        {
+            return _context.Compras
+                .Include(c => c.Produto)
+                .Include(c => c.Fornecedor)
+                .Where(c => c.Id == id)
+                .Select(c => new CompraViewModel
+                {
+                    Id = c.Id,
+                    ProdutoId = c.ProdutoId,
+                    FornecedorId = c.FornecedorId,
+                    ProdutoNome = c.Produto.Codigo + " - " + c.Produto.Nome,
+                    FornecedorNome = c.Fornecedor.Nome,
+                    QuantidadeGramas = c.QuantidadeGramas ?? 0,
+                    ValorTotal = c.ValorTotal,
+                    DataCompra = c.DataCompra,
+                    Ativo = c.Ativo
+                })
+                .First();
         }
 
         private List<CompraViewModel> ObterComprasVM()
@@ -174,13 +174,10 @@ namespace MegaHairPro.Web.Controllers
                 .Select(c => new CompraViewModel
                 {
                     Id = c.Id,
-
                     ProdutoId = c.ProdutoId,
                     FornecedorId = c.FornecedorId,
-
-                    ProdutoNome = c.Produto.Nome,
+                    ProdutoNome = c.Produto.Codigo + " - " + c.Produto.Nome,
                     FornecedorNome = c.Fornecedor.Nome,
-
                     QuantidadeGramas = c.QuantidadeGramas ?? 0,
                     ValorTotal = c.ValorTotal,
                     DataCompra = c.DataCompra,
@@ -196,24 +193,17 @@ namespace MegaHairPro.Web.Controllers
 
             if (estoque == null)
             {
-                estoque = new Estoque
-                {
-                    ProdutoId = produtoId,
-                    QuantidadeGramas = 0
-                };
+                estoque = new Estoque { ProdutoId = produtoId, QuantidadeGramas = 0 };
                 _context.Estoques.Add(estoque);
             }
 
             estoque.QuantidadeGramas += adicionar ? quantidade : -quantidade;
-            if (estoque.QuantidadeGramas < 0)
-                estoque.QuantidadeGramas = 0;
+            if (estoque.QuantidadeGramas < 0) estoque.QuantidadeGramas = 0;
 
-            // Mantém o estoque do Produto consistente com compras/vendas
             if (produto != null)
             {
                 produto.EstoqueGramas += adicionar ? quantidade : -quantidade;
-                if (produto.EstoqueGramas < 0)
-                    produto.EstoqueGramas = 0;
+                if (produto.EstoqueGramas < 0) produto.EstoqueGramas = 0;
             }
         }
     }

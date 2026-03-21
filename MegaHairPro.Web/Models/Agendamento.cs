@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.ComponentModel.DataAnnotations;
@@ -23,5 +23,6 @@ namespace MegaHairPro.Web.Models
         public Servico Servico { get; set; }
         public decimal ValorTotal => AgendamentosServicos?.Sum(s => s.Servico.Valor) ?? 0;
         public DateTime DataFim { get; set; }
+        public bool Cancelado { get; set; } = false;
     }
 }

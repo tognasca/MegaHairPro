@@ -1,55 +1,35 @@
 @model MegaHairPro.Web.Models.Produto
 
 <tr id="row-@Model.Id"
-    data-nome="@Model.Nome"
     data-tipo="@((int)Model.TipoProduto)"
     data-unidade="@((int)Model.UnidadeMedida)"
-    data-origem="@Model.Origem"
-    data-tamanho="@Model.Tamanho"
-    data-cor="@Model.Cor"
-    data-status="@Model.Status"
-    class="@(Model.Status ? "" : "table-secondary text-muted")">
+    data-nome="@(Model.Nome ?? "")"
+    data-origem="@(Model.Origem ?? "")"
+    data-tamanho="@(Model.Tamanho ?? "")"
+    data-cor="@(Model.Cor ?? "")"
+    data-status="@Model.Status.ToString().ToLower()"
+    class="@(!Model.Status ? "table-secondary text-muted" : "")">
 
-    <td>@Model.Codigo</td>
-    <td>@Model.TipoProduto</td>
-    <td>@Model.Nome</td>
-    <td>@Model.Origem</td>
-    <td>@Model.Tamanho</td>
-
-    <td>@Model.Cor</td>
-    <td>
-
+    <td style="font-weight:600;font-size:13px;">@Model.Codigo</td>
+    <td style="font-size:12px;color:#64748b;">@Model.TipoProduto</td>
+    <td style="font-size:13px;">@(Model.Origem ?? "—")</td>
+    <td style="font-size:13px;">@(Model.Tamanho ?? "—")</td>
+    <td style="font-size:13px;">@(Model.Cor ?? "—")</td>
+    <td class="text-center">
         @if (Model.Status)
         {
-            <span class="badge bg-success">Ativo</span>
+            <span class="badge bg-success-soft">Ativo</span>
         }
         else
         {
-            <span class="badge bg-danger">Inativo</span>
+            <span class="badge bg-danger-soft">Inativo</span>
         }
-
     </td>
-
     <td class="text-center">
-
-        <button class="btn btn-sm btn-outline-primary"
-                onclick="editarProduto(@Model.Id)">
-            Editar
-        </button>
-
-        <button class="btn btn-sm btn-outline-warning"
-                onclick="toggleStatus(@Model.Id)">
-            @(Model.Status ? "Inativar" : "Ativar")
-        </button>
-
-        <button class="btn btn-sm btn-outline-danger"
-                onclick="confirmarExcluir(@Model.Id)">
-
-            Excluir
-
-        </button>
-
-
-
+        <div class="d-flex gap-1 justify-content-center">
+            <button class="btn-act btn-act-blue" onclick="editarProduto(@Model.Id)">Editar</button>
+            <button class="btn-act btn-act-warn" onclick="toggleStatus(@Model.Id)">@(Model.Status ? "Inativar" : "Ativar")</button>
+            <button class="btn-act btn-act-red"  onclick="confirmarExcluir(@Model.Id)">Excluir</button>
+        </div>
     </td>
 </tr>

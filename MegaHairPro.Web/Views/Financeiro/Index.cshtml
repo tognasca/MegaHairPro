@@ -2,131 +2,234 @@
 
 @{
     ViewData["Title"] = "Financeiro";
+    decimal entradas = (decimal)ViewBag.TotalEntradas;
+    decimal saidas = (decimal)ViewBag.TotalSaidas;
+    decimal saldo = (decimal)ViewBag.Saldo;
 }
 
 <h2 class="mb-4">💰 Financeiro</h2>
 
+<!-- FILTROS -->
 <div class="card-premium mb-4">
-    <form method="get" class="row g-3">
-        <div class="col-md-3">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-2">
             <label>Início</label>
-            <input type="date"
-                   name="inicio"
-                   class="form-control"
-                   value="@ViewBag.Inicio" />
+            <input type="date" name="inicio" class="form-control" value="@ViewBag.Inicio" />
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <label>Fim</label>
-            <input type="date"
-                   name="fim"
-                   class="form-control"
-                   value="@ViewBag.Fim" />
+            <input type="date" name="fim" class="form-control" value="@ViewBag.Fim" />
         </div>
-        <div class="col-md-3 align-self-end">
-            <button class="btn btn-primary w-100">
-                Filtrar
-            </button>
+        <div class="col-md-2">
+            <label>Tipo</label>
+            <select name="tipo" class="form-select">
+                <option value="">Todos</option>
+                <option value="Receber" selected="@(ViewBag.FiltroTipo == "Receber")">Receber</option>
+                <option value="Pagar" selected="@(ViewBag.FiltroTipo == "Pagar")">Pagar</option>
+            </select>
+
+
+        </div>
+        <div class="col-md-2">
+            <label>Status</label>
+            <select name="status" class="form-select">
+                <option value="">Todos</option>
+                <option value="Aberta" selected="@(ViewBag.FiltroStatus == "Aberta")">Em aberto</option>
+                <option value="Paga" selected="@(ViewBag.FiltroStatus == "Paga")">Paga</option>
+                <option value="Cancelada" selected="@(ViewBag.FiltroStatus == "Cancelada")">Cancelada</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary w-100">Filtrar</button>
         </div>
     </form>
 </div>
 
+<!-- TOTAIS -->
 <div class="row mb-4">
     <div class="col-md-4">
         <div class="card shadow-sm p-3 rounded-4">
             <h6 class="text-muted">Entradas (pagas)</h6>
-            <h3 class="fw-bold text-success">
-                R$ @((decimal)ViewBag.TotalEntradas).ToString("N2")
+            <h3 class="fw-bold text-success" id="totalEntradas">
+                R$ @entradas.ToString("N2")
             </h3>
         </div>
     </div>
     <div class="col-md-4">
         <div class="card shadow-sm p-3 rounded-4">
             <h6 class="text-muted">Saídas (pagas)</h6>
-            <h3 class="fw-bold text-danger">
-                R$ @((decimal)ViewBag.TotalSaidas).ToString("N2")
+            <h3 class="fw-bold text-danger" id="totalSaidas">
+                R$ @saidas.ToString("N2")
             </h3>
         </div>
     </div>
     <div class="col-md-4">
         <div class="card shadow-sm p-3 rounded-4">
             <h6 class="text-muted">Saldo</h6>
-            <h3 class="fw-bold @( ((decimal)ViewBag.Saldo) >= 0 ? "text-success" : "text-danger")">
-                R$ @((decimal)ViewBag.Saldo).ToString("N2")
+            <h3 class="fw-bold @(saldo >= 0 ? "text-success" : "text-danger")" id="totalSaldo">
+                R$ @saldo.ToString("N2")
             </h3>
         </div>
     </div>
 </div>
 
-<table class="table table-striped table-bordered">
-    <thead>
-        <tr>
-            <th>Data</th>
-            <th>Tipo</th>
-            <th>Origem</th>
-            <th>Descrição</th>
-            <th class="text-end">Valor</th>
-            <th>Status</th>
-            <th>Ações</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var c in Model)
-        {
-            <tr>
-                <td>@c.DataCompetencia.ToString("dd/MM/yyyy")</td>
-                <td>
-                    @if (c.Tipo == MegaHairPro.Web.Models.TipoContaFinanceira.Receber)
-                    {
-                        <span class="badge bg-success">Receber</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-danger">Pagar</span>
-                    }
-                </td>
-                <td>@c.Origem</td>
-                <td>@c.Descricao</td>
-                <td class="text-end">R$ @c.Valor.ToString("N2")</td>
-                <td>
-                    @switch (c.Status)
-                    {
-                        case MegaHairPro.Web.Models.StatusContaFinanceira.Aberta:
-                            <span class="badge bg-warning text-dark">Em aberto</span>
-                            break;
-                        case MegaHairPro.Web.Models.StatusContaFinanceira.Paga:
-                            <span class="badge bg-success">Paga</span>
-                            break;
-                        case MegaHairPro.Web.Models.StatusContaFinanceira.Cancelada:
-                            <span class="badge bg-secondary">Cancelada</span>
-                            break;
-                    }
-                </td>
-                <td>
-                    @if (c.Status == MegaHairPro.Web.Models.StatusContaFinanceira.Aberta)
-                    {
-                        <form asp-action="MarcarComoPago"
-                              method="post"
-                              class="d-inline">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@c.Id" />
-                            <button class="btn btn-sm btn-success">
-                                Marcar pago
-                            </button>
-                        </form>
+<!-- TABELA -->
+<div class="card shadow-sm rounded-4">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>Data</th>
+                    <th>Tipo</th>
+                    <th>Origem</th>
+                    <th>Descrição</th>
+                    <th class="text-end">Valor</th>
+                    <th>Status</th>
+                    <th width="200">Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaContas">
+                @foreach (var c in Model)
+                {
+                    <tr id="conta-@c.Id">
+                        <td>@c.DataCompetencia.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            @if (c.Tipo == MegaHairPro.Web.Models.TipoContaFinanceira.Receber)
+                            {
+                                <span class="badge bg-success">Receber</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Pagar</span>
+                            }
+                        </td>
+                        <td>@c.Origem</td>
+                        <td>@c.Descricao</td>
+                        <td class="text-end">R$ @c.Valor.ToString("N2")</td>
+                        <td class="status-cell">
+                            @if (c.Status == MegaHairPro.Web.Models.StatusContaFinanceira.Aberta)
+                            {
+                                <span class="badge bg-warning text-dark">Em aberto</span>
+                            }
+                            else if (c.Status == MegaHairPro.Web.Models.StatusContaFinanceira.Paga)
+                            {
+                                <span class="badge bg-success">Paga</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Cancelada</span>
+                            }
+                        </td>
+                        <td class="acoes-cell">
+                            @if (c.Status == MegaHairPro.Web.Models.StatusContaFinanceira.Aberta)
+                            {
+                                @Html.AntiForgeryToken()
+                                <button class="btn btn-sm btn-success"
+                                        onclick="marcarPago(@c.Id)">
+                                    Marcar pago
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger"
+                                        onclick="cancelar(@c.Id)">
+                                    Cancelar
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
 
-                        <form asp-action="Cancelar"
-                              method="post"
-                              class="d-inline">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@c.Id" />
-                            <button class="btn btn-sm btn-outline-danger">
-                                Cancelar
-                            </button>
-                        </form>
-                    }
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+<!-- TOAST -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="toast" class="toast text-white border-0" role="alert">
+        <div class="d-flex align-items-center">
+            <div id="toastMsg" class="toast-body"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
 
+<script>
+    function getToken() {
+        return $('input[name="__RequestVerificationToken"]').first().val();
+    }
+
+    function getParams() {
+        let params = new URLSearchParams(window.location.search);
+        return {
+            inicio: params.get("inicio") || "@ViewBag.Inicio",
+            fim:    params.get("fim")    || "@ViewBag.Fim"
+        };
+    }
+
+    function toast(msg, tipo) {
+        let t = $("#toast");
+        t.removeClass("bg-success bg-danger bg-warning");
+        t.addClass(tipo);
+        $("#toastMsg").text(msg);
+        new bootstrap.Toast(t[0], { delay: 3000 }).show();
+    }
+
+    function atualizarTotais() {
+        let p = getParams();
+        $.get("/Financeiro/Totais", { inicio: p.inicio, fim: p.fim }, function (data) {
+            $("#totalEntradas").text("R$ " + data.entradas);
+            $("#totalSaidas").text("R$ " + data.saidas);
+            let saldoEl = $("#totalSaldo");
+            saldoEl.text("R$ " + data.saldo);
+            saldoEl.removeClass("text-success text-danger");
+            saldoEl.addClass(data.saldoNegativo ? "text-danger" : "text-success");
+        });
+    }
+
+    function marcarPago(id) {
+        let fd = new FormData();
+        fd.append("id", id);
+        fd.append("__RequestVerificationToken", getToken());
+
+        $.ajax({
+            url: "/Financeiro/MarcarComoPagoAjax",
+            type: "POST",
+            data: fd,
+            processData: false,
+            contentType: false,
+            success: function (res) {
+                if (res.success) {
+                    let row = $("#conta-" + id);
+                    row.find(".status-cell").html('<span class="badge bg-success">Paga</span>');
+                    row.find(".acoes-cell").html('');
+                    toast("Marcado como pago", "bg-success");
+                    atualizarTotais();
+                }
+            },
+            error: function () { toast("Erro ao atualizar", "bg-danger"); }
+        });
+    }
+
+    function cancelar(id) {
+        let fd = new FormData();
+        fd.append("id", id);
+        fd.append("__RequestVerificationToken", getToken());
+
+        $.ajax({
+            url: "/Financeiro/CancelarAjax",
+            type: "POST",
+            data: fd,
+            processData: false,
+            contentType: false,
+            success: function (res) {
+                if (res.success) {
+                    let row = $("#conta-" + id);
+                    row.find(".status-cell").html('<span class="badge bg-secondary">Cancelada</span>');
+                    row.find(".acoes-cell").html('');
+                    toast("Cancelado com sucesso", "bg-warning");
+                    atualizarTotais();
+                }
+            },
+            error: function () { toast("Erro ao cancelar", "bg-danger"); }
+        });
+    }
+</script>

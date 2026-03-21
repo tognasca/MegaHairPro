@@ -6,68 +6,80 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace MegaHairPro.Web.Services;
-
-public class AgendamentoService
+namespace MegaHairPro.Web.Services
 {
-    private readonly AppDbContext _context;
-    private readonly INotificationService _notifier;
-
-    public AgendamentoService(AppDbContext context, INotificationService notifier)
+    public class AgendamentoService
     {
-        _context = context;
-        _notifier = notifier;
-    }
+        private readonly AppDbContext _context;
+        private readonly INotificationService _notifier;
 
-    public async Task<Agendamento> CriarAgendamentoAsync(Agendamento model, int[] servicosSelecionados)
-    {
-        _context.Agendamentos.Add(model);
-        await _context.SaveChangesAsync();
-
-        foreach (var id in servicosSelecionados)
+        public AgendamentoService(AppDbContext context, INotificationService notifier)
         {
-            _context.AgendamentoServicos.Add(new AgendamentoServico
-            {
-                AgendamentoId = model.Id,
-                ServicoId = id
-            });
+            _context  = context;
+            _notifier = notifier;
         }
 
-        await _context.SaveChangesAsync();
+        public async Task<Agendamento> CriarAgendamentoAsync(Agendamento model, int[] servicosSelecionados)
+        {
+            // ServicoId é FK obrigatória no model — usa o primeiro serviço selecionado
+            if (servicosSelecionados.Any())
+                model.ServicoId = servicosSelecionados[0];
 
-        await EnviarNotificacaoConfirmacaoAsync(model.Id);
+            // Calcula DataFim com duração total de todos os serviços
+            var servicos = _context.Servicos
+                .Where(s => servicosSelecionados.Contains(s.Id))
+                .ToList();
 
-        return model;
-    }
+            int duracaoTotal = servicos.Sum(s => s.DuracaoMinutos);
+            model.DataFim    = model.DataHora.AddMinutes(duracaoTotal > 0 ? duracaoTotal : 60);
 
-    public async Task EnviarNotificacaoConfirmacaoAsync(int agendamentoId)
-    {
-        var agendamento = await _context.Agendamentos
-            .Include(a => a.Cliente)
-            .Include(a => a.Profissional)
-            .Include(a => a.AgendamentosServicos).ThenInclude(s => s.Servico)
-            .FirstOrDefaultAsync(a => a.Id == agendamentoId);
+            _context.Agendamentos.Add(model);
+            await _context.SaveChangesAsync();
 
-        if (agendamento == null)
-            return;
+            // Cria os vínculos N:N com todos os serviços
+            foreach (var id in servicosSelecionados)
+            {
+                _context.AgendamentoServicos.Add(new AgendamentoServico
+                {
+                    AgendamentoId = model.Id,
+                    ServicoId     = id
+                });
+            }
 
-        var cliente = agendamento.Cliente;
-        if (cliente == null || string.IsNullOrWhiteSpace(cliente.Email))
-            return;
+            await _context.SaveChangesAsync();
 
-        var dataTexto = agendamento.DataHora.ToString("dd/MM/yyyy HH:mm");
-        var servicos = string.Join(", ", agendamento.AgendamentosServicos.Select(s => s.Servico.Nome));
+            await EnviarNotificacaoConfirmacaoAsync(model.Id);
 
-        var assunto = "Confirmação de agendamento";
-        var mensagem = $@"
-            <p>Olá, {cliente.Nome}!</p>
-            <p>Seu agendamento foi registrado:</p>
-            <p><strong>Data/Hora:</strong> {dataTexto}<br/>
-               <strong>Profissional:</strong> {agendamento.Profissional.Nome}<br/>
-               <strong>Serviços:</strong> {servicos}</p>
-            <p>Qualquer dúvida, entre em contato com o salão.</p>";
+            return model;
+        }
 
-        await _notifier.EnviarEmailAsync(cliente.Email, assunto, mensagem);
+        public async Task EnviarNotificacaoConfirmacaoAsync(int agendamentoId)
+        {
+            var agendamento = await _context.Agendamentos
+                .Include(a => a.Cliente)
+                .Include(a => a.Profissional)
+                .Include(a => a.AgendamentosServicos).ThenInclude(s => s.Servico)
+                .FirstOrDefaultAsync(a => a.Id == agendamentoId);
+
+            if (agendamento?.Cliente == null ||
+                string.IsNullOrWhiteSpace(agendamento.Cliente.Email))
+                return;
+
+            var cliente    = agendamento.Cliente;
+            var dataTexto  = agendamento.DataHora.ToString("dd/MM/yyyy HH:mm");
+            var servicos   = string.Join(", ", agendamento.AgendamentosServicos.Select(s => s.Servico.Nome));
+
+            var mensagem = $@"
+                <p>Olá, {cliente.Nome}!</p>
+                <p>Seu agendamento foi registrado:</p>
+                <p>
+                    <strong>Data/Hora:</strong> {dataTexto}<br/>
+                    <strong>Profissional:</strong> {agendamento.Profissional?.Nome}<br/>
+                    <strong>Serviços:</strong> {servicos}
+                </p>
+                <p>Qualquer dúvida, entre em contato com o salão.</p>";
+
+            await _notifier.EnviarEmailAsync(cliente.Email, "Confirmação de agendamento", mensagem);
+        }
     }
 }
-

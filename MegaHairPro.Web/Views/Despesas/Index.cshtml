@@ -1,553 +1,250 @@
-﻿@model IEnumerable<MegaHairPro.Web.Models.Despesas>
+@model IEnumerable<MegaHairPro.Web.Models.Despesas>
 
-<div class="container-fluid">
+@{
+    ViewData["Title"] = "Despesas";
+}
 
-
-    <!-- DASHBOARD -->
-
-    <div class="row mb-4">
-
-        <div class="col-md-4">
-
-            <div class="card-premium">
-
-                <small>Total do mês</small>
-
-                <h3 class="text-danger">
-
-                    R$ @Model.Sum(x => x.Valor).ToString("N2")
-
-                </h3>
-
-            </div>
-
-        </div>
-
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div class="page-header mb-0">
+        <div class="page-title">Despesas</div>
+        <div class="page-sub">Controle de gastos do salão</div>
     </div>
-
-
-
-    <!-- NOVA DESPESA -->
-
-    <div class="card-premium mb-4">
-
-        <h5>➕ Nova Despesa</h5>
-
-        @Html.AntiForgeryToken()
-
-        <div class="row g-2">
-
-
-            <div class="col-md-2">
-
-                <select id="categoria" class="form-select">
-
-                    <option value="">Categoria</option>
-
-                    <option>Salão</option>
-                    <option>Aluguel</option>
-                    <option>Internet</option>
-                    <option>Produto</option>
-                    <option>Marketing</option>
-
-                </select>
-
-            </div>
-
-
-
-            <div class="col-md-3">
-
-                <input id="descricao"
-                       class="form-control"
-                       placeholder="Descrição">
-
-            </div>
-
-
-
-            <div class="col-md-2">
-
-                <input id="valor"
-                       type="number"
-                       class="form-control"
-                       placeholder="Valor">
-
-            </div>
-
-
-
-            <div class="col-md-2">
-
-                <input id="data"
-                       type="date"
-                       class="form-control">
-
-            </div>
-
-
-
-            <div class="col-md-1 form-check mt-2">
-
-                <input type="checkbox"
-                       id="ratear"
-                       class="form-check-input">
-
-                <label>Ratear</label>
-
-            </div>
-
-
-
-            <div class="col-md-2">
-
-                <button id="btnSalvar"
-                        class="btn btn-success w-100"
-                        onclick="salvarDespesa()">
-
-                    Salvar
-
-                </button>
-
-            </div>
-
-
-
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px 20px;text-align:right;">
+        <div style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Total do mês</div>
+        <div style="font-size:24px;font-weight:700;color:#dc2626;" id="totalMes">
+            R$ @Model.Sum(x => x.Valor).ToString("N2")
         </div>
-
     </div>
+</div>
 
+<div class="section-card">
+    <div class="section-label">Nova despesa</div>
+    @Html.AntiForgeryToken()
+    <div class="row g-3 align-items-end">
+        <div class="col-md-2">
+            <label class="form-label">Categoria</label>
+            <select id="categoria" class="form-select">
+                <option value="">Selecione...</option>
+                <option>Salão</option><option>Aluguel</option><option>Internet</option>
+                <option>Produto</option><option>Marketing</option><option>Outros</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Descrição</label>
+            <input id="descricao" class="form-control" placeholder="Descrição da despesa" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Valor</label>
+            <input id="valor" type="text" class="form-control" placeholder="0,00" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Data</label>
+            <input id="data" type="date" class="form-control" />
+        </div>
+        <div class="col-md-1 d-flex align-items-end pb-1 gap-2">
+            <input type="checkbox" id="ratear" class="form-check-input mt-0" />
+            <label class="form-label mb-0" style="font-size:12px;color:#64748b;">Ratear</label>
+        </div>
+        <div class="col-md-2">
+            <button id="btnSalvar" class="btn btn-success w-100" onclick="salvarDespesa()">Salvar</button>
+        </div>
+    </div>
+</div>
 
-
-
-    <!-- TABELA -->
-
-    <div class="card-premium">
-
-        <table class="table table-hover">
-
+<div class="table-card">
+    <div class="table-card-header">
+        <span class="table-card-title">Despesas registradas</span>
+        <span class="table-count">@Model.Count() registros</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table">
             <thead>
-
                 <tr>
-
                     <th>Categoria</th>
                     <th>Descrição</th>
-                    <th>Valor</th>
+                    <th class="text-end">Valor</th>
                     <th>Data</th>
-                    <th>Rateio</th>
-                    <th width="180"></th>
-
+                    <th class="text-center">Rateio</th>
+                    <th width="130"></th>
                 </tr>
-
             </thead>
-
-
-
             <tbody id="lista">
-
-                @foreach (var d in Model)
-                {
-
-                    @Html.Partial("_DespesaRow", d)
-
-                }
-
+                @foreach (var d in Model) { @Html.Partial("_DespesaRow", d) }
             </tbody>
-
-
         </table>
-
     </div>
-
 </div>
-
-
-
 
 <!-- MODAL EDITAR -->
-
-<div class="modal fade" id="modalEditar">
-
+<div class="modal fade" id="modalEditar" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-
-        <div class="modal-content">
-
-
-            <div class="modal-header bg-primary text-white">
-
-                <h5>Editar Despesa</h5>
-
-                <button class="btn-close btn-close-white"
-                        data-bs-dismiss="modal">
-                </button>
-
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Editar Despesa</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
-
-
             <div class="modal-body">
-
-
-                <input type="hidden" id="editId">
-
-
-                <label>Categoria</label>
-
-                <select id="editCategoria"
-                        class="form-control mb-2">
-
-                    <option>Salão</option>
-                    <option>Aluguel</option>
-                    <option>Internet</option>
-                    <option>Produto</option>
-                    <option>Marketing</option>
-
-                </select>
-
-
-
-                <label>Descrição</label>
-
-                <input id="editDescricao"
-                       class="form-control mb-2">
-
-
-
-                <label>Valor</label>
-
-                <input id="editValor"
-                       type="number"
-                       class="form-control mb-2">
-
-
-
-                <label>Data</label>
-
-                <input id="editData"
-                       type="date"
-                       class="form-control mb-2">
-
-
-
-                <div class="form-check">
-
-                    <input type="checkbox"
-                           id="editRatear"
-                           class="form-check-input">
-
-                    <label>Ratear</label>
-
+                <input type="hidden" id="editId" />
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Categoria</label>
+                        <select id="editCategoria" class="form-select">
+                            <option>Salão</option><option>Aluguel</option><option>Internet</option>
+                            <option>Produto</option><option>Marketing</option><option>Outros</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Descrição</label>
+                        <input id="editDescricao" class="form-control" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Valor</label>
+                        <input id="editValor" type="text" class="form-control" placeholder="0,00" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Data</label>
+                        <input id="editData" type="date" class="form-control" />
+                    </div>
+                    <div class="col-12 d-flex align-items-center gap-2">
+                        <input type="checkbox" id="editRatear" class="form-check-input mt-0" />
+                        <label class="form-label mb-0" style="font-size:13px;">Ratear este valor</label>
+                    </div>
                 </div>
-
-
             </div>
-
-
-
-            <div class="modal-footer">
-
-                <button class="btn btn-success"
-                        onclick="salvarEdicao()">
-
-                    Salvar
-
-                </button>
-
+            <div class="modal-footer border-0">
+                <button class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-success px-4" onclick="salvarEdicao()">Salvar</button>
             </div>
-
-
-
         </div>
     </div>
 </div>
 
-
-
+<!-- MODAL EXCLUIR -->
+<div class="modal fade" id="modalExcluir" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white border-0"><h5>Confirmar exclusão</h5></div>
+            <div class="modal-body text-center">
+                <p>Deseja excluir esta despesa?</p>
+                <input type="hidden" id="excluirId" />
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-danger" id="btnExcluir">Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- TOAST -->
-
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
-
-    <div id="toast"
-         class="toast text-white">
-
-        <div id="toastMsg"
-             class="toast-body">
+    <div id="toast" class="toast align-items-center text-white border-0">
+        <div class="d-flex align-items-center">
+            <div id="toastMsg" class="toast-body"></div>
+            <button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
         </div>
-
     </div>
-
 </div>
-
-
-<div class="modal fade" id="modalExcluir">
-
-    <div class="modal-dialog modal-dialog-centered">
-
-        <div class="modal-content border-0 shadow">
-
-            <div class="modal-header bg-danger text-white">
-
-                <h5>
-
-                    Confirmar exclusão
-
-                </h5>
-
-            </div>
-
-
-            <div class="modal-body text-center">
-
-                <h6>
-
-                    Deseja excluir esta Despesa?
-
-                </h6>
-
-                <input type="hidden"
-                       id="excluirId">
-
-            </div>
-
-
-
-            <div class="modal-footer">
-
-                <button class="btn btn-secondary"
-                        data-bs-dismiss="modal">
-
-                    Cancelar
-
-                </button>
-
-
-                <button class="btn btn-danger"
-                        id="btnExcluir">
-
-                    Excluir
-
-                </button>
-
-            </div>
-
-
-        </div>
-
-    </div>
-
-</div>
-
 
 <script>
+    let modalEditar, modalExcluir;
 
-
-    let modalEditar;
-
-     let modalExcluir;
-
-    document.addEventListener("DOMContentLoaded", function(){
-
-    modalEditar =
-    new bootstrap.Modal(document.getElementById("modalEditar"));
-
-    document.getElementById("data").valueAsDate =
-    new Date();
-
-      modalExcluir =  new bootstrap.Modal(document.getElementById("modalExcluir"));
-
+    document.addEventListener("DOMContentLoaded", function () {
+        modalEditar  = new bootstrap.Modal(document.getElementById("modalEditar"));
+        modalExcluir = new bootstrap.Modal(document.getElementById("modalExcluir"));
+        document.getElementById("data").valueAsDate = new Date();
+        aplicarMascara(document.getElementById("valor"));
+        aplicarMascara(document.getElementById("editValor"));
     });
-    function confirmarExcluir(id)
-    {
 
-        $("#excluirId").val(id);
-
-        modalExcluir.show();
-
+    function aplicarMascara(input) {
+        if (!input || input._mascaraAplicada) return;
+        input._mascaraAplicada = true;
+        input.addEventListener("input", function () {
+            let v = this.value.replace(/\D/g, "");
+            v = (parseInt(v || "0", 10) / 100).toFixed(2);
+            this.value = v.replace(".", ",");
+        });
     }
 
+    function parseBR(val) { return parseFloat((val || "0").replace(/\./g, "").replace(",", ".")) || 0; }
+    function getToken()   { return $('input[name="__RequestVerificationToken"]').first().val(); }
 
-    $("#btnExcluir").click(function()
-    {
+    function toast(msg, cor) {
+        let t = $("#toast");
+        t.removeClass("bg-success bg-danger bg-warning");
+        t.addClass(cor);
+        $("#toastMsg").text(msg);
+        new bootstrap.Toast(t[0], { delay: 3000 }).show();
+    }
 
-        let id = $("#excluirId").val();
+    function atualizarTotal() {
+        $.get("/Despesas/TotalMes", function (total) { $("#totalMes").text("R$ " + total); });
+    }
 
-        let btn = $(this);
-
-        btn.html("Excluindo...");
-        btn.prop("disabled", true);
-
-
-
-        let formData = new FormData();
-
-        formData.append("id", id);
-
-        formData.append("__RequestVerificationToken",
-            $('input[name="__RequestVerificationToken"]').val());
-
+    function salvarDespesa() {
+        let btn = $("#btnSalvar").html("Salvando...").prop("disabled", true);
+        let fd  = new FormData();
+        fd.append("Categoria",    categoria.value);
+        fd.append("Descricao",    descricao.value);
+        fd.append("Valor",        parseBR(valor.value).toString());
+        fd.append("DataCadastro", data.value);
+        fd.append("Ratear",       ratear.checked);
+        fd.append("__RequestVerificationToken", getToken());
         $.ajax({
+            url: '/Despesas/CreateAjax', type: 'POST', data: fd,
+            processData: false, contentType: false,
+            success: function (html) { $("#lista").prepend(html); toast("Salvo com sucesso", "bg-success"); atualizarTotal(); limpar(); },
+            error: function () { toast("Erro ao salvar", "bg-danger"); },
+            complete: function () { btn.html("Salvar").prop("disabled", false); }
+        });
+    }
 
-            url: "/Despesas/DeleteAjax",
-            type: "POST",
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function()
-            {
-                let row = $("#row-" + id);
-                row.fadeOut(300,function(){
-                    row.remove();
-                });
-                modalExcluir.hide();
-                toast("Produto excluído com sucesso","bg-success");
-            },
-            complete: function()
-            {
-                btn.html("Excluir");
-                btn.prop("disabled", false);
-            }
+    function abrirModalEditar(id, categoria, descricao, valor, data, ratear) {
+        editId.value        = id;
+        editCategoria.value = categoria;
+        editDescricao.value = descricao;
+        editData.value      = data;
+        editRatear.checked  = ratear;
+        let inputVG = document.getElementById("editValor");
+        inputVG.value = parseFloat(valor || 0).toFixed(2).replace(".", ",");
+        aplicarMascara(inputVG);
+        modalEditar.show();
+    }
+
+    function salvarEdicao() {
+        let fd = new FormData();
+        fd.append("Id",           editId.value);
+        fd.append("Categoria",    editCategoria.value);
+        fd.append("Descricao",    editDescricao.value);
+        fd.append("Valor",        parseBR(editValor.value).toString());
+        fd.append("DataCadastro", editData.value);
+        fd.append("Ratear",       editRatear.checked);
+        fd.append("__RequestVerificationToken", getToken());
+        $.ajax({
+            url: '/Despesas/EditAjax', type: 'POST', data: fd,
+            processData: false, contentType: false,
+            success: function (html) { $("#row-" + editId.value).replaceWith($(html)); modalEditar.hide(); toast("Editado com sucesso", "bg-success"); atualizarTotal(); },
+            error: function () { toast("Erro ao editar", "bg-danger"); }
+        });
+    }
+
+    function confirmarExcluir(id) { $("#excluirId").val(id); modalExcluir.show(); }
+
+    $("#btnExcluir").click(function () {
+        let id  = $("#excluirId").val();
+        let btn = $(this).html("Excluindo...").prop("disabled", true);
+        let fd  = new FormData();
+        fd.append("id", id);
+        fd.append("__RequestVerificationToken", getToken());
+        $.ajax({
+            url: "/Despesas/DeleteAjax", type: "POST", data: fd,
+            processData: false, contentType: false,
+            success: function () { $("#row-" + id).fadeOut(300, function () { $(this).remove(); }); modalExcluir.hide(); toast("Despesa excluída", "bg-success"); atualizarTotal(); },
+            error: function () { toast("Erro ao excluir", "bg-danger"); },
+            complete: function () { btn.html("Excluir").prop("disabled", false); }
         });
     });
 
-
-
-
-    // TOAST
-
-    function toast(msg,cor){
-
-    let t=$("#toast");
-
-    t.removeClass("bg-success bg-danger");
-
-    t.addClass(cor);
-
-    $("#toastMsg").html(msg);
-
-    new bootstrap.Toast(t[0]).show();
-
-    }
-
-
-
-
-    // SALVAR
-
-    function salvarDespesa(){
-
-    let fd=new FormData();
-
-    fd.append("Categoria",categoria.value);
-
-    fd.append("Descricao",descricao.value);
-
-    fd.append("Valor",valor.value);
-
-    fd.append("DataCadastro",data.value);
-
-    fd.append("Ratear",ratear.checked);
-
-    fd.append("__RequestVerificationToken",
-
-    $('input[name="__RequestVerificationToken"]').val());
-
-
-    $.ajax({
-    url:'/Despesas/CreateAjax',
-    type:'POST',
-    data:fd,
-    processData:false,
-    contentType:false,
-    success:function(html){
-    $("#lista").prepend(html);
-    toast("Salvo com sucesso","bg-success");
-
-    limpar();
-
-    }
-
-    });
-
-    }
-
-    // EDITAR ABRIR
-
-    function abrirModalEditar(id,categoria,descricao,valor,data,ratear){
-      
-    editId.value=id;
-    editCategoria.value=categoria;
-    editDescricao.value=descricao;
-    editValor.value=valor;
-    editData.value=data;
-    editRatear.checked=ratear;
-    modalEditar.show();
-
-    }
-
-    // SALVAR EDIÇÃO
-
-    function salvarEdicao(){
-
-    let fd=new FormData();
-
-    fd.append("Id",editId.value);
-
-    fd.append("Categoria",editCategoria.value);
-
-    fd.append("Descricao",editDescricao.value);
-
-    fd.append("Valor",editValor.value);
-
-    fd.append("DataCadastro",editData.value);
-
-    fd.append("Ratear",editRatear.checked);
-
-    fd.append("__RequestVerificationToken",
-
-    $('input[name="__RequestVerificationToken"]').val());
-
-
-    $.ajax({
-
-    url:'/Despesas/EditAjax',
-
-    type:'POST',
-
-    data:fd,
-
-    processData:false,
-
-    contentType:false,
-
-
-    success:function(html){
-
-    $("#row-"+editId.value)
-
-    .replaceWith(html);
-
-    modalEditar.hide();
-
-    toast("Editado com sucesso","bg-success");
-
-    }
-
-    });
-
-    }
-    // LIMPAR
-
-    function limpar(){
-
-    descricao.value="";
-
-    valor.value="";
-
-    ratear.checked=false;
-
-    }
-
-
-
+    function limpar() { descricao.value = ""; valor.value = ""; ratear.checked = false; }
 </script>

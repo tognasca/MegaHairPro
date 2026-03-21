@@ -4,939 +4,317 @@
     ViewData["Title"] = "Produtos";
 }
 
-<div class="container-fluid">
+<div class="page-header">
+    <div class="page-title">Produtos</div>
+    <div class="page-sub">Cadastro e controle de produtos em estoque</div>
+</div>
 
-    <h2 class="mb-4">
-        📦 Controle de Produtos
-    </h2>
-    <div class="card-premium mb-4">
-
-        <h5 class="mb-3">
-
-            <i class="bi bi-plus-circle"></i>
-
-            Novo Produto
-
-        </h5>
-
-
-        <form id="formProduto">
-
-            @Html.AntiForgeryToken()
-
-            <div class="row g-3 align-items-end">
-
-
-                <!-- Tipo -->
-                <div class="col-md-2">
-
-                    <label class="form-label">Tipo</label>
-
-                    <select name="TipoProduto"
-                            id="TipoProduto"
-                            class="form-select"
-                            required>
-
-                        <option value="">Selecione</option>
-                        <option value="1">Cabelo</option>
-                        <option value="2">Acessório</option>
-
-                    </select>
-
-                </div>
-
-                <!-- Unidade (g/mL) -->
-                <div class="col-md-2">
-                    <label class="form-label">Unidade</label>
-                    <select name="UnidadeMedida"
-                            id="UnidadeMedida"
-                            class="form-select"
-                            required>
-                        <option value="1">g</option>
-                        <option value="2">mL</option>
-                    </select>
-                </div>
-
-
-                <!-- Nome -->
-                <div class="col-md-3 campo-cabelo">
-
-                    <label class="form-label">Nome</label>
-
-                    <input name="Nome"
-                           class="form-control">
-
-                </div>
-
-
-
-                <!-- Origem -->
-                <div class="col-md-2 campo-cabelo">
-
-                    <label class="form-label">Origem</label>
-
-                    <select name="Origem"
-                            class="form-select">
-
-                        <option value="">Selecione</option>
-                        <option>Indiano</option>
-                        <option>Vietnamita</option>
-                        <option>Russo</option>
-                        <option>Brasileiro</option>
-
-                    </select>
-
-                </div>
-
-
-
-                <!-- Tamanho -->
-                <div class="col-md-2 campo-cabelo">
-
-                    <label class="form-label">Tamanho</label>
-
-                    <select name="Tamanho"
-                            class="form-select">
-
-                        <option value="">Selecione</option>
-                        <option>40cm</option>
-                        <option>45cm</option>
-                        <option>50cm</option>
-                        <option>55cm</option>
-                        <option>60cm</option>
-                        <option>65cm</option>
-                        <option>70cm</option>
-
-                    </select>
-
-                </div>
-
-
-
-                <!-- Cor -->
-                <div class="col-md-2 campo-cabelo">
-
-                    <label class="form-label">Cor</label>
-
-                    <select name="Cor"
-                            class="form-select">
-
-                        <option value="">Selecione</option>
-                        <option>Castanho</option>
-                        <option>Castanho Claro</option>
-                        <option>Castanho Escuro</option>
-                        <option>Louro</option>
-                        <option>Preto</option>
-
-                    </select>
-
-                </div>
-
-
-
-                <!-- DESCRIÇÃO ACESSÓRIO -->
-                <div class="col-md-6 campo-acessorio d-none">
-
-                    <label class="form-label">
-
-                        Descrição
-
-                    </label>
-
-                    <input name="Descricao"
-                           class="form-control">
-
-                </div>
-
-
-
-                <!-- BOTÃO -->
-                <div class="col-md-1">
-
-                    <button id="btnSalvar"
-                            class="btn btn-success w-100">
-
-                        Salvar
-
-                    </button>
-
-                </div>
-
-
+<div class="section-card">
+    <div class="section-label">Novo produto</div>
+    <form id="formProduto">
+        @Html.AntiForgeryToken()
+        <div class="row g-3 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label">Tipo</label>
+                <select name="TipoProduto" id="TipoProduto" class="form-select" required>
+                    <option value="">Selecione</option>
+                    <option value="1">Cabelo</option>
+                    <option value="2">Acessório</option>
+                </select>
             </div>
-
-        </form>
-
-    </div>
-    <div class="card shadow">
-        <div class="card-body">
-
-            <div class="card shadow-sm mb-4">
-
-                <div class="card-body">
-
-                    <div class="row">
-
-                        <div class="col-md-3">
-                            <input type="text"
-                                   id="filtroNome"
-                                   class="form-control"
-                                   placeholder="🔎 Buscar nome">
-                        </div>
-
-
-                        <div class="col-md-2">
-                            <select id="filtroOrigem"
-                                    class="form-control">
-
-                                <option value="">Origem</option>
-
-                                <option>Indiano</option>
-                                <option>Vietnamita</option>
-                                <option>Russo</option>
-                                <option>Brasileiro</option>
-
-                            </select>
-                        </div>
-
-
-                        <div class="col-md-2">
-                            <select id="filtroStatus"
-                                    class="form-control">
-
-                                <option value="">Status</option>
-
-                                <option value="true">
-                                    Ativo
-                                </option>
-
-                                <option value="false">
-                                    Inativo
-                                </option>
-
-                            </select>
-                        </div>
-
-
-                        <div class="col-md-2">
-
-                            <button class="btn btn-secondary w-100"
-                                    onclick="limparFiltro()">
-
-                                Limpar
-
-                            </button>
-
-                        </div>
-
-
-                    </div>
-
-                </div>
-
+            <div class="col-md-2">
+                <label class="form-label">Unidade</label>
+                <select name="UnidadeMedida" id="UnidadeMedida" class="form-select" required>
+                    <option value="1">g</option>
+                    <option value="2">mL</option>
+                </select>
             </div>
-
-            <table class="table table-hover">
-
-                <thead class="table-dark">
-
-                    <tr>
-
-                        <th>Código</th>
-
-                        <th>Tipo</th>
-
-                        <th>Nome</th>
-
-                        <th>Origem</th>
-
-                        <th>Tamanho</th>
-
-                        <th>Cor</th>
-
-                        <th>Status</th>
-
-                        <th width="200">
-
-                            Ações
-
-                        </th>
-
-                    </tr>
-
-                </thead>
-
-
-
-                <tbody id="produtosBody">
-
-                    @foreach (var p in Model)
-                    {
-                        @Html.Partial("_ProdutoRow", p)
-                    }
-
-                </tbody>
-
-
-            </table>
-
+            <div class="col-md-3 campo-cabelo-nome d-none">
+                <label class="form-label">Nome</label>
+                <input name="Nome" id="txtnome" class="form-control" />
+            </div>
+            <div class="col-md-2 campo-cabelo">
+                <label class="form-label">Origem</label>
+                <select name="Origem" class="form-select">
+                    <option value="">Selecione</option>
+                    <option>Indiano</option><option>Vietnamita</option>
+                    <option>Russo</option><option>Brasileiro</option>
+                </select>
+            </div>
+            <div class="col-md-2 campo-cabelo">
+                <label class="form-label">Tamanho</label>
+                <select name="Tamanho" class="form-select">
+                    <option value="">Selecione</option>
+                    <option>40cm</option><option>45cm</option><option>50cm</option>
+                    <option>55cm</option><option>60cm</option><option>65cm</option><option>70cm</option>
+                </select>
+            </div>
+            <div class="col-md-2 campo-cabelo">
+                <label class="form-label">Cor</label>
+                <select name="Cor" class="form-select">
+                    <option value="">Selecione</option>
+                    <option>Castanho</option><option>Castanho Claro</option>
+                    <option>Castanho Escuro</option><option>Louro</option><option>Preto</option>
+                </select>
+            </div>
+            <div class="col-md-5 campo-acessorio d-none">
+                <label class="form-label">Descrição</label>
+                <input name="Descricao" class="form-control" />
+            </div>
+            <div class="col-md-1">
+                <button id="btnSalvar" class="btn btn-success w-100">Salvar</button>
+            </div>
         </div>
+    </form>
+</div>
 
-    </div>
-
-
-    <div class="toast-container position-fixed bottom-0 end-0 p-3">
-
-        <div id="toast"
-             class="toast align-items-center text-white border-0"
-             role="alert">
-
-            <div class="d-flex align-items-center">
-
-                <div id="toastMsg"
-                     class="toast-body">
-
-                    Mensagem
-
-                </div>
-
-                <button type="button"
-                        class="btn-close btn-close-white me-2 m-auto"
-                        data-bs-dismiss="toast">
-                </button>
-
-            </div>
-
+<!-- FILTROS -->
+<div class="section-card">
+    <div class="section-label">Filtros</div>
+    <div class="row g-3">
+        <div class="col-md-3">
+            <input type="text" id="filtroNome" class="form-control" placeholder="Buscar por nome..." />
         </div>
-
+        <div class="col-md-2">
+            <select id="filtroOrigem" class="form-select">
+                <option value="">Origem</option>
+                <option>Indiano</option><option>Vietnamita</option>
+                <option>Russo</option><option>Brasileiro</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select id="filtroStatus" class="form-select">
+                <option value="">Status</option>
+                <option value="true">Ativo</option>
+                <option value="false">Inativo</option>
+            </select>
+        </div>
+        <div class="col-md-1">
+            <button class="btn btn-outline-secondary w-100" onclick="limparFiltro()">Limpar</button>
+        </div>
     </div>
 </div>
 
+<!-- LISTAGEM -->
+<div class="table-card">
+    <div class="table-card-header">
+        <span class="table-card-title">Produtos registrados</span>
+        <span class="table-count">@Model.Count() registros</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Tipo</th>
+                    <th>Origem</th>
+                    <th>Tamanho</th>
+                    <th>Cor</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center" width="200">Ações</th>
+                </tr>
+            </thead>
+            <tbody id="produtosBody">
+                @foreach (var p in Model) { @Html.Partial("_ProdutoRow", p) }
+            </tbody>
+        </table>
+    </div>
+</div>
 
+<!-- MODAL EDITAR -->
 <div class="modal fade" id="modalEditarProduto" tabindex="-1">
-
     <div class="modal-dialog modal-dialog-centered modal-lg">
-
         <div class="modal-content border-0 shadow-lg rounded-4">
-
-            <!-- HEADER -->
             <div class="modal-header border-0 pb-0">
-
-                <h5 class="modal-title fw-bold">
-
-                    ✏️ Editar Produto
-
-                </h5>
-
-                <button class="btn-close"
-                        data-bs-dismiss="modal">
-                </button>
-
+                <h5 class="modal-title fw-bold">Editar Produto</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
-
-            <!-- BODY -->
-            <div class="modal-body pt-2">
-
-                <input type="hidden" id="editId">
-
-
+            <div class="modal-body">
+                <input type="hidden" id="editId" />
                 <div class="row g-3">
-
-
-                    <div class="col-md-6">
-
-                        <label class="form-label fw-semibold">
-
-                            Tipo
-
-                        </label>
-
-                        <select id="editTipo"
-                                class="form-select form-select-lg shadow-sm">
-
+                    <div class="col-md-4">
+                        <label class="form-label">Tipo</label>
+                        <select id="editTipo" class="form-select">
                             <option value="1">Cabelo</option>
-
                             <option value="2">Acessório</option>
-
                         </select>
-
                     </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Unidade</label>
-                        <select id="editUnidadeMedida"
-                                class="form-select form-select-lg shadow-sm">
+                    <div class="col-md-4">
+                        <label class="form-label">Unidade</label>
+                        <select id="editUnidadeMedida" class="form-select">
                             <option value="1">g</option>
                             <option value="2">mL</option>
                         </select>
                     </div>
-
-
-                    <div class="col-md-6">
-
-                        <label class="form-label fw-semibold">
-
-                            Nome
-
-                        </label>
-
-                        <input id="editNome"
-                               class="form-control form-control-lg shadow-sm">
-
-                    </div>
-
-
-
-                    <div class="col-md-6">
-
-                        <label class="form-label fw-semibold">
-
-                            Origem
-
-                        </label>
-
-                        <select id="editOrigem"
-                                class="form-select form-select-lg shadow-sm">
-
-                            <option>Indiano</option>
-
-                            <option>Vietnamita</option>
-
-                            <option>Russo</option>
-
-                            <option>Brasileiro</option>
-
+                    <div class="col-md-4">
+                        <label class="form-label">Origem</label>
+                        <select id="editOrigem" class="form-select">
+                            <option>Indiano</option><option>Vietnamita</option>
+                            <option>Russo</option><option>Brasileiro</option>
                         </select>
-
                     </div>
-
-
-
-                    <div class="col-md-3">
-
-                        <label class="form-label fw-semibold">
-
-                            Tamanho
-
-                        </label>
-
-                        <select id="editTamanho"
-                                class="form-select form-select-lg shadow-sm">
-
-                            <option>40cm</option>
-                            <option>45cm</option>
-                            <option>50cm</option>
-                            <option>55cm</option>
-                            <option>60cm</option>
-                            <option>65cm</option>
-                            <option>70cm</option>
-
+                    <div class="col-md-4">
+                        <label class="form-label">Tamanho</label>
+                        <select id="editTamanho" class="form-select">
+                            <option>40cm</option><option>45cm</option><option>50cm</option>
+                            <option>55cm</option><option>60cm</option><option>65cm</option><option>70cm</option>
                         </select>
-
                     </div>
-
-
-                    <div class="col-md-3">
-
-                        <label class="form-label fw-semibold">
-
-                            Cor
-
-                        </label>
-
-                        <select id="editCor" class="form-control">
-                            <option>Castanho</option>
-                            <option>Castanho Claro</option>
-                            <option>Castanho Escuro</option>
-                            <option>Louro</option>
-                            <option>Preto</option>
-                            <option>Ruivo</option>
+                    <div class="col-md-4">
+                        <label class="form-label">Cor</label>
+                        <select id="editCor" class="form-select">
+                            <option>Castanho</option><option>Castanho Claro</option>
+                            <option>Castanho Escuro</option><option>Louro</option>
+                            <option>Preto</option><option>Ruivo</option>
                         </select>
-
-
                     </div>
-
-
-
                 </div>
-
-
             </div>
-
-
-            <!-- FOOTER -->
-            <div class="modal-footer border-0 pt-0">
-
-                <button class="btn btn-light btn-lg px-4"
-                        data-bs-dismiss="modal">
-
-                    Cancelar
-
-                </button>
-
-
-                <button class="btn btn-success btn-lg px-5 shadow-sm"
-                        onclick="salvarEdicao()">
-
-                    ✔ Salvar
-
-                </button>
-
-
+            <div class="modal-footer border-0">
+                <button class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-success px-4" onclick="salvarEdicao()">Salvar</button>
             </div>
-
         </div>
-
     </div>
-
 </div>
 
-<div class="modal fade" id="modalExcluir">
-
+<!-- MODAL EXCLUIR -->
+<div class="modal fade" id="modalExcluir" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-
         <div class="modal-content border-0 shadow">
-
-            <div class="modal-header bg-danger text-white">
-
-                <h5>
-
-                    Confirmar exclusão
-
-                </h5>
-
-            </div>
-
-
+            <div class="modal-header bg-danger text-white border-0"><h5>Confirmar exclusão</h5></div>
             <div class="modal-body text-center">
-
-                <h6>
-
-                    Deseja excluir este produto?
-
-                </h6>
-
-                <input type="hidden"
-                       id="excluirId">
-
+                <p>Deseja excluir este produto?</p>
+                <input type="hidden" id="excluirId" />
             </div>
-
-
-
-            <div class="modal-footer">
-
-                <button class="btn btn-secondary"
-                        data-bs-dismiss="modal">
-
-                    Cancelar
-
-                </button>
-
-
-                <button class="btn btn-danger"
-                        id="btnExcluir">
-
-                    Excluir
-
-                </button>
-
+            <div class="modal-footer border-0">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-danger" id="btnExcluir">Excluir</button>
             </div>
-
-
         </div>
-
     </div>
-
 </div>
 
-
-
-
-<!-- ============================= -->
-<!-- SCRIPT PREMIUM -->
-<!-- ============================= -->
+<!-- TOAST -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="toast" class="toast align-items-center text-white border-0">
+        <div class="d-flex align-items-center">
+            <div id="toastMsg" class="toast-body"></div>
+            <button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
 
 <script>
-       let modalEditarProduto;
-        let modalExcluir;
-    document.addEventListener("DOMContentLoaded", function () {
+    let modalEditarProduto, modalExcluir;
 
+    document.addEventListener("DOMContentLoaded", function () {
+        $(".campo-cabelo-nome").addClass("d-none");
         modalEditarProduto = new bootstrap.Modal(document.getElementById("modalEditarProduto"));
-        modalExcluir =  new bootstrap.Modal(document.getElementById("modalExcluir"));
+        modalExcluir       = new bootstrap.Modal(document.getElementById("modalExcluir"));
         aplicarRegraUnidade($("#TipoProduto").val());
     });
-
-    function confirmarExcluir(id)
-    {
-
-        $("#excluirId").val(id);
-
-        modalExcluir.show();
-
-    }
-
-
-
-    $("#btnExcluir").click(function()
-    {
-
-        let id = $("#excluirId").val();
-
-        let btn = $(this);
-
-        btn.html("Excluindo...");
-        btn.prop("disabled", true);
-
-
-
-        let formData = new FormData();
-
-        formData.append("id", id);
-
-        formData.append("__RequestVerificationToken",
-            $('input[name="__RequestVerificationToken"]').val());
-
-        $.ajax({
-
-            url: "/Produtos/DeleteAjax",
-            type: "POST",
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function()
-            {
-                let row = $("#row-" + id);
-                row.fadeOut(300,function(){
-                    row.remove();
-                });
-                modalExcluir.hide();
-                toast("Produto excluído com sucesso","bg-success");
-            },
-            complete: function()
-            {
-                btn.html("Excluir");
-                btn.prop("disabled", false);
-            }
-        });
-    });
-
 
     function aplicarRegraUnidade(tipo) {
-        // Cabelo sempre em gramas
-        if (tipo === "1") {
-            $("#UnidadeMedida").val("1").prop("disabled", true);
-            $("#editUnidadeMedida").val("1").prop("disabled", true);
-        } else {
-            $("#UnidadeMedida").prop("disabled", false);
-            $("#editUnidadeMedida").prop("disabled", false);
-        }
+        if (tipo === "1") { $("#UnidadeMedida").val("1").prop("disabled", true); $("#editUnidadeMedida").val("1").prop("disabled", true); }
+        else              { $("#UnidadeMedida").prop("disabled", false); $("#editUnidadeMedida").prop("disabled", false); }
     }
 
-    $("#TipoProduto").change(function(){
-
+    $("#TipoProduto").change(function () {
         let tipo = $(this).val();
-
-        if(tipo == "2")
-        {
-
-            $(".campo-cabelo").addClass("d-none");
-
-            $(".campo-acessorio").removeClass("d-none");
-
-        }
-        else
-        {
-
-            $(".campo-cabelo").removeClass("d-none");
-
-            $(".campo-acessorio").addClass("d-none");
-
-        }
-
+        if (tipo == "2") { $(".campo-cabelo").addClass("d-none"); $(".campo-acessorio").removeClass("d-none"); }
+        else             { $(".campo-cabelo").removeClass("d-none"); $(".campo-acessorio").addClass("d-none"); }
         aplicarRegraUnidade(tipo);
-
     });
 
+    function getToken() { return $('input[name="__RequestVerificationToken"]').first().val(); }
 
-
-    $("#formProduto").submit(function(e){
-
-        e.preventDefault();
-
-        let btn = $("#btnSalvar");
-
-        btn.html("Salvando...");
-
-        btn.prop("disabled", true);
-
-
-        let formData = new FormData(this);
-
-
-        $.ajax({
-
-            url: "/Produtos/CreateAjax",
-
-            type: "POST",
-
-            data: formData,
-
-            processData: false,
-
-            contentType: false,
-
-
-            success: function(response)
-            {
-
-                $("#produtosBody").prepend(response);
-
-
-                toast("Produto salvo com sucesso","bg-success");
-
-
-                limpar();
-
-
-            },
-
-            error: function()
-            {
-
-                toast("Erro ao salvar","bg-danger");
-
-            },
-
-            complete: function()
-            {
-
-                btn.html("Salvar");
-
-                btn.prop("disabled", false);
-
-            }
-
-        });
-
-    });
-
-
-
-    function limpar()
-    {
-
-        $("#formProduto")[0].reset();
-        aplicarRegraUnidade($("#TipoProduto").val());
-
+    function toast(msg, tipo) {
+        let t = $("#toast");
+        t.removeClass("bg-success bg-danger bg-warning");
+        t.addClass(tipo);
+        $("#toastMsg").text(msg);
+        new bootstrap.Toast(t[0], { delay: 3000 }).show();
     }
 
+    $("#formProduto").submit(function (e) {
+        e.preventDefault();
+        let btn = $("#btnSalvar").html("Salvando...").prop("disabled", true);
+        $.ajax({
+            url: "/Produtos/CreateAjax", type: "POST", data: new FormData(this),
+            processData: false, contentType: false,
+            success: function (html) { $("#produtosBody").prepend(html); toast("Produto salvo", "bg-success"); limpar(); },
+            error: function () { toast("Erro ao salvar", "bg-danger"); },
+            complete: function () { btn.html("Salvar").prop("disabled", false); }
+        });
+    });
 
+    function limpar() { $("#formProduto")[0].reset(); aplicarRegraUnidade($("#TipoProduto").val()); }
 
-
-
-        function editarProduto(id) {
-
+    function editarProduto(id) {
         let row = document.getElementById("row-" + id);
-
         $("#editId").val(id);
         $("#editTipo").val(row.dataset.tipo);
-        $("#editNome").val(row.dataset.nome);
         $("#editOrigem").val(row.dataset.origem);
         $("#editTamanho").val(row.dataset.tamanho);
         $("#editCor").val(row.dataset.cor);
         $("#editUnidadeMedida").val(row.dataset.unidade || "1");
         aplicarRegraUnidade($("#editTipo").val());
-
         modalEditarProduto.show();
-
     }
-
 
     function salvarEdicao() {
-
-        let formData = new FormData();
-            formData.append("Id", $("#editId").val());
-            formData.append("TipoProduto", $("#editTipo").val());
-            formData.append("UnidadeMedida", $("#editUnidadeMedida").val());
-            formData.append("Nome", $("#editNome").val());
-            formData.append("Origem", $("#editOrigem").val());
-            formData.append("Tamanho", $("#editTamanho").val());
-            formData.append("Cor", $("#editCor").val());
-            formData.append("__RequestVerificationToken", $('input[name="__RequestVerificationToken"]').val());
-
-         $.ajax({
-
-            url: '/Produtos/EditAjax',
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (html) {
-                $("#row-" + $("#editId").val()).replaceWith(html);
-                let modal = bootstrap.Modal.getInstance(document.getElementById("modalEditarProduto"));
-                modal.hide();
-                toast("Editado com sucesso", "bg-success");
-            }
-        });
-    }
-
-     function toast(msg, tipo){
-            let t = $("#toast");
-            t.removeClass("bg-success bg-danger");
-            t.addClass(tipo);
-            $("#toastMsg").html(msg);
-            new bootstrap.Toast(t[0]).show();
-    }
-
-
-      function toggleStatus(id)
-    {
-
-        let formData = new FormData();
-
-        formData.append("Id", id);
-
-        formData.append("__RequestVerificationToken",
-            $('input[name="__RequestVerificationToken"]').val());
-
-
+        let id = $("#editId").val();
+        let fd = new FormData();
+        fd.append("Id", id); fd.append("TipoProduto", $("#editTipo").val());
+        fd.append("UnidadeMedida", $("#editUnidadeMedida").val());
+        fd.append("Origem", $("#editOrigem").val()); fd.append("Tamanho", $("#editTamanho").val());
+        fd.append("Cor", $("#editCor").val());
+        fd.append("__RequestVerificationToken", getToken());
         $.ajax({
-            url: '/Produtos/ToggleStatusAjax',
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (response)
-            {
-                if (typeof response === "string")
-                    $("#row-" + id).replaceWith(response);
-                else
-                {
-                    let btn = $("#row-" + id).find(".btn-status");
-                    if (response.ativo)
-                    {
-                        btn.removeClass("btn-warning")
-                           .addClass("btn-success")
-                           .text("Ativo");
-                    }
-                    else
-                    {
-                        btn.removeClass("btn-success")
-                           .addClass("btn-warning")
-                           .text("Inativo");
-                    }
-                }
-                toast("Status alterado com sucesso", "bg-success");
-            }
+            url: '/Produtos/EditAjax', type: 'POST', data: fd, processData: false, contentType: false,
+            success: function (html) { $("#row-" + id).replaceWith(html); modalEditarProduto.hide(); toast("Editado com sucesso", "bg-success"); },
+            error: function () { toast("Erro ao editar", "bg-danger"); }
         });
-
     }
 
+    function toggleStatus(id) {
+        let fd = new FormData();
+        fd.append("Id", id); fd.append("__RequestVerificationToken", getToken());
+        $.ajax({
+            url: '/Produtos/ToggleStatusAjax', type: 'POST', data: fd, processData: false, contentType: false,
+            success: function (html) { $("#row-" + id).replaceWith(html); toast("Status alterado", "bg-warning"); }
+        });
+    }
 
+    function confirmarExcluir(id) { $("#excluirId").val(id); modalExcluir.show(); }
 
-    $("#filtroNome, #filtroOrigem, #filtroStatus")
-
-    .on("keyup change",
-
-    function ()
-    {
-
-        filtrar();
-
+    $("#btnExcluir").click(function () {
+        let id = $("#excluirId").val();
+        let btn = $(this).html("Excluindo...").prop("disabled", true);
+        let fd = new FormData(); fd.append("id", id); fd.append("__RequestVerificationToken", getToken());
+        $.ajax({
+            url: "/Produtos/DeleteAjax", type: "POST", data: fd, processData: false, contentType: false,
+            success: function () { $("#row-" + id).fadeOut(300, function () { $(this).remove(); }); modalExcluir.hide(); toast("Produto excluído", "bg-success"); },
+            error: function () { toast("Erro ao excluir", "bg-danger"); },
+            complete: function () { btn.html("Excluir").prop("disabled", false); }
+        });
     });
 
+    $("#filtroNome, #filtroOrigem, #filtroStatus").on("keyup change", filtrar);
 
-
-    function filtrar()
-    {
-
-        let nome =
-            $("#filtroNome").val().toLowerCase();
-
-        let origem =
-            $("#filtroOrigem").val();
-
-        let status =
-            $("#filtroStatus").val();
-
-
-
-        $("#produtosBody tr")
-
-        .each(function ()
-        {
-
-            let row = $(this);
-
-
-            let okNome =
-                row.data("nome")
-                   .toLowerCase()
-                   .includes(nome);
-
-
-
-            let okOrigem =
-                origem == "" ||
-                row.data("origem") == origem;
-
-
-
-            let okStatus =
-                status == "" ||
-                row.data("status").toString() == status;
-
-
-
-            if (okNome && okOrigem && okStatus)
-
-                row.show();
-
-            else
-
-                row.hide();
-
+    function filtrar() {
+        let nome   = $("#filtroNome").val().toLowerCase();
+        let origem = $("#filtroOrigem").val();
+        let status = $("#filtroStatus").val();
+        $("#produtosBody tr").each(function () {
+            let r = $(this);
+            let ok = r.data("nome").toLowerCase().includes(nome) &&
+                     (origem == "" || r.data("origem") == origem) &&
+                     (status == "" || r.data("status").toString() == status);
+            r.toggle(ok);
         });
-
-
     }
 
-
-
-    function limparFiltro()
-    {
-
-        $("#filtroNome").val("");
-
-        $("#filtroOrigem").val("");
-
-        $("#filtroStatus").val("");
-
-        filtrar();
-
-    }
-
-
-
-
-        function toast(msg, tipo)
-    {
-
-        let t = $("#toast");
-
-        t.removeClass("bg-success bg-danger bg-warning");
-
-        t.addClass(tipo);
-
-        $("#toastMsg").text(msg);
-
-        new bootstrap.Toast(t[0], {
-            delay: 3000
-        }).show();
-
-    }
-
-
-
+    function limparFiltro() { $("#filtroNome, #filtroOrigem, #filtroStatus").val(""); filtrar(); }
 </script>

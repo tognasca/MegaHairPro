@@ -1,0 +1,214 @@
+@{
+    ViewData["Title"] = "Minha Conta";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+
+        <div class="card-premium">
+            <h4 class="mb-1">👤 Minha Conta</h4>
+            <p class="text-muted mb-4">Atualize seus dados de acesso</p>
+
+            @if (TempData["Sucesso"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show">
+                    @TempData["Sucesso"]
+                    <button class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["Erro"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show">
+                    @TempData["Erro"]
+                    <button class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <!-- DADOS -->
+            <form id="formDados">
+                @Html.AntiForgeryToken()
+                <h6 class="fw-bold mb-3 text-muted">Dados pessoais</h6>
+
+                <div class="mb-3">
+                    <label class="form-label">Nome</label>
+                    <input id="nome" class="form-control" value="@User.Identity?.Name" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">E-mail</label>
+                    <input id="email" type="email" class="form-control" value="@User.Identity?.Name" readonly
+                           style="background:#f8fafc;" />
+                    <small class="text-muted">O e-mail não pode ser alterado.</small>
+                </div>
+
+                <button id="btnDados" class="btn btn-primary w-100">
+                    <i class="bi bi-save"></i> Salvar Dados
+                </button>
+            </form>
+
+            <hr class="my-4" />
+
+            <!-- SENHA -->
+            <form id="formSenha">
+                @Html.AntiForgeryToken()
+                <h6 class="fw-bold mb-3 text-muted">Alterar senha</h6>
+
+                <div class="mb-3">
+                    <label class="form-label">Senha atual</label>
+                    <div class="input-group">
+                        <input id="senhaAtual" type="password" class="form-control" placeholder="Senha atual" />
+                        <button class="btn btn-outline-secondary" type="button" onclick="toggleSenha('senhaAtual')">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Nova senha</label>
+                    <div class="input-group">
+                        <input id="novaSenha" type="password" class="form-control" placeholder="Mín. 6 caracteres" />
+                        <button class="btn btn-outline-secondary" type="button" onclick="toggleSenha('novaSenha')">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Confirmar nova senha</label>
+                    <input id="confirmarSenha" type="password" class="form-control" placeholder="Repita a nova senha" />
+                </div>
+
+                <!-- Força da senha -->
+                <div class="mb-3">
+                    <div class="progress" style="height:6px; border-radius:4px;">
+                        <div id="forcaBarra" class="progress-bar" style="width:0%; transition:.3s;"></div>
+                    </div>
+                    <small id="forcaTexto" class="text-muted"></small>
+                </div>
+
+                <div id="erroSenha" class="alert alert-danger" style="display:none"></div>
+
+                <button id="btnSenha" class="btn btn-warning w-100">
+                    <i class="bi bi-key"></i> Alterar Senha
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="toast" class="toast align-items-center text-white border-0">
+        <div class="d-flex align-items-center">
+            <div id="toastMsg" class="toast-body"></div>
+            <button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function getToken() {
+        return $('input[name="__RequestVerificationToken"]').first().val();
+    }
+
+    function toast(msg, tipo) {
+        let t = $("#toast");
+        t.removeClass("bg-success bg-danger bg-warning bg-info");
+        t.addClass(tipo);
+        $("#toastMsg").text(msg);
+        new bootstrap.Toast(t[0], { delay: 3500 }).show();
+    }
+
+    function toggleSenha(id) {
+        let input = document.getElementById(id);
+        input.type = input.type === "password" ? "text" : "password";
+    }
+
+    // ── Força da senha ────────────────────────────────────────────────────────
+    document.getElementById("novaSenha").addEventListener("input", function () {
+        let v = this.value;
+        let forca = 0;
+        if (v.length >= 6)  forca++;
+        if (/[A-Z]/.test(v)) forca++;
+        if (/[0-9]/.test(v)) forca++;
+        if (/[^A-Za-z0-9]/.test(v)) forca++;
+
+        let cores  = ["#ef4444","#f97316","#eab308","#22c55e"];
+        let textos = ["Fraca","Razoável","Boa","Forte"];
+        let barra  = document.getElementById("forcaBarra");
+        let texto  = document.getElementById("forcaTexto");
+
+        barra.style.width = (forca * 25) + "%";
+        barra.style.background = cores[forca - 1] || "#e2e8f0";
+        texto.textContent = v.length > 0 ? "Força: " + (textos[forca - 1] || "") : "";
+    });
+
+    // ── Salvar dados ─────────────────────────────────────────────────────────
+    $("#formDados").submit(function (e) {
+        e.preventDefault();
+        let btn = $("#btnDados");
+        btn.html("Salvando...").prop("disabled", true);
+
+        let fd = new FormData();
+        fd.append("nome", $("#nome").val());
+        fd.append("__RequestVerificationToken", getToken());
+
+        $.ajax({
+            url: "/Account/AtualizarNome",
+            type: "POST",
+            data: fd,
+            processData: false,
+            contentType: false,
+            success: function () { toast("Dados atualizados com sucesso", "bg-success"); },
+            error: function (xhr) { toast(xhr.responseText || "Erro ao salvar", "bg-danger"); },
+            complete: function () { btn.html('<i class="bi bi-save"></i> Salvar Dados').prop("disabled", false); }
+        });
+    });
+
+    // ── Alterar senha ─────────────────────────────────────────────────────────
+    $("#formSenha").submit(function (e) {
+        e.preventDefault();
+        $("#erroSenha").hide();
+
+        let nova      = $("#novaSenha").val();
+        let confirmar = $("#confirmarSenha").val();
+
+        if (nova !== confirmar) {
+            $("#erroSenha").text("As senhas não coincidem.").show();
+            return;
+        }
+
+        if (nova.length < 6) {
+            $("#erroSenha").text("A senha deve ter no mínimo 6 caracteres.").show();
+            return;
+        }
+
+        let btn = $("#btnSenha");
+        btn.html("Alterando...").prop("disabled", true);
+
+        let fd = new FormData();
+        fd.append("senhaAtual",  $("#senhaAtual").val());
+        fd.append("novaSenha",   nova);
+        fd.append("__RequestVerificationToken", getToken());
+
+        $.ajax({
+            url: "/Account/AlterarSenha",
+            type: "POST",
+            data: fd,
+            processData: false,
+            contentType: false,
+            success: function () {
+                toast("Senha alterada com sucesso", "bg-success");
+                $("#formSenha")[0].reset();
+                document.getElementById("forcaBarra").style.width = "0%";
+                document.getElementById("forcaTexto").textContent = "";
+            },
+            error: function (xhr) {
+                $("#erroSenha").text(xhr.responseText || "Erro ao alterar senha.").show();
+            },
+            complete: function () { btn.html('<i class="bi bi-key"></i> Alterar Senha').prop("disabled", false); }
+        });
+    });
+</script>
