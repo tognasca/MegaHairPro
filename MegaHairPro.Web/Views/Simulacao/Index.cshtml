@@ -32,9 +32,7 @@
                     <option value="">Selecione...</option>
                     @foreach (var p in ViewBag.Produtos)
                     {
-                        <option value="@p.Id" data-unidade="@((int)p.UnidadeMedida)">
-                            @p.Codigo - @p.Nome
-                        </option>
+                        <option value="@p.Id">@p.Nome</option>
                     }
                 </select>
             </div>

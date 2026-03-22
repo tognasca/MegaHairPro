@@ -2,25 +2,28 @@
     ViewData["Title"] = "Agenda";
 }
 
-<div class="page-header">
-    <div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="page-header mb-0">
         <div class="page-title">Agenda</div>
-        <div class="page-sub">Visualize e gerencie todos os agendamentos</div>
+        <div class="page-sub">Calendário de atendimentos</div>
     </div>
-    <a href="@Url.Action("Novo")" class="btn-header-action">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-        Novo Agendamento
+    <a href="@Url.Action("Novo")" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Novo Agendamento
     </a>
 </div>
 
-<!-- FILTRO -->
-<div class="section-card">
-    <div class="section-label">Filtros</div>
-    <div class="row g-3 align-items-end">
+<div class="d-flex gap-3 mb-3" style="font-size:12px;color:#64748b;">
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f59e0b;margin-right:4px;"></span>Agendado</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#16a34a;margin-right:4px;"></span>Sinal pago</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#2563eb;margin-right:4px;"></span>Concluído</span>
+</div>
+
+<div class="section-card mb-4">
+    <div class="row g-3">
         <div class="col-md-4">
-            <label class="form-label">Profissional</label>
+            <label class="form-label">Filtrar por Profissional</label>
             <select id="profissionalFiltro" class="form-select">
-                <option value="">Todos os profissionais</option>
+                <option value="">Todos</option>
                 @foreach (var p in ViewBag.Profissionais)
                 {
                     <option value="@p.Value">@p.Text</option>
@@ -30,7 +33,6 @@
     </div>
 </div>
 
-<!-- CALENDÁRIO -->
 <div class="section-card">
     <div id="calendar"></div>
 </div>
@@ -38,19 +40,31 @@
 <!-- MODAL DETALHES -->
 <div class="modal fade" id="modalDetalhes" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius:16px;overflow:hidden">
-            <div class="modal-header border-0" style="background:var(--navy,#1a2e4a);color:#fff;padding:20px 24px">
-                <h5 class="modal-title" style="font-weight:600;font-size:1rem">Detalhes do Agendamento</h5>
-                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Detalhes do Agendamento</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-4" id="modalDetalhesBody">
-                <div class="text-center py-3">
-                    <div class="spinner-border" style="color:var(--navy,#1a2e4a)"></div>
-                </div>
+            <div class="modal-body" id="modalDetalhesBody">
+                <div class="text-center py-3"><div class="spinner-border text-primary"></div></div>
             </div>
-            <div class="modal-footer border-0 px-4 pb-4 pt-0 gap-2">
-                <button class="btn btn-light" data-bs-dismiss="modal">Fechar</button>
-                <button class="btn btn-danger" id="btnCancelarAgendamento">Cancelar Agendamento</button>
+            <div class="modal-footer border-0 d-flex gap-2 flex-wrap" id="modalDetalhesBtns"></div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL CANCELAR -->
+<div class="modal fade" id="modalCancelar" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white border-0"><h5>Cancelar agendamento</h5></div>
+            <div class="modal-body text-center">
+                <p>Deseja cancelar este agendamento?</p>
+                <input type="hidden" id="cancelarId" />
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Voltar</button>
+                <button class="btn btn-danger" id="btnCancelarConfirm">Confirmar cancelamento</button>
             </div>
         </div>
     </div>
@@ -68,95 +82,176 @@
 
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@@6.1.11/index.global.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@@6.1.11/index.global.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@@6.1.11/locales/pt-br.global.min.js"></script>
-
-<style>
-    .fc { font-family: inherit; }
-    .fc .fc-toolbar-title { font-size: 1rem; font-weight: 600; }
-    .fc .fc-button { background: var(--navy,#1a2e4a) !important; border-color: var(--navy,#1a2e4a) !important; font-size: 0.8rem; border-radius: 6px !important; }
-    .fc .fc-button:hover { opacity: .85; }
-    .fc .fc-button-active { opacity: .7 !important; }
-    .fc-event { border-radius: 6px !important; font-size: 0.78rem !important; border: none !important; padding: 2px 6px !important; }
-    .fc-timegrid-slot { height: 40px !important; }
-    .detail-row { display:flex; justify-content:space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size:.9rem; }
-    .detail-row:last-child { border-bottom:none; }
-    .detail-label { color: #6b7280; }
-    .detail-value { font-weight: 500; }
-</style>
 
 <script>
-    let modalDetalhes, agendamentoAtivoId = null, calendar;
+    let modalDetalhes, modalCancelar, calendar;
 
     document.addEventListener('DOMContentLoaded', function () {
         modalDetalhes = new bootstrap.Modal(document.getElementById('modalDetalhes'));
-        var calendarEl = document.getElementById('calendar');
-        calendar = new FullCalendar.Calendar(calendarEl, {
+        modalCancelar = new bootstrap.Modal(document.getElementById('modalCancelar'));
+
+        calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
             initialView: 'timeGridWeek',
             locale: 'pt-br',
             height: 680,
             slotMinTime: '07:00:00',
             slotMaxTime: '21:00:00',
             allDaySlot: false,
-            headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' },
-            buttonText: { today: 'Hoje', month: 'Mês', week: 'Semana', day: 'Dia' },
-            events: function (info, successCallback, failureCallback) {
-                let profissionalId = document.getElementById('profissionalFiltro').value;
-                fetch(`/Agendamento/ListarEventos?profissionalId=${profissionalId}`)
-                    .then(r => r.json()).then(data => successCallback(data)).catch(err => failureCallback(err));
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
             },
-            eventClick: function (info) { agendamentoAtivoId = info.event.id; abrirDetalhes(info.event.id); }
+            events: function (info, successCallback, failureCallback) {
+                let profId = document.getElementById('profissionalFiltro').value;
+                fetch(`/Agendamento/ListarEventos?profissionalId=${profId}`)
+                    .then(r => r.json())
+                    .then(data => successCallback(data))
+                    .catch(err => failureCallback(err));
+            },
+            eventClick: function (info) {
+                abrirDetalhes(info.event.id);
+            }
         });
+
         calendar.render();
         document.getElementById('profissionalFiltro').addEventListener('change', () => calendar.refetchEvents());
     });
 
-    function abrirDetalhes(id) {
-        document.getElementById('modalDetalhesBody').innerHTML = '<div class="text-center py-3"><div class="spinner-border" style="color:var(--navy,#1a2e4a)"></div></div>';
-        modalDetalhes.show();
-        fetch(`/Agendamento/Detalhes?id=${id}`)
-            .then(r => r.json())
-            .then(d => {
-                let servicosHtml = d.servicos.map(s => `
-                    <div class="d-flex justify-content-between align-items-center py-2" style="border-bottom:1px solid #f3f4f6">
-                        <span style="font-size:.88rem">${s.nome}</span>
-                        <span class="fw-600" style="color:#16a34a;font-size:.88rem">R$ ${s.valor.toFixed(2)}</span>
-                    </div>`).join('');
-                document.getElementById('modalDetalhesBody').innerHTML = `
-                    <div class="detail-row"><span class="detail-label">Cliente</span><span class="detail-value">${d.cliente}</span></div>
-                    <div class="detail-row"><span class="detail-label">Profissional</span><span class="detail-value">${d.profissional}</span></div>
-                    <div class="detail-row"><span class="detail-label">Horário</span><span class="detail-value">${d.dataHora} até ${d.dataFim}</span></div>
-                    <div class="mt-3 mb-1" style="font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:#9ca3af">Serviços</div>
-                    ${servicosHtml}
-                    <div class="d-flex justify-content-between align-items-center mt-3 pt-2" style="border-top:2px solid #f3f4f6">
-                        <span style="font-weight:600">Total</span>
-                        <span style="font-size:1.1rem;font-weight:700;color:#16a34a">R$ ${d.valorTotal.toFixed(2)}</span>
-                    </div>`;
-            })
-            .catch(() => { document.getElementById('modalDetalhesBody').innerHTML = '<p class="text-danger">Erro ao carregar detalhes.</p>'; });
+    function getToken() {
+        return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
     }
-
-    document.getElementById('btnCancelarAgendamento').addEventListener('click', function () {
-        if (!agendamentoAtivoId) return;
-        let btn = this;
-        btn.disabled = true; btn.textContent = 'Cancelando...';
-        let fd = new FormData();
-        fd.append('id', agendamentoAtivoId);
-        fd.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]')?.value || '');
-        fetch('/Agendamento/Cancelar', { method: 'POST', body: fd })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) { modalDetalhes.hide(); calendar.refetchEvents(); toast('Agendamento cancelado', 'bg-success'); }
-                else { toast('Erro ao cancelar', 'bg-danger'); }
-            })
-            .catch(() => toast('Erro ao cancelar', 'bg-danger'))
-            .finally(() => { btn.disabled = false; btn.textContent = 'Cancelar Agendamento'; });
-    });
 
     function toast(msg, tipo) {
         let t = document.getElementById('toast');
         t.className = 'toast align-items-center text-white border-0 ' + tipo;
         document.getElementById('toastMsg').textContent = msg;
-        new bootstrap.Toast(t, { delay: 3000 }).show();
+        new bootstrap.Toast(t, { delay: 4000 }).show();
     }
+
+    function abrirDetalhes(id) {
+        document.getElementById('modalDetalhesBody').innerHTML =
+            '<div class="text-center py-3"><div class="spinner-border text-primary"></div></div>';
+        document.getElementById('modalDetalhesBtns').innerHTML = '';
+        modalDetalhes.show();
+
+        fetch(`/Agendamento/Detalhes?id=${id}`)
+            .then(r => r.json())
+            .then(d => {
+                const badgeMap = { Agendado:'bg-warning text-dark', Confirmado:'bg-success', Concluido:'bg-primary', Cancelado:'bg-secondary' };
+                const badge = badgeMap[d.status] || 'bg-secondary';
+
+                const servicosHtml = d.servicos.map(s =>
+                    `<li class="d-flex justify-content-between py-1 border-bottom">
+                        <span style="font-size:13px;">${s.nome}</span>
+                        <strong style="font-size:13px;">R$ ${s.valor.toFixed(2)}</strong>
+                    </li>`
+                ).join('');
+
+                document.getElementById('modalDetalhesBody').innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge ${badge} px-3 py-2" style="font-size:12px;">${d.status}</span>
+                        <small class="text-muted">#${d.id}</small>
+                    </div>
+                    <div style="font-weight:600;font-size:15px;">${d.cliente}</div>
+                    <div style="color:#64748b;font-size:13px;margin-top:2px;">
+                        <i class="bi bi-person-badge me-1"></i>${d.profissional}
+                    </div>
+                    <div style="color:#64748b;font-size:13px;margin-top:2px;margin-bottom:16px;">
+                        <i class="bi bi-clock me-1"></i>${d.dataHora} — ${d.dataFim}
+                    </div>
+                    <ul class="list-unstyled mb-3">${servicosHtml}</ul>
+                    <div class="d-flex justify-content-between fw-bold py-2" style="font-size:14px;">
+                        <span>Total dos serviços</span>
+                        <span style="color:#16a34a;">R$ ${d.valorTotal.toFixed(2)}</span>
+                    </div>
+                    <hr/>
+                    <div style="font-size:12px;color:#64748b;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Pagamento</div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <span class="badge ${d.sinalPago ? 'bg-success-soft' : 'bg-warning-soft'}">
+                            ${d.sinalPago ? '✓' : '○'} Sinal — R$ ${d.valorSinal.toFixed(2)}
+                        </span>
+                        <span class="badge ${d.restantePago ? 'bg-success-soft' : 'bg-warning-soft'}">
+                            ${d.restantePago ? '✓' : '○'} Restante — R$ ${d.valorRestante.toFixed(2)}
+                        </span>
+                    </div>
+                `;
+
+                // Botões de ação por status
+                let btns = document.getElementById('modalDetalhesBtns');
+                btns.innerHTML = '';
+
+                if (d.status === 'Agendado') {
+                    btns.innerHTML += `
+                        <button class="btn btn-success" onclick="registrarSinal(${d.id})">
+                            <i class="bi bi-cash-coin"></i> Receber Sinal (R$ ${d.valorSinal.toFixed(2)})
+                        </button>`;
+                }
+                if (d.status === 'Confirmado') {
+                    btns.innerHTML += `
+                        <button class="btn btn-primary" onclick="concluir(${d.id})">
+                            <i class="bi bi-check-circle"></i> Concluir (R$ ${d.valorRestante.toFixed(2)})
+                        </button>`;
+                }
+                if (d.status !== 'Concluido' && d.status !== 'Cancelado') {
+                    btns.innerHTML += `
+                        <button class="btn btn-outline-danger" onclick="abrirCancelar(${d.id})">
+                            Cancelar
+                        </button>`;
+                }
+                btns.innerHTML += `<button class="btn btn-light ms-auto" data-bs-dismiss="modal">Fechar</button>`;
+            })
+            .catch(() => {
+                document.getElementById('modalDetalhesBody').innerHTML =
+                    '<p class="text-danger">Erro ao carregar detalhes.</p>';
+            });
+    }
+
+    function registrarSinal(id) {
+        let fd = new FormData();
+        fd.append('id', id);
+        fd.append('__RequestVerificationToken', getToken());
+        fetch('/Agendamento/RegistrarSinal', { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) { modalDetalhes.hide(); calendar.refetchEvents(); toast(data.msg, 'bg-success'); }
+                else { toast(data.msg, 'bg-danger'); }
+            });
+    }
+
+    function concluir(id) {
+        let fd = new FormData();
+        fd.append('id', id);
+        fd.append('__RequestVerificationToken', getToken());
+        fetch('/Agendamento/Concluir', { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) { modalDetalhes.hide(); calendar.refetchEvents(); toast(data.msg, 'bg-success'); }
+                else { toast(data.msg, 'bg-danger'); }
+            });
+    }
+
+    function abrirCancelar(id) {
+        document.getElementById('cancelarId').value = id;
+        modalDetalhes.hide();
+        setTimeout(() => modalCancelar.show(), 300);
+    }
+
+    document.getElementById('btnCancelarConfirm').addEventListener('click', function () {
+        let id  = document.getElementById('cancelarId').value;
+        let btn = this;
+        btn.disabled = true; btn.textContent = 'Cancelando...';
+        let fd = new FormData();
+        fd.append('id', id);
+        fd.append('__RequestVerificationToken', getToken());
+        fetch('/Agendamento/Cancelar', { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) { modalCancelar.hide(); calendar.refetchEvents(); toast('Agendamento cancelado', 'bg-warning'); }
+                else { toast('Erro ao cancelar', 'bg-danger'); }
+            })
+            .finally(() => { btn.disabled = false; btn.textContent = 'Confirmar cancelamento'; });
+    });
 </script>
+
 @Html.AntiForgeryToken()

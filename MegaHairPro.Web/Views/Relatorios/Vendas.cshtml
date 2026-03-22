@@ -27,7 +27,7 @@
                 <option value="">Todos</option>
                 @foreach (var p in (IEnumerable<MegaHairPro.Web.Models.Produto>)ViewBag.Produtos)
                 {
-                    <option value="@p.Id">@p.Nome</option>
+                    <option value="@p.Id">@p.Descricao</option>
                 }
             </select>
         </div>

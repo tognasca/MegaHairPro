@@ -4,15 +4,12 @@
     ViewData["Title"] = "Novo Agendamento";
 }
 
-<div class="page-header">
-    <div>
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div class="page-header mb-0">
         <div class="page-title">Novo Agendamento</div>
         <div class="page-sub">Preencha os dados para criar um novo agendamento</div>
     </div>
-    <a href="@Url.Action("Index")" class="btn-header-back">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
-        Voltar
-    </a>
+    <a href="@Url.Action("Index")" class="btn btn-outline-secondary btn-sm">← Voltar</a>
 </div>
 
 @if (!ViewData.ModelState.IsValid)
@@ -35,13 +32,15 @@
         <div class="row g-3">
             <div class="col-md-6">
                 <label class="form-label">Cliente</label>
-                <select asp-for="ClienteId" asp-items="ViewBag.Clientes" class="form-select" required id="clienteSelect">
+                <select asp-for="ClienteId" asp-items="ViewBag.Clientes"
+                        class="form-select" required id="clienteSelect">
                     <option value="">Selecione o cliente...</option>
                 </select>
             </div>
             <div class="col-md-6">
                 <label class="form-label">Profissional</label>
-                <select asp-for="ProfissionalId" asp-items="ViewBag.Profissionais" class="form-select" required id="profissionalSelect">
+                <select asp-for="ProfissionalId" asp-items="ViewBag.Profissionais"
+                        class="form-select" required id="profissionalSelect">
                     <option value="">Selecione o profissional...</option>
                 </select>
             </div>
@@ -71,7 +70,7 @@
             </div>
         </div>
         <div id="loadingHorarios" class="mt-3" style="display:none">
-            <div class="spinner-border spinner-border-sm" style="color:var(--navy,#1a2e4a)"></div>
+            <div class="spinner-border spinner-border-sm text-primary"></div>
             <span class="ms-2 text-muted" style="font-size:.85rem">Verificando disponibilidade...</span>
         </div>
     </div>
@@ -96,15 +95,15 @@
                         <div class="servico-card-body">
                             <div class="servico-nome">@s.Nome</div>
                             <div class="servico-info">
-                                <span class="servico-duracao">⏱ @s.DuracaoMinutos min</span>
+                                <span>⏱ @s.DuracaoMinutos min</span>
                                 @if (s.ValorPromocional.HasValue && s.ValorPromocional > 0)
                                 {
                                     <span class="text-decoration-line-through text-muted ms-2" style="font-size:.8rem">R$ @s.Valor.ToString("N2")</span>
-                                    <span class="servico-preco preco-promo ms-1">R$ @s.ValorPromocional.Value.ToString("N2")</span>
+                                    <span class="fw-semibold ms-1" style="color:#16a34a;">R$ @s.ValorPromocional.Value.ToString("N2")</span>
                                 }
                                 else
                                 {
-                                    <span class="servico-preco ms-2">R$ @s.Valor.ToString("N2")</span>
+                                    <span class="fw-semibold ms-2">R$ @s.Valor.ToString("N2")</span>
                                 }
                             </div>
                         </div>
@@ -120,38 +119,65 @@
             </div>
             <div class="col-md-3">
                 <label class="form-label">Valor Total</label>
-                <input id="valorTotal" class="form-control fw-bold" style="color:#16a34a" readonly value="R$ 0,00" />
+                <input id="valorTotalExib" class="form-control fw-bold" style="color:#16a34a;" readonly value="R$ 0,00" />
+                <input type="hidden" id="valorTotalNum" value="0" />
             </div>
         </div>
     </div>
 
-    <button type="submit" id="btnAgendar" class="btn w-100 py-3" style="background:var(--navy,#1a2e4a);color:#fff;border-radius:10px;font-weight:600;font-size:.95rem;opacity:.5;cursor:not-allowed" disabled>
+    <!-- SINAL -->
+    <div class="section-card">
+        <div class="section-label">Sinal de entrada</div>
+        <p class="text-muted mb-3" style="font-size:.85rem">
+            Defina o sinal pelo <strong>percentual</strong> ou digitando o <strong>valor direto</strong>.
+            Um campo atualiza o outro automaticamente.
+        </p>
+        <div class="row g-3 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label">% do sinal</label>
+                <div class="input-group">
+                    <input id="percSinal" name="percentualSinal" type="number"
+                           class="form-control" placeholder="30"
+                           min="0" max="100" value="30" />
+                    <span class="input-group-text">%</span>
+                </div>
+                <small class="text-muted">Sugerido: 10–50%</small>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Ou valor fixo (R$)</label>
+                <input id="valorSinalFixo" name="valorSinal" type="text"
+                       class="form-control" placeholder="0,00" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Sinal a cobrar</label>
+                <input id="valorSinalCalc" class="form-control fw-bold"
+                       style="color:#2563eb;background:#f0f9ff;" readonly value="—" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Restante</label>
+                <input id="valorRestanteCalc" class="form-control"
+                       style="color:#64748b;background:#f8fafc;" readonly value="—" />
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" id="btnAgendar" class="btn btn-success w-100 py-3"
+            style="font-size:.95rem;font-weight:600;" disabled>
         Confirmar Agendamento
     </button>
 </form>
 
 <style>
     .servico-card-label {
-        display: block;
-        border: 1.5px solid #e5e7eb;
-        border-radius: 10px;
-        padding: 14px 16px;
-        cursor: pointer;
-        transition: border-color .2s, background .2s;
-        position: relative;
+        display: block; border: 1.5px solid #e5e7eb; border-radius: 10px;
+        padding: 14px 16px; cursor: pointer;
+        transition: border-color .2s, background .2s; position: relative;
     }
     .servico-card-label:hover { border-color: #9ca3af; background: #fafafa; }
-    .servico-card-label:has(.servico-check:checked) {
-        border-color: var(--navy,#1a2e4a);
-        background: #f0f4f8;
-    }
-    .servico-check { position:absolute; top:14px; right:14px; width:16px; height:16px; accent-color: var(--navy,#1a2e4a); }
-    .servico-nome { font-weight: 600; font-size: .9rem; margin-bottom: 6px; padding-right: 24px; }
-    .servico-info { font-size: .82rem; color: #6b7280; }
-    .servico-duracao { }
-    .servico-preco { font-weight: 600; color: #374151; }
-    .preco-promo { color: #16a34a !important; }
-    #btnAgendar:not([disabled]) { opacity:1 !important; cursor:pointer !important; }
+    .servico-card-label:has(.servico-check:checked) { border-color: #2563eb; background: #eff6ff; }
+    .servico-check { position:absolute; top:14px; right:14px; width:16px; height:16px; accent-color:#2563eb; }
+    .servico-nome  { font-weight:600; font-size:.9rem; margin-bottom:6px; padding-right:24px; }
+    .servico-info  { font-size:.82rem; color:#6b7280; }
 </style>
 
 <script>
@@ -163,20 +189,27 @@
     const btnAgendar         = document.getElementById("btnAgendar");
     const loading            = document.getElementById("loadingHorarios");
     const avisoSemHorario    = document.getElementById("avisoSemHorario");
+    const percSinalInput     = document.getElementById("percSinal");
+    const valorFixoInput     = document.getElementById("valorSinalFixo");
+    const valorSinalCalc     = document.getElementById("valorSinalCalc");
+    const valorRestanteCalc  = document.getElementById("valorRestanteCalc");
+    const valorTotalNum      = document.getElementById("valorTotalNum");
 
+    // ── Horários ──────────────────────────────────────────────────────────────
     profissionalSelect.addEventListener("change", buscarHorarios);
     dataSelecionada.addEventListener("change", buscarHorarios);
     clienteSelect.addEventListener("change", validarFormulario);
     horarioSelect.addEventListener("change", function () {
-        dataHoraHidden.value = (dataSelecionada.value && this.value) ? dataSelecionada.value + "T" + this.value : "";
+        dataHoraHidden.value = (dataSelecionada.value && this.value)
+            ? dataSelecionada.value + "T" + this.value : "";
         validarFormulario();
     });
 
     function buscarHorarios() {
         let profId = profissionalSelect.value, data = dataSelecionada.value;
         horarioSelect.innerHTML = '<option value="">Selecione...</option>';
-        horarioSelect.disabled = true;
-        dataHoraHidden.value = "";
+        horarioSelect.disabled  = true;
+        dataHoraHidden.value    = "";
         avisoSemHorario.style.display = "none";
         validarFormulario();
         if (!profId || !data) return;
@@ -196,6 +229,7 @@
             .catch(() => { loading.style.display = "none"; });
     }
 
+    // ── Serviços ──────────────────────────────────────────────────────────────
     document.querySelectorAll('.servico-check').forEach(chk => {
         chk.addEventListener('change', function () { recalcular(); validarFormulario(); });
     });
@@ -204,12 +238,60 @@
         let duracao = 0, valor = 0;
         document.querySelectorAll('.servico-check:checked').forEach(chk => {
             duracao += parseInt(chk.dataset.duracao || 0);
-            valor   += parseFloat(chk.dataset.valor || 0);
+            valor   += parseFloat(chk.dataset.valor  || 0);
         });
-        document.getElementById('duracaoTotal').value = duracao + ' min';
-        document.getElementById('valorTotal').value   = 'R$ ' + valor.toFixed(2).replace('.', ',');
+        document.getElementById('duracaoTotal').value   = duracao + ' min';
+        document.getElementById('valorTotalExib').value = 'R$ ' + valor.toFixed(2).replace('.', ',');
+        valorTotalNum.value = valor.toFixed(2);
+        recalcularPorPerc(); // atualiza sinal quando serviços mudam
     }
 
+    // ── Sinal ─────────────────────────────────────────────────────────────────
+    function parseBR(val) {
+        return parseFloat((val || "0").replace(/\./g, "").replace(",", ".")) || 0;
+    }
+
+    // Máscara no campo de valor fixo
+    valorFixoInput.addEventListener("input", function () {
+        let v = this.value.replace(/\D/g, "");
+        v = (parseInt(v || "0", 10) / 100).toFixed(2);
+        this.value = v.replace(".", ",");
+        recalcularPorValorFixo();
+    });
+
+    // % → calcula valor
+    percSinalInput.addEventListener("input", recalcularPorPerc);
+
+    function recalcularPorPerc() {
+        let total = parseFloat(valorTotalNum.value) || 0;
+        let perc  = parseFloat(percSinalInput.value) || 0;
+        let sinal = total > 0 ? Math.round((perc / 100) * total * 100) / 100 : 0;
+
+        // Atualiza campo de valor fixo sem disparar o listener
+        valorFixoInput.value = sinal > 0 ? sinal.toFixed(2).replace(".", ",") : "";
+        atualizarDisplay(sinal, total);
+    }
+
+    // Valor fixo → calcula %
+    function recalcularPorValorFixo() {
+        let total = parseFloat(valorTotalNum.value) || 0;
+        let sinal = parseBR(valorFixoInput.value);
+
+        if (total > 0 && sinal > 0) {
+            percSinalInput.value = Math.round((sinal / total) * 100);
+        } else {
+            percSinalInput.value = "";
+        }
+        atualizarDisplay(sinal, total);
+    }
+
+    function atualizarDisplay(sinal, total) {
+        let restante = total - sinal;
+        valorSinalCalc.value    = sinal > 0    ? "R$ " + sinal.toFixed(2).replace(".", ",")    : "—";
+        valorRestanteCalc.value = restante >= 0 ? "R$ " + restante.toFixed(2).replace(".", ",") : "—";
+    }
+
+    // ── Validação ─────────────────────────────────────────────────────────────
     function validarFormulario() {
         let ok = !!dataHoraHidden.value &&
                  document.querySelectorAll('.servico-check:checked').length > 0 &&

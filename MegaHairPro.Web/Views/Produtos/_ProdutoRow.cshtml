@@ -3,7 +3,7 @@
 <tr id="row-@Model.Id"
     data-tipo="@((int)Model.TipoProduto)"
     data-unidade="@((int)Model.UnidadeMedida)"
-    data-nome="@(Model.Nome ?? "")"
+    data-nome="@(Model.Descricao ?? "")"
     data-origem="@(Model.Origem ?? "")"
     data-tamanho="@(Model.Tamanho ?? "")"
     data-cor="@(Model.Cor ?? "")"
@@ -12,6 +12,7 @@
 
     <td style="font-weight:600;font-size:13px;">@Model.Codigo</td>
     <td style="font-size:12px;color:#64748b;">@Model.TipoProduto</td>
+    <td style="font-size:12px;color:#64748b;">@Model.Descricao</td>    
     <td style="font-size:13px;">@(Model.Origem ?? "—")</td>
     <td style="font-size:13px;">@(Model.Tamanho ?? "—")</td>
     <td style="font-size:13px;">@(Model.Cor ?? "—")</td>

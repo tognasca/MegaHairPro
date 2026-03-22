@@ -133,10 +133,16 @@ namespace MegaHairPro.Web.Controllers
         {
             // Exibe código + nome no combo: "CAB-0001 - Cabelo Natural"
             ViewBag.Produtos = _context.Produtos
-                .Where(p => p.Status == true)
-                .OrderBy(p => p.Codigo)
-                .Select(p => new { p.Id, Nome = p.Codigo + " - " + p.Nome })
-                .ToList();
+     .Where(p => p.Status == true)
+     .OrderBy(p => p.Codigo)
+     .Select(p => new
+     {
+         p.Id,
+         Nome = p.TipoProduto == TipoProduto.Cabelo
+             ? p.Codigo + " - " + p.Origem + " (" + p.Tamanho + ")"
+             : p.Codigo + " - " + p.Descricao
+     }).OrderBy(x => x.Id)
+     .ToList();
 
             ViewBag.Fornecedores = _context.Fornecedores
                 .Where(f => f.Status == true)
@@ -155,7 +161,7 @@ namespace MegaHairPro.Web.Controllers
                     Id = c.Id,
                     ProdutoId = c.ProdutoId,
                     FornecedorId = c.FornecedorId,
-                    ProdutoNome = c.Produto.Codigo + " - " + c.Produto.Nome,
+                    ProdutoNome = c.Produto.Codigo + " - " + c.Produto.Descricao,
                     FornecedorNome = c.Fornecedor.Nome,
                     QuantidadeGramas = c.QuantidadeGramas ?? 0,
                     ValorTotal = c.ValorTotal,
@@ -176,7 +182,7 @@ namespace MegaHairPro.Web.Controllers
                     Id = c.Id,
                     ProdutoId = c.ProdutoId,
                     FornecedorId = c.FornecedorId,
-                    ProdutoNome = c.Produto.Codigo + " - " + c.Produto.Nome,
+                    ProdutoNome = c.Produto.Codigo + " - " + c.Produto.Descricao,
                     FornecedorNome = c.Fornecedor.Nome,
                     QuantidadeGramas = c.QuantidadeGramas ?? 0,
                     ValorTotal = c.ValorTotal,

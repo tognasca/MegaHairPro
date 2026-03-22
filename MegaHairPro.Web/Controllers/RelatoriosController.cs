@@ -42,7 +42,7 @@ public class RelatoriosController : Controller
 
         ViewBag.Inicio = inicio.Value.ToString("yyyy-MM-dd");
         ViewBag.Fim = fim.Value.ToString("yyyy-MM-dd");
-        ViewBag.Produtos = _context.Produtos.OrderBy(p => p.Nome).ToList();
+        ViewBag.Produtos = _context.Produtos.OrderBy(p => p.Descricao).ToList();
         ViewBag.Clientes = _context.Clientes.OrderBy(c => c.Nome).ToList();
         ViewBag.TotalVendido = lista.Sum(v => v.PrecoVenda ?? 0);
         ViewBag.TotalLucro = lista.Sum(v => v.LucroTotal ?? 0);

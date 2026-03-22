@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace MegaHairPro.Web.Models;
 
@@ -12,7 +12,8 @@ public enum OrigemContaFinanceira
 {
     Venda = 1,
     Despesa = 2,
-    Manual = 3
+    Manual = 3,
+    Agendamento = 4  // ← novo
 }
 
 public enum StatusContaFinanceira
@@ -30,7 +31,6 @@ public class ContaFinanceira
     public OrigemContaFinanceira Origem { get; set; }
 
     public string Descricao { get; set; } = string.Empty;
-
     public decimal Valor { get; set; }
 
     public DateTime DataCompetencia { get; set; }
@@ -38,12 +38,18 @@ public class ContaFinanceira
     public DateTime? DataPagamento { get; set; }
 
     public string? FormaPagamento { get; set; }
+
     public StatusContaFinanceira Status { get; set; } = StatusContaFinanceira.Aberta;
 
+    // FK — Venda
     public int? VendaId { get; set; }
     public Venda? Venda { get; set; }
 
+    // FK — Despesa
     public int? DespesaId { get; set; }
     public Despesas? Despesa { get; set; }
-}
 
+    // FK — Agendamento ← novo
+    public int? AgendamentoId { get; set; }
+    public Agendamento? Agendamento { get; set; }
+}

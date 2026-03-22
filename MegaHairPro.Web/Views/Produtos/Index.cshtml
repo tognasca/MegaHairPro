@@ -25,8 +25,9 @@
             <div class="col-md-2">
                 <label class="form-label">Unidade</label>
                 <select name="UnidadeMedida" id="UnidadeMedida" class="form-select" required>
-                    <option value="1">g</option>
+                    <option value="1">Gramas</option>
                     <option value="2">mL</option>
+                    <option value="3">Unidade</option>
                 </select>
             </div>
             <div class="col-md-3 campo-cabelo-nome d-none">
@@ -107,6 +108,7 @@
                 <tr>
                     <th>Código</th>
                     <th>Tipo</th>
+                    <th>Descrição</th>
                     <th>Origem</th>
                     <th>Tamanho</th>
                     <th>Cor</th>
@@ -142,8 +144,9 @@
                     <div class="col-md-4">
                         <label class="form-label">Unidade</label>
                         <select id="editUnidadeMedida" class="form-select">
-                            <option value="1">g</option>
+                            <option value="1">Gramas</option>
                             <option value="2">mL</option>
+                            <option value="3">Unidade</option>
                         </select>
                     </div>
                     <div class="col-md-4">
@@ -216,8 +219,13 @@
     });
 
     function aplicarRegraUnidade(tipo) {
-        if (tipo === "1") { $("#UnidadeMedida").val("1").prop("disabled", true); $("#editUnidadeMedida").val("1").prop("disabled", true); }
-        else              { $("#UnidadeMedida").prop("disabled", false); $("#editUnidadeMedida").prop("disabled", false); }
+        if (tipo === "1") { 
+            $("#UnidadeMedida").val("1").prop("disabled", true);
+             $("#editUnidadeMedida").val("1").prop("disabled", true); }
+        else {
+            $("#UnidadeMedida").prop("disabled", false); 
+            $("#editUnidadeMedida").prop("disabled", false); 
+        }
     }
 
     $("#TipoProduto").change(function () {

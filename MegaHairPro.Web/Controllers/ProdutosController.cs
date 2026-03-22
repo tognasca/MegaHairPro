@@ -53,7 +53,7 @@ namespace MegaHairPro.Web.Controllers
             if (original == null)
                 return Json(new { success = false });
 
-            original.Nome = produto.Nome;
+            original.Descricao = produto.Descricao;
             original.TipoProduto = produto.TipoProduto;
             original.UnidadeMedida = produto.TipoProduto == TipoProduto.Cabelo
                 ? UnidadeMedida.Grama

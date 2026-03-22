@@ -22,15 +22,14 @@ namespace MegaHairPro.Web.Controllers
             _agendamentoService = agendamentoService;
         }
 
-        // ✅ Calendário principal
         [HttpGet]
         public IActionResult Index()
         {
-            ViewBag.Profissionais = new SelectList(_context.Profissionais.OrderBy(p => p.Nome), "Id", "Nome");
+            ViewBag.Profissionais = new SelectList(
+                _context.Profissionais.OrderBy(p => p.Nome), "Id", "Nome");
             return View();
         }
 
-        // ✅ Eventos para o FullCalendar (JSON)
         [HttpGet]
         public async Task<IActionResult> ListarEventos(int? profissionalId)
         {
@@ -38,6 +37,7 @@ namespace MegaHairPro.Web.Controllers
                 .Include(a => a.Profissional)
                 .Include(a => a.Cliente)
                 .Include(a => a.AgendamentosServicos).ThenInclude(s => s.Servico)
+                .Where(a => a.Status != StatusAgendamento.Cancelado)
                 .AsQueryable();
 
             if (profissionalId.HasValue && profissionalId > 0)
@@ -45,16 +45,27 @@ namespace MegaHairPro.Web.Controllers
 
             var agendamentos = await query.ToListAsync();
 
+            static string CorStatus(StatusAgendamento s) => s switch
+            {
+                StatusAgendamento.Confirmado => "#16a34a",
+                StatusAgendamento.Concluido => "#2563eb",
+                _ => "#f59e0b"
+            };
+
             var eventos = agendamentos.Select(a => new
             {
                 id = a.Id,
                 title = $"{a.Cliente?.Nome} — {string.Join(", ", a.AgendamentosServicos.Select(s => s.Servico.Nome))}",
                 start = a.DataHora.ToString("yyyy-MM-ddTHH:mm:ss"),
                 end = a.DataFim.ToString("yyyy-MM-ddTHH:mm:ss"),
-                color = a.ProfissionalId % 2 == 0 ? "#2563eb" : "#16a34a", // cor por profissional
+                color = CorStatus(a.Status),
                 extendedProps = new
                 {
                     profissional = a.Profissional?.Nome,
+                    status = a.Status.ToString(),
+                    sinalPago = a.SinalPago,
+                    valorSinal = a.ValorSinal,
+                    valorRestante = a.ValorRestante,
                     valorTotal = a.AgendamentosServicos.Sum(s => s.Servico.ValorFinal)
                 }
             });
@@ -62,7 +73,6 @@ namespace MegaHairPro.Web.Controllers
             return Json(eventos);
         }
 
-        // ✅ Formulário de novo agendamento
         [HttpGet]
         public IActionResult Novo()
         {
@@ -70,10 +80,10 @@ namespace MegaHairPro.Web.Controllers
             return View();
         }
 
-        // ✅ Salvar agendamento
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Novo(Agendamento model, int[] servicosSelecionados)
+        public async Task<IActionResult> Novo(Agendamento model, int[] servicosSelecionados,
+            decimal percentualSinal)
         {
             if (!servicosSelecionados.Any())
             {
@@ -82,19 +92,14 @@ namespace MegaHairPro.Web.Controllers
                 return View(model);
             }
 
-            // Calcula DataFim somando duração de todos os serviços selecionados
-            var servicos = _context.Servicos
-                .Where(s => servicosSelecionados.Contains(s.Id))
-                .ToList();
-
-            var duracaoTotal = _context.Servicos.Where(s => servicosSelecionados.Contains(s.Id)).Sum(s => s.DuracaoMinutos);
-
-            var dataFim = model.DataHora.AddMinutes(duracaoTotal);
+            var servicos = _context.Servicos.Where(s => servicosSelecionados.Contains(s.Id)).ToList();
+            int duracaoTotal = servicos.Sum(s => s.DuracaoMinutos);
+            model.DataFim = model.DataHora.AddMinutes(duracaoTotal > 0 ? duracaoTotal : 60);
 
             bool conflito = _context.Agendamentos.Any(a =>
                 a.ProfissionalId == model.ProfissionalId &&
-                a.DataHora < dataFim &&
-                a.DataFim > model.DataHora);
+                a.Status != StatusAgendamento.Cancelado &&
+                a.DataHora < model.DataFim && a.DataFim > model.DataHora);
 
             if (conflito)
             {
@@ -103,50 +108,116 @@ namespace MegaHairPro.Web.Controllers
                 return View(model);
             }
 
+            decimal valorTotal = servicos.Sum(s => s.ValorFinal);
+            decimal percSinal = Math.Clamp(percentualSinal, 10, 50);
+            model.PercentualSinal = percSinal;
+            model.ValorSinal = Math.Round(valorTotal * (percSinal / 100m), 2);
+            model.ValorRestante = Math.Round(valorTotal - model.ValorSinal, 2);
+            model.Status = StatusAgendamento.Agendado;
+
             await _agendamentoService.CriarAgendamentoAsync(model, servicosSelecionados);
 
-            TempData["Sucesso"] = "Agendamento criado com sucesso!";
+            TempData["Sucesso"] = "Agendamento criado!";
             return RedirectToAction(nameof(Index));
         }
 
-        // ✅ Painel do cliente
-        [HttpGet]
-        public async Task<IActionResult> PainelCliente(int id)
+        // ✅ Registrar sinal pago
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RegistrarSinal(int id)
         {
-            var cliente = await _context.Clientes.FindAsync(id);
-            if (cliente == null) return NotFound();
+            var ag = await _context.Agendamentos.FindAsync(id);
+            if (ag == null) return Json(new { success = false, msg = "Não encontrado." });
+            if (ag.SinalPago) return Json(new { success = false, msg = "Sinal já registrado." });
 
-            ViewBag.ClienteNome = cliente.Nome;
+            ag.SinalPago = true;
+            ag.DataPagamentoSinal = DateTime.Now;
+            ag.Status = StatusAgendamento.Confirmado;
 
-            var agendamentos = await _context.Agendamentos
-                .Include(a => a.Profissional)
-                .Include(a => a.AgendamentosServicos).ThenInclude(s => s.Servico)
-                .Where(a => a.ClienteId == id)
-                .OrderByDescending(a => a.DataHora)
-                .ToListAsync();
+            _context.ContasFinanceiras.Add(new ContaFinanceira
+            {
+                Tipo = TipoContaFinanceira.Receber,
+                Origem = OrigemContaFinanceira.Agendamento,
+                Descricao = $"Sinal — Agendamento #{ag.Id} ({ag.DataHora:dd/MM/yyyy HH:mm})",
+                Valor = ag.ValorSinal,
+                DataCompetencia = DateTime.Now,
+                DataVencimento = DateTime.Now,
+                Status = StatusContaFinanceira.Paga,
+                DataPagamento = DateTime.Now,
+                AgendamentoId = ag.Id
+            });
 
-            return View(agendamentos);
+            await _context.SaveChangesAsync();
+
+            return Json(new
+            {
+                success = true,
+                msg = $"Sinal de R$ {ag.ValorSinal:N2} registrado!",
+                valorRestante = ag.ValorRestante.ToString("N2")
+            });
         }
 
-        // ✅ Cancelar agendamento via AJAX
+        // ✅ Concluir atendimento e receber restante
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Concluir(int id)
+        {
+            var ag = await _context.Agendamentos
+                .Include(a => a.AgendamentosServicos).ThenInclude(s => s.Servico)
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+            if (ag == null)
+                return Json(new { success = false, msg = "Não encontrado." });
+            if (ag.Status == StatusAgendamento.Concluido)
+                return Json(new { success = false, msg = "Já concluído." });
+            if (!ag.SinalPago)
+                return Json(new { success = false, msg = "Registre o sinal antes de concluir." });
+
+            ag.RestantePago = true;
+            ag.DataConclusao = DateTime.Now;
+            ag.Status = StatusAgendamento.Concluido;
+
+            _context.ContasFinanceiras.Add(new ContaFinanceira
+            {
+                Tipo = TipoContaFinanceira.Receber,
+                Origem = OrigemContaFinanceira.Agendamento,
+                Descricao = $"Restante — Agendamento #{ag.Id} ({ag.DataHora:dd/MM/yyyy HH:mm})",
+                Valor = ag.ValorRestante,
+                DataCompetencia = DateTime.Now,
+                DataVencimento = DateTime.Now,
+                Status = StatusContaFinanceira.Paga,
+                DataPagamento = DateTime.Now,
+                AgendamentoId = ag.Id
+            });
+
+            await _context.SaveChangesAsync();
+
+            return Json(new
+            {
+                success = true,
+                msg = $"Concluído! R$ {ag.ValorRestante:N2} recebido."
+            });
+        }
+
+        // ✅ Cancelar
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancelar(int id)
         {
-            var agendamento = await _context.Agendamentos.FindAsync(id);
-            if (agendamento == null) return Json(new { success = false });
+            var ag = await _context.Agendamentos.FindAsync(id);
+            if (ag == null) return Json(new { success = false });
 
-            // Remove os serviços vinculados primeiro
-            var servicos = _context.AgendamentoServicos
-                .Where(a => a.AgendamentoId == id);
-            _context.AgendamentoServicos.RemoveRange(servicos);
+            _context.AgendamentoServicos.RemoveRange(
+                _context.AgendamentoServicos.Where(a => a.AgendamentoId == id));
 
-            _context.Agendamentos.Remove(agendamento);
+            ag.Status = StatusAgendamento.Cancelado;
+            ag.Cancelado = true;
             await _context.SaveChangesAsync();
 
             return Json(new { success = true });
         }
-        // ✅ Detalhes via AJAX (tooltip no calendário)
+
+        // ✅ Detalhes (AJAX modal)
         [HttpGet]
         public async Task<IActionResult> Detalhes(int id)
         {
@@ -160,10 +231,16 @@ namespace MegaHairPro.Web.Controllers
 
             return Json(new
             {
+                id = a.Id,
                 cliente = a.Cliente?.Nome,
                 profissional = a.Profissional?.Nome,
                 dataHora = a.DataHora.ToString("dd/MM/yyyy HH:mm"),
                 dataFim = a.DataFim.ToString("HH:mm"),
+                status = a.Status.ToString(),
+                sinalPago = a.SinalPago,
+                valorSinal = a.ValorSinal,
+                valorRestante = a.ValorRestante,
+                restantePago = a.RestantePago,
                 servicos = a.AgendamentosServicos.Select(s => new
                 {
                     nome = s.Servico.Nome,
@@ -173,28 +250,17 @@ namespace MegaHairPro.Web.Controllers
             });
         }
 
-        private void CarregarViewBags()
-        {
-            ViewBag.Clientes = new SelectList(_context.Clientes.OrderBy(c => c.Nome), "Id", "Nome");
-            ViewBag.Profissionais = new SelectList(_context.Profissionais.OrderBy(p => p.Nome), "Id", "Nome");
-            ViewBag.Servicos = _context.Servicos.OrderBy(s => s.Nome).ToList();
-        }
-
-        // Adicione estes dois métodos no AgendamentoController
-
-        // ✅ AJAX — Retorna horários disponíveis para uma profissional em uma data
+        // ✅ Horários disponíveis
         [HttpGet]
         public IActionResult HorariosDisponiveis(int profissionalId, string data)
         {
             if (!DateTime.TryParse(data, out var dataSelecionada))
                 return BadRequest("Data inválida.");
 
-            // Configurações do salão
-            var inicio = TimeSpan.FromHours(8);   // 08:00
-            var fim = TimeSpan.FromHours(20);  // 20:00
-            var intervalo = TimeSpan.FromMinutes(30); // slots de 30 em 30 min
+            var inicio = TimeSpan.FromHours(8);
+            var fim = TimeSpan.FromHours(20);
+            var intervalo = TimeSpan.FromMinutes(30);
 
-            // Gera todos os slots do dia
             var todosSlots = new List<DateTime>();
             var slot = dataSelecionada.Date + inicio;
             while (slot.TimeOfDay + intervalo <= fim)
@@ -203,27 +269,44 @@ namespace MegaHairPro.Web.Controllers
                 slot = slot.Add(intervalo);
             }
 
-            // Busca agendamentos da profissional nesse dia
             var agendamentosDia = _context.Agendamentos
                 .Where(a => a.ProfissionalId == profissionalId &&
-                            a.DataHora.Date == dataSelecionada.Date)
+                            a.DataHora.Date == dataSelecionada.Date &&
+                            a.Status != StatusAgendamento.Cancelado)
                 .Select(a => new { a.DataHora, a.DataFim })
                 .ToList();
 
-            // Filtra slots que conflitam com agendamentos existentes
             var disponiveis = todosSlots
                 .Where(s => !agendamentosDia.Any(a =>
                     s < a.DataFim && s.Add(intervalo) > a.DataHora))
-                .Select(s => new
-                {
-                    valor = s.ToString("HH:mm"),
-                    label = s.ToString("HH:mm")
-                })
+                .Select(s => new { valor = s.ToString("HH:mm"), label = s.ToString("HH:mm") })
                 .ToList();
 
             return Json(disponiveis);
         }
 
-       
+        [HttpGet]
+        public async Task<IActionResult> PainelCliente(int id)
+        {
+            var cliente = await _context.Clientes.FindAsync(id);
+            if (cliente == null) return NotFound();
+            ViewBag.ClienteNome = cliente.Nome;
+
+            var agendamentos = await _context.Agendamentos
+                .Include(a => a.Profissional)
+                .Include(a => a.AgendamentosServicos).ThenInclude(s => s.Servico)
+                .Where(a => a.ClienteId == id)
+                .OrderByDescending(a => a.DataHora)
+                .ToListAsync();
+
+            return View(agendamentos);
+        }
+
+        private void CarregarViewBags()
+        {
+            ViewBag.Clientes = new SelectList(_context.Clientes.OrderBy(c => c.Nome), "Id", "Nome");
+            ViewBag.Profissionais = new SelectList(_context.Profissionais.OrderBy(p => p.Nome), "Id", "Nome");
+            ViewBag.Servicos = _context.Servicos.OrderBy(s => s.Nome).ToList();
+        }
     }
 }

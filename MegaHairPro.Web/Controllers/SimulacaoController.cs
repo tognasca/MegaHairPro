@@ -91,7 +91,7 @@ namespace MegaHairPro.Web.Controllers
             var metodo = _context.MetodosAplicacao.FirstOrDefault(m => m.Id == model.MetodoId);
 
             resultado.ClienteNome = cliente?.Nome;
-            resultado.ProdutoNome = produto?.Nome;
+            resultado.ProdutoNome = produto?.Descricao;
             resultado.MetodoNome = metodo?.Nome;
 
             if (metodo != null)
@@ -334,7 +334,17 @@ namespace MegaHairPro.Web.Controllers
 
             ViewBag.Produtos = _context.Produtos
                 .Where(x => x.Status == true)
-                .Select(p => new { p.Id, p.Codigo, p.Nome, p.EstoqueGramas, p.UnidadeMedida, p.Status })
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Codigo,
+                    Nome = p.TipoProduto == TipoProduto.Cabelo
+            ? p.Codigo + " - " + p.Origem + " (" + p.Tamanho + ")"
+            : p.Codigo + " - " + p.Descricao,
+                    p.EstoqueGramas,
+                    p.UnidadeMedida,
+                    p.Status
+                }).OrderBy(x => x.Codigo)
                 .ToList();
 
             ViewBag.Metodos = _context.MetodosAplicacao
