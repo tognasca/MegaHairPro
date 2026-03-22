@@ -132,14 +132,13 @@ namespace MegaHairPro.Web.Controllers
         private void CarregarViewBags()
         {
             // Exibe código + nome no combo: "CAB-0001 - Cabelo Natural"
-            ViewBag.Produtos = _context.Produtos
-     .Where(p => p.Status == true)
+            ViewBag.Produtos = _context.Produtos.Where(p => p.Status == true)
      .OrderBy(p => p.Codigo)
      .Select(p => new
      {
          p.Id,
          Nome = p.TipoProduto == TipoProduto.Cabelo
-             ? p.Codigo + " - " + p.Origem + " (" + p.Tamanho + ")"
+             ? p.Origem + " (" + p.Tamanho + ")" + " - " + p.Cor
              : p.Codigo + " - " + p.Descricao
      }).OrderBy(x => x.Id)
      .ToList();
