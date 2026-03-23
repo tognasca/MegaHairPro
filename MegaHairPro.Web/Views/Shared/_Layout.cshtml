@@ -216,34 +216,44 @@
         .categoria-badge { display: flex; align-items: center; gap: 8px; }
         .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 
-        /* ══════════════════════════════════════════
-           TABLET (≤ 991px)
-        ══════════════════════════════════════════ */
-        @@media (max-width: 991px) {
-            .topbar { left: 0; }
-            .btn-menu { display: flex; }
-            .sidebar { transform: translateX(-100%); width: 270px; }
-            .sidebar.open { transform: translateX(0); }
-            .sb-close { display: block; }
-            .content { margin-left: 0; padding: 16px; }
-            .total-banner { flex-direction: column; align-items: flex-start; }
-            .total-banner-value { font-size: 22px; }
+        /* ── TABELA — scroll horizontal em todas as telas ── */
+        .table-card {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .table-card .table { min-width: 600px; }
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         /* ══════════════════════════════════════════
-           MOBILE (≤ 575px)
+           TABLET (max-width: 991px)
+        ══════════════════════════════════════════ */
+        @@media (max-width: 991px) {
+            .topbar        { left: 0 !important; }
+            .btn-menu      { display: flex !important; }
+            .sidebar       { transform: translateX(-100%) !important; width: 270px !important; box-shadow: 4px 0 20px rgba(0,0,0,.3); }
+            .sidebar.open  { transform: translateX(0) !important; }
+            .sb-close      { display: block !important; }
+            .content       { margin-left: 0 !important; padding: 16px !important; }
+            .total-banner  { flex-direction: column; align-items: flex-start; }
+            .total-banner-value { font-size: 22px; }
+            .modal-dialog  { max-width: 94vw; }
+        }
+
+        /* ══════════════════════════════════════════
+           MOBILE (max-width: 575px)
         ══════════════════════════════════════════ */
         @@media (max-width: 575px) {
-            .content { padding: 10px; }
-            .topbar-label { display: none; }
-            .page-title { font-size: 17px; }
+            .content       { padding: 10px !important; }
+            .topbar-label  { display: none !important; }
+            .page-title    { font-size: 17px; }
             .section-card, .card-premium { padding: 14px; }
             .total-banner-value { font-size: 19px; }
-            .modal-dialog { margin: 6px; }
-            /* Botões de ação menores */
-            .btn-act { padding: 5px 7px; }
-            /* Tabela scroll horizontal */
-            .table-card { overflow-x: auto; }
+            .modal-dialog  { margin: 6px; max-width: calc(100vw - 12px); }
+            .btn-act       { padding: 5px 7px; font-size: 10px; }
+            .table-card .table { min-width: 500px; }
         }
     </style>
 </head>

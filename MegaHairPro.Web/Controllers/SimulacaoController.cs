@@ -362,5 +362,78 @@ namespace MegaHairPro.Web.Controllers
             return decimal.TryParse(normalized, NumberStyles.Any, CultureInfo.InvariantCulture, out var result)
                 ? result : 0;
         }
+
+        // Adicione este método no SimulacaoController.cs
+
+        [HttpGet]
+        public IActionResult MensagemWhatsApp(int id)
+        {
+            var sim = _context.Simulacao.FirstOrDefault(x => x.Id == id);
+            if (sim == null) return NotFound();
+
+            // Busca WhatsApp do cliente
+            var cliente = _context.Clientes.FirstOrDefault(c => c.Id == sim.ClienteId);
+            var whatsapp = cliente?.WhatsApp ?? cliente?.Telefone ?? "";
+
+            // Limpa número — só dígitos
+            var numero = new string(whatsapp.Where(char.IsDigit).ToArray());
+
+            // Adiciona DDI 55 se não tiver
+            if (numero.Length <= 11)
+                numero = "55" + numero;
+
+            // Monta mensagem
+            decimal precoFinal = sim.PrecoVenda ?? 0;
+            decimal confeccao = sim.ValorTotalConfeccao ?? 0;
+            decimal desconto = sim.ValorDesconto ?? 0;
+            bool temDesconto = desconto > 0;
+            bool temConfeccao = confeccao > 0;
+            var validade = sim.DataValidadePix != default ? sim.DataValidadePix : DateTime.Now.AddDays(7);
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"Olá, *{sim.ClienteNome}*! 👋");
+            sb.AppendLine();
+            sb.AppendLine("✨ *Simulação de Venda — Mega Hair Pro*");
+            sb.AppendLine();
+            sb.AppendLine($"💇 *Produto:* {sim.ProdutoNome}");
+            sb.AppendLine($"📏 *Quantidade:* {sim.QuantidadeGramas:N0}g");
+            if (!string.IsNullOrEmpty(sim.MetodoNome))
+                sb.AppendLine($"🔧 *Método:* {sim.MetodoNome}");
+            sb.AppendLine();
+
+            if (temDesconto)
+            {
+                sb.AppendLine($"💰 *Valor:* R$ {(sim.PrecoVendaOriginal ?? 0):N2}");
+                sb.AppendLine($"🎁 *Desconto ({sim.PercentualDesconto:N0}%):* − R$ {desconto:N2}");
+                sb.AppendLine($"✅ *Total com desconto:* *R$ {precoFinal:N2}*");
+            }
+            else
+            {
+                sb.AppendLine($"💰 *Valor total:* *R$ {precoFinal:N2}*");
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("💳 *Formas de pagamento:*");
+            sb.AppendLine("• À vista: Dinheiro, PIX ou Débito");
+            sb.AppendLine("• Crédito parcelado (sujeito a juros)");
+            sb.AppendLine();
+            sb.AppendLine($"⏳ *Proposta válida até:* {validade:dd/MM/yyyy}");
+            sb.AppendLine();
+            sb.AppendLine("_Mega Hair Pro — Tatiane Tognasca_");
+            sb.AppendLine("_Rua das Manacás, 340, Sala 1_");
+            sb.AppendLine("_📞 (11) 93052-8032_");
+
+            var mensagem = Uri.EscapeDataString(sb.ToString());
+            var urlWhatsAppWeb = string.IsNullOrEmpty(numero) ? $"https://wa.me/?text={mensagem}" : $"https://wa.me/{numero}?text={mensagem}";
+            var urlWhatsAppNativo = string.IsNullOrEmpty(numero) ? $"whatsapp://send?text={mensagem}" : $"whatsapp://send?phone={numero}&text={mensagem}";
+
+            return Json(new
+            {
+                url = urlWhatsAppWeb,
+                urlNativo = urlWhatsAppNativo,
+                temNumero = !string.IsNullOrEmpty(whatsapp)
+            });
+        }
+
     }
 }
