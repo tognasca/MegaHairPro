@@ -103,7 +103,7 @@
         <span class="table-count">@Model.Count() registros</span>
     </div>
     <div class="table-responsive">
-        <table class="table">
+        <table id="tabelaProdutos" class="table">
             <thead>
                 <tr>
                     <th>Código</th>
@@ -209,29 +209,51 @@
 </div>
 
 <script>
-    let modalEditarProduto, modalExcluir;
+       let modalEditarProduto, modalExcluir;
+    let tabela;
 
     document.addEventListener("DOMContentLoaded", function () {
+
         $(".campo-cabelo-nome").addClass("d-none");
+
         modalEditarProduto = new bootstrap.Modal(document.getElementById("modalEditarProduto"));
-        modalExcluir       = new bootstrap.Modal(document.getElementById("modalExcluir"));
+        modalExcluir = new bootstrap.Modal(document.getElementById("modalExcluir"));
+
         aplicarRegraUnidade($("#TipoProduto").val());
+
+        // 🔥 INICIALIZA DATATABLE
+        tabela = $("#tabelaProdutos").DataTable({
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json"
+            },
+            order: [[0, "desc"]],
+            columnDefs: [
+                { orderable: false, targets: [7] }
+            ]
+        });
     });
 
     function aplicarRegraUnidade(tipo) {
-        if (tipo === "1") { 
+        if (tipo === "1") {
             $("#UnidadeMedida").val("1").prop("disabled", true);
-             $("#editUnidadeMedida").val("1").prop("disabled", true); }
+            $("#editUnidadeMedida").val("1").prop("disabled", true);
+        }
         else {
-            $("#UnidadeMedida").prop("disabled", false); 
-            $("#editUnidadeMedida").prop("disabled", false); 
+            $("#UnidadeMedida").prop("disabled", false);
+            $("#editUnidadeMedida").prop("disabled", false);
         }
     }
 
     $("#TipoProduto").change(function () {
         let tipo = $(this).val();
-        if (tipo == "2") { $(".campo-cabelo").addClass("d-none"); $(".campo-acessorio").removeClass("d-none"); }
-        else             { $(".campo-cabelo").removeClass("d-none"); $(".campo-acessorio").addClass("d-none"); }
+        if (tipo == "2") {
+            $(".campo-cabelo").addClass("d-none");
+            $(".campo-acessorio").removeClass("d-none");
+        }
+        else {
+            $(".campo-cabelo").removeClass("d-none");
+            $(".campo-acessorio").addClass("d-none");
+        }
         aplicarRegraUnidade(tipo);
     });
 
@@ -248,81 +270,180 @@
     $("#formProduto").submit(function (e) {
         e.preventDefault();
         let btn = $("#btnSalvar").html("Salvando...").prop("disabled", true);
+
         $.ajax({
-            url: "/Produtos/CreateAjax", type: "POST", data: new FormData(this),
-            processData: false, contentType: false,
-            success: function (html) { $("#produtosBody").prepend(html); toast("Produto salvo", "bg-success"); limpar(); },
-            error: function () { toast("Erro ao salvar", "bg-danger"); },
-            complete: function () { btn.html("Salvar").prop("disabled", false); }
+            url: "/Produtos/CreateAjax",
+            type: "POST",
+            data: new FormData(this),
+            processData: false,
+            contentType: false,
+
+            success: function (html) {
+
+                // 🔥 ADD VIA DATATABLE
+                let row = $(html);
+                tabela.row.add(row).draw(false);
+
+                toast("Produto salvo", "bg-success");
+                limpar();
+            },
+
+            error: function () {
+                toast("Erro ao salvar", "bg-danger");
+            },
+
+            complete: function () {
+                btn.html("Salvar").prop("disabled", false);
+            }
         });
     });
 
-    function limpar() { $("#formProduto")[0].reset(); aplicarRegraUnidade($("#TipoProduto").val()); }
+    function limpar() {
+        $("#formProduto")[0].reset();
+        aplicarRegraUnidade($("#TipoProduto").val());
+    }
 
     function editarProduto(id) {
         let row = document.getElementById("row-" + id);
+
         $("#editId").val(id);
         $("#editTipo").val(row.dataset.tipo);
         $("#editOrigem").val(row.dataset.origem);
         $("#editTamanho").val(row.dataset.tamanho);
         $("#editCor").val(row.dataset.cor);
         $("#editUnidadeMedida").val(row.dataset.unidade || "1");
+
         aplicarRegraUnidade($("#editTipo").val());
+
         modalEditarProduto.show();
     }
 
     function salvarEdicao() {
+
         let id = $("#editId").val();
+
         let fd = new FormData();
-        fd.append("Id", id); fd.append("TipoProduto", $("#editTipo").val());
+        fd.append("Id", id);
+        fd.append("TipoProduto", $("#editTipo").val());
         fd.append("UnidadeMedida", $("#editUnidadeMedida").val());
-        fd.append("Origem", $("#editOrigem").val()); fd.append("Tamanho", $("#editTamanho").val());
+        fd.append("Origem", $("#editOrigem").val());
+        fd.append("Tamanho", $("#editTamanho").val());
         fd.append("Cor", $("#editCor").val());
         fd.append("__RequestVerificationToken", getToken());
+
         $.ajax({
-            url: '/Produtos/EditAjax', type: 'POST', data: fd, processData: false, contentType: false,
-            success: function (html) { $("#row-" + id).replaceWith(html); modalEditarProduto.hide(); toast("Editado com sucesso", "bg-success"); },
-            error: function () { toast("Erro ao editar", "bg-danger"); }
+            url: '/Produtos/EditAjax',
+            type: 'POST',
+            data: fd,
+            processData: false,
+            contentType: false,
+
+            success: function (html) {
+
+                // 🔥 REMOVE ANTIGA E ADICIONA NOVA
+                tabela.row("#row-" + id).remove();
+
+                let nova = $(html);
+                tabela.row.add(nova).draw(false);
+
+                modalEditarProduto.hide();
+                toast("Editado com sucesso", "bg-success");
+            },
+
+            error: function () {
+                toast("Erro ao editar", "bg-danger");
+            }
         });
     }
 
     function toggleStatus(id) {
+
         let fd = new FormData();
-        fd.append("Id", id); fd.append("__RequestVerificationToken", getToken());
+        fd.append("Id", id);
+        fd.append("__RequestVerificationToken", getToken());
+
         $.ajax({
-            url: '/Produtos/ToggleStatusAjax', type: 'POST', data: fd, processData: false, contentType: false,
-            success: function (html) { $("#row-" + id).replaceWith(html); toast("Status alterado", "bg-warning"); }
+            url: '/Produtos/ToggleStatusAjax',
+            type: 'POST',
+            data: fd,
+            processData: false,
+            contentType: false,
+
+            success: function (html) {
+
+                tabela.row("#row-" + id).remove();
+
+                let nova = $(html);
+                tabela.row.add(nova).draw(false);
+
+                toast("Status alterado", "bg-warning");
+            }
         });
     }
 
-    function confirmarExcluir(id) { $("#excluirId").val(id); modalExcluir.show(); }
+    function confirmarExcluir(id) {
+        $("#excluirId").val(id);
+        modalExcluir.show();
+    }
 
     $("#btnExcluir").click(function () {
+
         let id = $("#excluirId").val();
         let btn = $(this).html("Excluindo...").prop("disabled", true);
-        let fd = new FormData(); fd.append("id", id); fd.append("__RequestVerificationToken", getToken());
+
+        let fd = new FormData();
+        fd.append("id", id);
+        fd.append("__RequestVerificationToken", getToken());
+
         $.ajax({
-            url: "/Produtos/DeleteAjax", type: "POST", data: fd, processData: false, contentType: false,
-            success: function () { $("#row-" + id).fadeOut(300, function () { $(this).remove(); }); modalExcluir.hide(); toast("Produto excluído", "bg-success"); },
-            error: function () { toast("Erro ao excluir", "bg-danger"); },
-            complete: function () { btn.html("Excluir").prop("disabled", false); }
+            url: "/Produtos/DeleteAjax",
+            type: "POST",
+            data: fd,
+            processData: false,
+            contentType: false,
+
+            success: function () {
+
+                // 🔥 REMOVE VIA DATATABLE
+                tabela.row("#row-" + id).remove().draw();
+
+                modalExcluir.hide();
+                toast("Produto excluído", "bg-success");
+            },
+
+            error: function () {
+                toast("Erro ao excluir", "bg-danger");
+            },
+
+            complete: function () {
+                btn.html("Excluir").prop("disabled", false);
+            }
         });
     });
 
     $("#filtroNome, #filtroOrigem, #filtroStatus").on("keyup change", filtrar);
 
     function filtrar() {
-        let nome   = $("#filtroNome").val().toLowerCase();
+
+        let nome = $("#filtroNome").val().toLowerCase();
         let origem = $("#filtroOrigem").val();
         let status = $("#filtroStatus").val();
+
         $("#produtosBody tr").each(function () {
+
             let r = $(this);
-            let ok = r.data("nome").toLowerCase().includes(nome) &&
-                     (origem == "" || r.data("origem") == origem) &&
-                     (status == "" || r.data("status").toString() == status);
+
+            let ok =
+                r.data("nome").toLowerCase().includes(nome) &&
+                (origem == "" || r.data("origem") == origem) &&
+                (status == "" || r.data("status").toString() == status);
+
             r.toggle(ok);
         });
     }
 
-    function limparFiltro() { $("#filtroNome, #filtroOrigem, #filtroStatus").val(""); filtrar(); }
+    function limparFiltro() {
+        $("#filtroNome, #filtroOrigem, #filtroStatus").val("");
+        filtrar();
+    }
 </script>

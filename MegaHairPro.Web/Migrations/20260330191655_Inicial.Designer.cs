@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MegaHairPro.Web.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260224233928_categoria")]
-    partial class categoria
+    [Migration("20260330191655_Inicial")]
+    partial class Inicial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,8 +33,14 @@ namespace MegaHairPro.Web.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("Cancelado")
+                        .HasColumnType("bit");
+
                     b.Property<int>("ClienteId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("DataConclusao")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("DataFim")
                         .HasColumnType("datetime2");
@@ -42,11 +48,32 @@ namespace MegaHairPro.Web.Migrations
                     b.Property<DateTime>("DataHora")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("DataPagamentoSinal")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("PercentualSinal")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<int>("ProfissionalId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("RestantePago")
+                        .HasColumnType("bit");
+
                     b.Property<int>("ServicoId")
                         .HasColumnType("int");
+
+                    b.Property<bool>("SinalPago")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("ValorRestante")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("ValorSinal")
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
@@ -72,6 +99,48 @@ namespace MegaHairPro.Web.Migrations
                     b.HasIndex("ServicoId");
 
                     b.ToTable("AgendamentoServicos");
+                });
+
+            modelBuilder.Entity("MegaHairPro.Web.Models.Anamnese", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Alergias")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AssinaturaDigital")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Ativa")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("ClienteId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DataCadastro")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("HistoricoClinico")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Observacoes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ProcedimentosAnteriores")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Restricoes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClienteId");
+
+                    b.ToTable("Anamneses");
                 });
 
             modelBuilder.Entity("MegaHairPro.Web.Models.ApplicationUser", b =>
@@ -249,6 +318,61 @@ namespace MegaHairPro.Web.Migrations
                     b.HasIndex("ProdutoId");
 
                     b.ToTable("Compras");
+                });
+
+            modelBuilder.Entity("MegaHairPro.Web.Models.ContaFinanceira", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AgendamentoId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DataCompetencia")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DataPagamento")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DataVencimento")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Descricao")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("DespesaId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FormaPagamento")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Origem")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Tipo")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Valor")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("VendaId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AgendamentoId");
+
+                    b.HasIndex("DespesaId");
+
+                    b.HasIndex("VendaId");
+
+                    b.ToTable("ContasFinanceiras");
                 });
 
             modelBuilder.Entity("MegaHairPro.Web.Models.Despesas", b =>
@@ -453,14 +577,14 @@ namespace MegaHairPro.Web.Migrations
                     b.Property<DateTime>("DataCadastro")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Descricao")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<decimal>("EstoqueGramas")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int?>("FornecedorId")
                         .HasColumnType("int");
-
-                    b.Property<string>("Nome")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Origem")
                         .HasColumnType("nvarchar(max)");
@@ -472,6 +596,9 @@ namespace MegaHairPro.Web.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("TipoProduto")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UnidadeMedida")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -919,6 +1046,17 @@ namespace MegaHairPro.Web.Migrations
                     b.Navigation("Servico");
                 });
 
+            modelBuilder.Entity("MegaHairPro.Web.Models.Anamnese", b =>
+                {
+                    b.HasOne("MegaHairPro.Web.Models.Cliente", "Cliente")
+                        .WithMany()
+                        .HasForeignKey("ClienteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Cliente");
+                });
+
             modelBuilder.Entity("MegaHairPro.Web.Models.Compra", b =>
                 {
                     b.HasOne("MegaHairPro.Web.Models.Fornecedor", "Fornecedor")
@@ -936,6 +1074,27 @@ namespace MegaHairPro.Web.Migrations
                     b.Navigation("Fornecedor");
 
                     b.Navigation("Produto");
+                });
+
+            modelBuilder.Entity("MegaHairPro.Web.Models.ContaFinanceira", b =>
+                {
+                    b.HasOne("MegaHairPro.Web.Models.Agendamento", "Agendamento")
+                        .WithMany()
+                        .HasForeignKey("AgendamentoId");
+
+                    b.HasOne("MegaHairPro.Web.Models.Despesas", "Despesa")
+                        .WithMany()
+                        .HasForeignKey("DespesaId");
+
+                    b.HasOne("MegaHairPro.Web.Models.Venda", "Venda")
+                        .WithMany()
+                        .HasForeignKey("VendaId");
+
+                    b.Navigation("Agendamento");
+
+                    b.Navigation("Despesa");
+
+                    b.Navigation("Venda");
                 });
 
             modelBuilder.Entity("MegaHairPro.Web.Models.Estoque", b =>

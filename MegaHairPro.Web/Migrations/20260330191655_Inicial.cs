@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MegaHairPro.Web.Migrations
 {
     /// <inheritdoc />
-    public partial class Inicialllll : Migration
+    public partial class Inicial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -97,10 +97,12 @@ namespace MegaHairPro.Web.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    Codigo = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Descricao = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Valor = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Ratear = table.Column<bool>(type: "bit", nullable: false),
                     Categoria = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CorCategoria = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     DataCadastro = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Status = table.Column<bool>(type: "bit", nullable: false)
                 },
@@ -389,14 +391,42 @@ namespace MegaHairPro.Web.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Anamneses",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ClienteId = table.Column<int>(type: "int", nullable: false),
+                    DataCadastro = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Alergias = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    HistoricoClinico = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ProcedimentosAnteriores = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Restricoes = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Observacoes = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AssinaturaDigital = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Ativa = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Anamneses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Anamneses_Clientes_ClienteId",
+                        column: x => x.ClienteId,
+                        principalTable: "Clientes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Produtos",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Codigo = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Nome = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Descricao = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     TipoProduto = table.Column<int>(type: "int", nullable: false),
+                    UnidadeMedida = table.Column<int>(type: "int", nullable: false),
                     Origem = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Tamanho = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Cor = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -422,10 +452,19 @@ namespace MegaHairPro.Web.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     DataHora = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DataFim = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ClienteId = table.Column<int>(type: "int", nullable: false),
                     ProfissionalId = table.Column<int>(type: "int", nullable: false),
                     ServicoId = table.Column<int>(type: "int", nullable: false),
-                    DataFim = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    Cancelado = table.Column<bool>(type: "bit", nullable: false),
+                    PercentualSinal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    ValorSinal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    SinalPago = table.Column<bool>(type: "bit", nullable: false),
+                    DataPagamentoSinal = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ValorRestante = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    RestantePago = table.Column<bool>(type: "bit", nullable: false),
+                    DataConclusao = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -526,6 +565,45 @@ namespace MegaHairPro.Web.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "ContasFinanceiras",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Tipo = table.Column<int>(type: "int", nullable: false),
+                    Origem = table.Column<int>(type: "int", nullable: false),
+                    Descricao = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Valor = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    DataCompetencia = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DataVencimento = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DataPagamento = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    FormaPagamento = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    VendaId = table.Column<int>(type: "int", nullable: true),
+                    DespesaId = table.Column<int>(type: "int", nullable: true),
+                    AgendamentoId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ContasFinanceiras", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ContasFinanceiras_Agendamentos_AgendamentoId",
+                        column: x => x.AgendamentoId,
+                        principalTable: "Agendamentos",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_ContasFinanceiras_Despesas_DespesaId",
+                        column: x => x.DespesaId,
+                        principalTable: "Despesas",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_ContasFinanceiras_Vendas_VendaId",
+                        column: x => x.VendaId,
+                        principalTable: "Vendas",
+                        principalColumn: "Id");
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_Agendamentos_ClienteId",
                 table: "Agendamentos",
@@ -545,6 +623,11 @@ namespace MegaHairPro.Web.Migrations
                 name: "IX_AgendamentoServicos_ServicoId",
                 table: "AgendamentoServicos",
                 column: "ServicoId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Anamneses_ClienteId",
+                table: "Anamneses",
+                column: "ClienteId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -596,6 +679,21 @@ namespace MegaHairPro.Web.Migrations
                 column: "ProdutoId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ContasFinanceiras_AgendamentoId",
+                table: "ContasFinanceiras",
+                column: "AgendamentoId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ContasFinanceiras_DespesaId",
+                table: "ContasFinanceiras",
+                column: "DespesaId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ContasFinanceiras_VendaId",
+                table: "ContasFinanceiras",
+                column: "VendaId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Estoques_ProdutoId",
                 table: "Estoques",
                 column: "ProdutoId");
@@ -611,6 +709,9 @@ namespace MegaHairPro.Web.Migrations
         {
             migrationBuilder.DropTable(
                 name: "AgendamentoServicos");
+
+            migrationBuilder.DropTable(
+                name: "Anamneses");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
@@ -634,7 +735,7 @@ namespace MegaHairPro.Web.Migrations
                 name: "Compras");
 
             migrationBuilder.DropTable(
-                name: "Despesas");
+                name: "ContasFinanceiras");
 
             migrationBuilder.DropTable(
                 name: "Estoques");
@@ -649,16 +750,19 @@ namespace MegaHairPro.Web.Migrations
                 name: "Usuarios");
 
             migrationBuilder.DropTable(
-                name: "Vendas");
+                name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "AspNetUsers");
 
             migrationBuilder.DropTable(
                 name: "Agendamentos");
 
             migrationBuilder.DropTable(
-                name: "AspNetRoles");
+                name: "Despesas");
 
             migrationBuilder.DropTable(
-                name: "AspNetUsers");
+                name: "Vendas");
 
             migrationBuilder.DropTable(
                 name: "Produtos");
