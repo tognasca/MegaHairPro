@@ -2,18 +2,18 @@
 
 <tr id="row-@Model.Id"
     data-nome="@Model.Nome"
-    data-telefone="@(Model.Telefone ?? "")"
+    @* data-telefone="@(Model.Telefone ?? "")" *@
     data-whatsapp="@(Model.WhatsApp ?? "")"
     data-email="@(Model.Email ?? "")"
     data-cpf="@(Model.CPF ?? "")"
     data-nascimento="@Model.DataNascimento?.ToString("yyyy-MM-dd")"
-    data-endereco="@(Model.Endereco ?? "")"
+    @* data-endereco="@(Model.Endereco ?? "")" *@
     data-obs="@(Model.Observacoes ?? "")"
     class="@(!Model.Status ? "table-secondary text-muted" : "")">
 
     <td style="font-weight:600;">@Model.Nome</td>
     <td style="font-size:12px;color:#64748b;">@(Model.CPF ?? "—")</td>
-    <td style="font-size:12px;">@(Model.Telefone ?? "—")</td>
+    @* <td style="font-size:12px;">@(Model.Telefone ?? "—")</td> *@
     <td style="font-size:12px;">@(Model.WhatsApp ?? "—")</td>
     <td style="font-size:12px;color:#64748b;">@(Model.Email ?? "—")</td>
     <td>

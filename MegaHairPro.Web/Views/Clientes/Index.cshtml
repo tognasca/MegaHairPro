@@ -17,19 +17,22 @@
         <div class="row g-3">
             <div class="col-md-5">
                 <label class="form-label">Nome</label>
-                <input name="Nome" class="form-control" placeholder="Nome completo" required />
+                <input id="newNome" name="Nome" class="form-control" placeholder="Nome completo" />
+                <div class="invalid-feedback">Informe o nome</div>
             </div>
             <div class="col-md-2">
                 <label class="form-label">CPF</label>
-                <input name="CPF" class="form-control" placeholder="000.000.000-00" />
+                <input id="newCpf" name="CPF" class="form-control" placeholder="000.000.000-00" />
+                <div class="invalid-feedback">CPF inválido</div>
             </div>
-            <div class="col-md-2">
+            @* <div class="col-md-2">
                 <label class="form-label">Telefone</label>
                 <input name="Telefone" class="form-control" placeholder="(00) 0000-0000" />
-            </div>
+            </div> *@
             <div class="col-md-2">
                 <label class="form-label">WhatsApp</label>
-                <input name="WhatsApp" class="form-control" placeholder="(00) 00000-0000" />
+                <input id="newWhats" name="WhatsApp" class="form-control" placeholder="(00) 00000-0000" />
+                <div class="invalid-feedback">WhatsApp inválido</div>
             </div>
             <div class="col-md-1 d-flex align-items-end">
                 <button class="btn btn-success w-100">Salvar</button>
@@ -42,10 +45,10 @@
                 <label class="form-label">Data Nascimento</label>
                 <input name="DataNascimento" type="date" class="form-control" />
             </div>
-            <div class="col-md-6">
+           @*  <div class="col-md-6">
                 <label class="form-label">Endereço</label>
                 <input name="Endereco" class="form-control" placeholder="Rua, número, bairro..." />
-            </div>
+            </div> *@
             <div class="col-md-12">
                 <label class="form-label">Observações</label>
                 <textarea name="Observacoes" class="form-control" rows="2" placeholder="Informações adicionais..."></textarea>
@@ -66,7 +69,7 @@
                 <tr>
                     <th>Nome</th>
                     <th>CPF</th>
-                    <th>Telefone</th>
+                    @* <th>Telefone</th> *@
                     <th>WhatsApp</th>
                     <th>E-mail</th>
                     <th>Status</th>
@@ -97,6 +100,7 @@
                     <div class="col-md-6">
                         <label class="form-label">Nome</label>
                         <input id="editNome" class="form-control" />
+                        <div class="invalid-feedback">Informe o nome</div>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Telefone</label>
@@ -105,6 +109,7 @@
                     <div class="col-md-3">
                         <label class="form-label">WhatsApp</label>
                         <input id="editWhats" class="form-control" />
+                        <div class="invalid-feedback">WhatsApp inválido</div>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">E-mail</label>
@@ -113,6 +118,7 @@
                     <div class="col-md-4">
                         <label class="form-label">CPF</label>
                         <input id="editCpf" class="form-control" />
+                        <div class="invalid-feedback">CPF inválido</div>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Nascimento</label>
@@ -165,12 +171,31 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/cleave.js@1.6.0/dist/cleave.min.js"></script>
 <script>
     let modalEditar, modalExcluir;
 
     document.addEventListener("DOMContentLoaded", function () {
         modalEditar  = new bootstrap.Modal(document.getElementById("modalEditarCliente"));
         modalExcluir = new bootstrap.Modal(document.getElementById("modalExcluir"));
+        // validar cadastro antes de enviar
+        let formCadastro = document.querySelector('form[asp-action="Index"]');
+        if (formCadastro) formCadastro.addEventListener('submit', validarCadastro);
+        // preserve default invalid-feedback texts
+        document.querySelectorAll('.invalid-feedback').forEach(function (fb) { if (!fb.getAttribute('data-default')) fb.setAttribute('data-default', fb.textContent); });
+        attachMasks();
+        // show server-side validation error (if any)
+        let serverError = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["Error"] ?? ""));
+        if (serverError) {
+            try { serverError = JSON.parse(serverError); } catch (e) { }
+            if (serverError) {
+                toast(serverError, 'bg-danger');
+                let se = String(serverError).toLowerCase();
+                if (se.includes('nome')) { let el = document.getElementById('newNome'); if (el) showInvalid(el, 'Informe o nome'); }
+                if (se.includes('cpf'))  { let el = document.getElementById('newCpf'); if (el) showInvalid(el, 'CPF inválido'); }
+                if (se.includes('whatsapp')) { let el = document.getElementById('newWhats'); if (el) showInvalid(el, 'WhatsApp inválido'); }
+            }
+        }
     });
 
     function getToken() {
@@ -183,6 +208,88 @@
         t.addClass(tipo);
         $("#toastMsg").text(msg);
         new bootstrap.Toast(t[0], { delay: 3000 }).show();
+    }
+
+    function onlyDigits(s) {
+        return s ? s.replace(/\D/g, '') : '';
+    }
+
+    // form feedback helpers
+    function showInvalid(el, msg) {
+        if (!el) return;
+        el.classList.add('is-invalid');
+        let fb = el.nextElementSibling;
+        if (fb && fb.classList.contains('invalid-feedback') && msg) fb.textContent = msg;
+    }
+    function clearInvalid(el) {
+        if (!el) return;
+        el.classList.remove('is-invalid');
+        let fb = el.nextElementSibling;
+        if (fb && fb.classList.contains('invalid-feedback')) fb.textContent = fb.getAttribute('data-default') || fb.textContent;
+    }
+
+    // CPF verifier (calculate check digits)
+    function isValidCPF(cpf) {
+        let d = onlyDigits(cpf);
+        if (d.length !== 11) return false;
+        // invalid repeated sequences
+        if (/^(\d)\1{10}$/.test(d)) return false;
+        let nums = d.split('').map(Number);
+        // first verifier
+        let sum = 0;
+        for (let i = 0; i < 9; i++) sum += nums[i] * (10 - i);
+        let r = (sum * 10) % 11;
+        if (r === 10) r = 0;
+        if (r !== nums[9]) return false;
+        // second verifier
+        sum = 0;
+        for (let i = 0; i < 10; i++) sum += nums[i] * (11 - i);
+        r = (sum * 10) % 11;
+        if (r === 10) r = 0;
+        return r === nums[10];
+    }
+
+    // initialize Cleave.js masks for CPF and WhatsApp
+    function attachMasks() {
+        try {
+            // CPF: 000.000.000-00
+            if (document.getElementById('newCpf')) new Cleave('#newCpf', { numericOnly: true, blocks: [3, 3, 3, 2], delimiters: ['.', '.', '-'] });
+            if (document.getElementById('editCpf')) new Cleave('#editCpf', { numericOnly: true, blocks: [3, 3, 3, 2], delimiters: ['.', '.', '-'] });
+
+            // WhatsApp / phone (Brazil)
+            if (document.getElementById('newWhats')) new Cleave('#newWhats', { phone: true, phoneRegionCode: 'BR' });
+            if (document.getElementById('editWhats')) new Cleave('#editWhats', { phone: true, phoneRegionCode: 'BR' });
+        } catch (e) {
+            console.warn('Cleave.js not available, falling back to basic masks');
+        }
+    }
+
+
+    function validarCadastro(e) {
+        // campos do formulário de cadastro (seleciona por name)
+        let nomeEl = document.querySelector('input[name="Nome"]');
+        let cpfEl = document.querySelector('input[name="CPF"]');
+        let whatsEl = document.querySelector('input[name="WhatsApp"]');
+
+        // remover marcações anteriores
+        [nomeEl, cpfEl, whatsEl].forEach(function (el) { if (el) el.classList.remove('is-invalid'); });
+
+        let nome = nomeEl ? nomeEl.value.trim() : '';
+        let cpf = cpfEl ? cpfEl.value.trim() : '';
+        let whats = whatsEl ? whatsEl.value.trim() : '';
+
+        if (!nome) { if (nomeEl) nomeEl.classList.add('is-invalid'); toast('Informe o nome', 'bg-danger'); e.preventDefault(); if (nomeEl) nomeEl.focus(); return false; }
+
+        // validar CPF com algoritmo
+        if (!cpf)  { if (cpfEl) showInvalid(cpfEl, 'Informe o CPF'); toast('Informe o CPF', 'bg-danger'); e.preventDefault(); if (cpfEl) cpfEl.focus(); return false; }
+        if (!isValidCPF(cpf)) { if (cpfEl) showInvalid(cpfEl, 'CPF inválido'); toast('CPF inválido', 'bg-danger'); e.preventDefault(); if (cpfEl) cpfEl.focus(); return false; }
+
+        // validar WhatsApp (10 ou 11 dígitos: DDD + número)
+        let whatsDigits = onlyDigits(whats);
+        if (!whats){ if (whatsEl) showInvalid(whatsEl, 'Informe o WhatsApp'); toast('Informe o WhatsApp', 'bg-danger'); e.preventDefault(); if (whatsEl) whatsEl.focus(); return false; }
+        if (whatsDigits.length < 10 || whatsDigits.length > 11) { if (whatsEl) showInvalid(whatsEl, 'WhatsApp inválido'); toast('WhatsApp inválido', 'bg-danger'); e.preventDefault(); if (whatsEl) whatsEl.focus(); return false; }
+
+        return true;
     }
 
     function editarCliente(id) {
@@ -200,14 +307,36 @@
     }
 
     function salvarEdicao() {
+        // validar campos obrigatórios antes de enviar
         let id = document.getElementById("editId").value;
+        let nome = document.getElementById("editNome").value.trim();
+        let cpf = document.getElementById("editCpf").value.trim();
+        let whats = document.getElementById("editWhats").value.trim();
+
+        // remover marcações anteriores
+        ["editNome", "editCpf", "editWhats"].forEach(function (i) {
+            let el = document.getElementById(i);
+            if (el) el.classList.remove("is-invalid");
+        });
+
+        if (!nome) { document.getElementById("editNome").classList.add("is-invalid"); toast("Informe o nome", "bg-danger"); document.getElementById("editNome").focus(); return; }
+
+        // validar CPF com algoritmo
+        if (!cpf)  { showInvalid(document.getElementById("editCpf"), 'Informe o CPF'); toast("Informe o CPF", "bg-danger"); document.getElementById("editCpf").focus(); return; }
+        if (!isValidCPF(cpf)) { showInvalid(document.getElementById("editCpf"), 'CPF inválido'); toast("CPF inválido", "bg-danger"); document.getElementById("editCpf").focus(); return; }
+
+        // validar WhatsApp (10 ou 11 dígitos)
+        let whatsDigits = onlyDigits(whats);
+        if (!whats){ showInvalid(document.getElementById("editWhats"), 'Informe o WhatsApp'); toast("Informe o WhatsApp", "bg-danger"); document.getElementById("editWhats").focus(); return; }
+        if (whatsDigits.length < 10 || whatsDigits.length > 11) { showInvalid(document.getElementById("editWhats"), 'WhatsApp inválido'); toast("WhatsApp inválido", "bg-danger"); document.getElementById("editWhats").focus(); return; }
+
         let fd = new FormData();
         fd.append("Id",             id);
-        fd.append("Nome",           document.getElementById("editNome").value);
+        fd.append("Nome",           nome);
         fd.append("Telefone",       document.getElementById("editTelefone").value);
-        fd.append("WhatsApp",       document.getElementById("editWhats").value);
+        fd.append("WhatsApp",       whats);
         fd.append("Email",          document.getElementById("editEmail").value);
-        fd.append("CPF",            document.getElementById("editCpf").value);
+        fd.append("CPF",            cpf);
         fd.append("DataNascimento", document.getElementById("editNascimento").value);
         fd.append("Endereco",       document.getElementById("editEndereco").value);
         fd.append("Observacoes",    document.getElementById("editObs").value);
@@ -221,7 +350,15 @@
                 modalEditar.hide();
                 toast("Cliente editado com sucesso", "bg-success");
             },
-            error: function () { toast("Erro ao editar", "bg-danger"); }
+            error: function (xhr) {
+                var msg = "Erro ao editar";
+                try { if (xhr && xhr.responseText) msg = xhr.responseText; } catch (e) { }
+                toast(msg, "bg-danger");
+                var m = String(msg).toLowerCase();
+                if (m.includes('nome')) showInvalid(document.getElementById('editNome'), 'Informe o nome');
+                if (m.includes('cpf')) showInvalid(document.getElementById('editCpf'), 'CPF inválido');
+                if (m.includes('whatsapp')) showInvalid(document.getElementById('editWhats'), 'WhatsApp inválido');
+            }
         });
     }
 
