@@ -79,7 +79,7 @@ var app = builder.Build();
 
 // ✅ CULTURA: InvariantCulture para model binding receber ponto decimal do JS
 //    A exibição em pt-BR é feita via .ToString("N2") nas views
-var invariantCulture = new CultureInfo("en-US");
+var invariantCulture = new CultureInfo("pt-BR");
 app.UseRequestLocalization(new RequestLocalizationOptions
 {
     DefaultRequestCulture = new RequestCulture(invariantCulture),

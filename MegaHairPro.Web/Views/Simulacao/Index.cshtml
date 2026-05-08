@@ -99,6 +99,7 @@
                         <th width="40"></th>
                         <th>Categoria</th>
                         <th>Descrição</th>
+                        <th>É despesa rateada?</th>
                         <th class="text-end">Valor aplicado</th>
                     </tr>
                 </thead>
@@ -115,11 +116,20 @@
                             <td><span class="badge bg-secondary" style="font-size:10px;">@d.Categoria</span></td>
                             <td style="font-size:13px;">
                                 @d.Descricao
+                            </td>
+
+                            <td style="font-size:13px;">
                                 @if (d.Ratear)
                                 {
-                                    <span class="badge bg-blue-soft ms-1">Rateada</span>
+                                    <span class="badge bg-blue-soft ms-1">Sim</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger-soft ms-1">Não</span>
                                 }
                             </td>
+
+                            
                             <td class="text-end" style="font-size:13px;">
                                 @if (d.Ratear)
                                 {
@@ -321,6 +331,42 @@
         });
     });
 
+        function enviarWhatsApp(id) {
+        // 1. Baixa o PDF automaticamente
+        // const linkPdf = `/Simulacao/GerarPdf?id=${id}`;
+        // const a = document.createElement('a');
+        // a.href = linkPdf;
+        // a.download = `orcamento_${id}.pdf`;
+        // document.body.appendChild(a);
+        // a.click();
+        // document.body.removeChild(a);
+
+        // 2. Aguarda 1 segundo e abre o WhatsApp
+        setTimeout(() => {
+            fetch(`/Simulacao/MensagemWhatsApp?id=${id}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.temNumero) {
+                        if (!confirm('Este cliente não tem WhatsApp cadastrado.\nDeseja abrir mesmo assim?')) return;
+                    }
+
+                    const isIpad   = /Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1;
+                    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || isIpad;
+
+                    if (isMobile) {
+                        const inicio = Date.now();
+                        window.location.href = data.urlNativo;
+                        setTimeout(() => {
+                            if (Date.now() - inicio < 2000) window.open(data.url, '_blank');
+                        }, 1500);
+                    } else {
+                        window.open(data.url, '_blank');
+                    }
+                })
+                .catch(() => toast('Erro ao gerar mensagem', 'bg-danger'));
+        }, 1000);
+    }
+
     function toast(msg, tipo) {
         let t = $("#toast");
         t.removeClass("bg-success bg-danger bg-warning bg-info");
@@ -479,34 +525,5 @@
             complete: function () { btn.html("Confirmar").prop("disabled", false); }
         });
     });
-
-
-
-           function enviarWhatsApp(id) {
-        fetch(`/Simulacao/MensagemWhatsApp?id=${id}`)
-            .then(r => r.json())
-            .then(data => {
-                if (!data.temNumero) {
-                    if (!confirm('Este cliente não tem WhatsApp cadastrado.\nDeseja abrir o WhatsApp mesmo assim para escolher o contato?')) return;
-                }
-
-                const isIpad = /Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1;
-                const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || isIpad;
-
-                if (isMobile) {
-                    const inicio = Date.now();
-                    window.location.href = data.urlNativo;
-
-                    setTimeout(() => {
-                        if (Date.now() - inicio < 2000) {
-                            window.open(data.url, '_blank');
-                        }
-                    }, 1500);
-                } else {
-                    window.open(data.url, '_blank');
-                }
-            })
-            .catch(() => toast('Erro ao gerar mensagem', 'bg-danger'));
-    }
 
 </script>

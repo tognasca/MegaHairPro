@@ -30,7 +30,7 @@
 
         .page {
             background: #fff;
-            max-width: 720px;
+            max-width: 900px;
             margin: 0 auto;
             border-radius: 12px;
             overflow: hidden;
@@ -38,23 +38,36 @@
             box-shadow: 0 4px 24px rgba(0,0,0,.12);
         }
 
-        /* WATERMARK */
-        .watermark {
-            position: fixed;
-            top: 38%;
-            left: 5%;
-            font-size: 110px;
-            font-weight: 900;
-            letter-spacing: 12px;
-            color: rgba(0,0,0,.035);
-            transform: rotate(-32deg);
-            pointer-events: none;
-            user-select: none;
-            z-index: 0;
-        }
+       /* WATERMARK */
+.watermark {
+    position: absolute;
+    top: 38%;
+    left: -8%;
+    font-size: 110px;
+    font-weight: 900;
+    letter-spacing: 12px;
+    color: rgba(0,0,0,.085);
+    transform: rotate(-32deg);
+    pointer-events: none;
+    user-select: none;
+    z-index: 1110;
+}
+
+/* MOBILE */
+@@media (max-width: 768px) {
+    .watermark {
+        top: 0%;
+        left: -10%;
+        font-size: 48px;
+        letter-spacing: 6px;
+        transform: translate(-50%, -50%) rotate(-32deg);
+        text-align: center;
+        width: 100%;
+    }
+}
 
         /* HEADER */
-        .header { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #1d4ed8 100%); position: relative; overflow: hidden; }
+        .header { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 20%, #0f172a 100%); position: relative; overflow: hidden; }
         .header-inner { display: flex; align-items: center; justify-content: space-between; padding: 22px 32px; position: relative; z-index: 1; }
         .header-logo-wrap { background: rgba(255,255,255,.12); border-radius: 10px; padding: 8px 14px; border: 1px solid rgba(255,255,255,.2); }
         .header-logo { width: 90px; display: block; }
@@ -65,7 +78,20 @@
         .header-bar { height: 3px; background: linear-gradient(90deg, #f59e0b, #fbbf24, #f59e0b); }
 
         /* BODY */
-        .body { padding: 28px 32px; }
+        .body {
+  padding: 28px 32px;
+  position: relative;
+  background:
+    linear-gradient(
+      rgba(255, 255, 255, 0.65),
+      rgba(255, 255, 255, 0.65)
+    ),
+    url("/Imagem/Marcadagua.jpg");
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
 
         /* CLIENTE */
         .cliente-box {
@@ -174,7 +200,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 24px;
+            /* margin-top: 24px; */
         }
         .footer-left { color: #94a3b8; font-size: 11px; line-height: 1.7; }
         .footer-right { text-align: right; color: #64748b; font-size: 10px; }
@@ -183,10 +209,10 @@
 </head>
 <body>
 
-    <div class="watermark">SIMULAÇÃO</div>
+    
 
     <div class="page">
-
+        <div class="watermark">SIMULAÇÃO</div>
         <!-- HEADER -->
         <div class="header">
             <div class="header-inner">
@@ -216,13 +242,21 @@
                         <label>Produto</label>
                         <span>@Model.ProdutoNome</span>
                     </div>
+                     <div class="cliente-item">
+                        <label>Cor</label>
+                        <span>@Model.Cor</span>
+                    </div>
+                      <div class="cliente-item">
+                        <label>Tamanho</label>
+                        <span>@Model.Tamanho</span>
+                    </div>
                     <div class="cliente-item">
                         <label>Quantidade</label>
                         <span>@Model.QuantidadeGramas.ToString("N0") g</span>
                     </div>
                     <div class="cliente-item">
                         <label>Método de Aplicação</label>
-                        <span>@(string.IsNullOrEmpty(Model.MetodoNome) ? "—" : Model.MetodoNome)</span>
+                        <span>@(string.IsNullOrEmpty(Model.MetodoNome) ? "Sem método" : Model.MetodoNome)</span>
                     </div>
                 </div>
             </div>
@@ -237,7 +271,7 @@
 
             @if (temConfeccao)
             {
-                <div class="linha">
+                <div class="linha destaque">
                     <span class="label">Confecção — @Model.MetodoNome</span>
                     <span class="valor">R$ @confeccao.ToString("N2")</span>
                 </div>
@@ -307,8 +341,6 @@
                 Gerado em @DateTime.Now.ToString("dd/MM/yyyy HH:mm")
             </div>
         </div>
-
     </div>
-
 </body>
 </html>

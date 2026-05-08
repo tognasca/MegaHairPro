@@ -1,0 +1,239 @@
+﻿@model string
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Compartilhar Simulação</title>
+
+    <!-- HEADER BONITO NO WHATSAPP -->
+    <meta property="og:title" content="Mega Hair Pro" />
+    <meta property="og:description" content="Confira sua simulação personalizada ✨" />
+    <meta property="og:image" content="@Model" />
+    <meta property="og:type" content="website" />
+
+    <style>
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                margin: 0;
+                padding: 24px;
+                font-family: Arial, Helvetica, sans-serif;
+                background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e293b 100%);
+                color: white;
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .card {
+                width: 100%;
+                max-width: 430px;
+                background: rgba(255,255,255,.96);
+                backdrop-filter: blur(12px);
+                border-radius: 24px;
+                padding: 38px 30px;
+                text-align: center;
+                box-shadow: 0 20px 60px rgba(0,0,0,.35);
+            }
+
+            .logo {
+                font-size: 34px;
+                margin-bottom: 10px;
+            }
+
+            .title {
+                font-size: 30px;
+                font-weight: 800;
+                color: #020617;
+                margin-bottom: 10px;
+            }
+
+            .sub {
+                color: #64748b;
+                font-size: 16px;
+                line-height: 1.6;
+                margin-bottom: 28px;
+            }
+
+            .loader {
+                width: 62px;
+                height: 62px;
+                border: 5px solid #e2e8f0;
+                border-top: 5px solid #2563eb;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin: 0 auto 28px;
+            }
+
+            @@keyframes spin {
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+
+            .status {
+                font-size: 15px;
+                color: #475569;
+                margin-bottom: 24px;
+            }
+
+            .btn {
+                display: none;
+                width: 100%;
+                border: none;
+                text-decoration: none;
+                background: linear-gradient(135deg, #16a34a, #22c55e);
+                color: white;
+                padding: 16px;
+                border-radius: 14px;
+                font-size: 16px;
+                font-weight: 700;
+                transition: .2s;
+                margin-top: 10px;
+            }
+
+                .btn:hover {
+                    transform: translateY(-2px);
+                    opacity: .95;
+                }
+
+            .erro {
+                color: #dc2626;
+                font-weight: 700;
+                margin-top: 18px;
+                display: none;
+                line-height: 1.5;
+            }
+
+            @@media (max-width: 600px) {
+
+                body {
+                    padding: 18px;
+                }
+
+                .card {
+                    padding: 30px 22px;
+                    border-radius: 22px;
+                }
+
+                .title {
+                    font-size: 26px;
+                }
+
+                .sub {
+                    font-size: 15px;
+                }
+            }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+
+        <div class="logo">✨</div>
+
+        <div class="title">
+            Mega Hair Pro
+        </div>
+
+        <div class="sub">
+            Preparando sua simulação para compartilhar no WhatsApp...
+        </div>
+
+        <div class="loader" id="loader"></div>
+
+        <div class="status" id="status">
+            Aguarde alguns segundos...
+        </div>
+
+        <a id="downloadBtn"
+               class="btn"
+               href="@Model"
+               download="simulacao.png">
+            📥 Baixar Simulação
+        </a>
+
+        <div class="erro" id="erro">
+            Não foi possível abrir o compartilhamento automático.
+        </div>
+
+    </div>
+
+    <script>
+
+            async function compartilhar(urlArquivo) {
+
+                const loader = document.getElementById("loader");
+                const status = document.getElementById("status");
+                const erro = document.getElementById("erro");
+                const btnDownload = document.getElementById("downloadBtn");
+
+                try {
+
+                    const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+
+                    // MOBILE
+                    if (navigator.share && isMobile) {
+
+                        status.innerHTML = "Abrindo compartilhamento...";
+
+                        const response = await fetch(urlArquivo);
+                        const blob = await response.blob();
+
+                        const file = new File(
+                            [blob],
+                            "simulacao.png",
+                            { type: blob.type }
+                        );
+
+                        await navigator.share({
+                            title: 'Mega Hair Pro',
+                            text: 'Confira sua simulação ✨',
+                            files: [file]
+                        });
+
+                        loader.style.display = "none";
+                        status.innerHTML = "Simulação compartilhada com sucesso ✨";
+
+                    } else {
+
+                        // DESKTOP
+                        loader.style.display = "none";
+
+                        status.innerHTML =
+                            "Seu navegador não suporta compartilhamento automático.";
+
+                        btnDownload.style.display = "block";
+                    }
+
+                } catch (e) {
+
+                    console.log(e);
+
+                    loader.style.display = "none";
+
+                    erro.style.display = "block";
+
+                    status.innerHTML =
+                        "Faça o download da imagem abaixo.";
+
+                    btnDownload.style.display = "block";
+                }
+            }
+
+            compartilhar("@Model");
+
+    </script>
+
+</body>
+</html>

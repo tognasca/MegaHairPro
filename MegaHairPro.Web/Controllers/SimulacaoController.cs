@@ -2,11 +2,14 @@ using MegaHairPro.Web.Data;
 using MegaHairPro.Web.Models;
 using MegaHairPro.Web.Services;
 using MegaHairPro.Web.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PuppeteerSharp;
 using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace MegaHairPro.Web.Controllers
@@ -35,10 +38,25 @@ namespace MegaHairPro.Web.Controllers
         public IActionResult Index()
         {
             CarregarViewBags();
+
             var lista = _context.Simulacao
                 .Where(x => x.Status == true)
                 .OrderByDescending(x => x.DataCadastro)
                 .ToList();
+
+            foreach (var sim in lista)
+            {
+                var produto = _context.Produtos
+                    .FirstOrDefault(p => p.Id == sim.ProdutoId);
+
+                sim.ProdutoNome = produto != null
+                    ? $"{produto.TipoProduto} {produto.Origem}"
+                    : string.Empty;
+
+                sim.Cor = produto?.Cor;
+                sim.Tamanho = produto?.Tamanho;
+            }
+
             return View(lista);
         }
 
@@ -146,6 +164,24 @@ namespace MegaHairPro.Web.Controllers
             simulacao.Status = !simulacao.Status;
             _context.SaveChanges();
             return Ok();
+        }
+
+
+        [AllowAnonymous]
+        [HttpGet]
+        public IActionResult ImprimirPublico(int id, string token)
+        {
+            var tokenEsperado = "TATIANETOGNASCAMEGAHAIR2026";
+
+            if (token != tokenEsperado)
+                return Unauthorized();
+
+            var sim = _context.Simulacao.FirstOrDefault(x => x.Id == id);
+
+            if (sim == null)
+                return NotFound();
+
+            return View("Imprimir", sim);
         }
 
         // ✅ CONFIRMAR VENDA
@@ -323,6 +359,15 @@ namespace MegaHairPro.Web.Controllers
                 sim.LogoCaminho = "data:image/png;base64," + Convert.ToBase64String(bytes);
             }
 
+            var produto = _context.Produtos.FirstOrDefault(p => p.Id == sim.ProdutoId);
+
+            sim.ProdutoNome = produto != null
+                ? $"{produto.TipoProduto} {produto.Origem}"
+                : string.Empty;
+
+            sim.Cor = produto?.Cor;
+            sim.Tamanho = produto?.Tamanho;
+
             return View(sim);
         }
 
@@ -333,19 +378,29 @@ namespace MegaHairPro.Web.Controllers
                 .Select(p => new { p.Id, p.CPF, p.Nome }).ToList();
 
             ViewBag.Produtos = _context.Produtos
-                .Where(x => x.Status == true)
-                .Select(p => new
-                {
-                    p.Id,
-                    p.Codigo,
-                    Nome = p.TipoProduto == TipoProduto.Cabelo
-            ? p.Codigo + " - " + p.Origem + " (" + p.Tamanho + ")"
-            : p.Codigo + " - " + p.Descricao,
-                    p.EstoqueGramas,
-                    p.UnidadeMedida,
-                    p.Status
-                }).OrderBy(x => x.Codigo)
-                .ToList();
+     .Where(x => x.Status == true && x.EstoqueGramas > 0)
+     .Select(p => new
+     {
+         p.Id,
+         p.Codigo,
+         Nome = p.TipoProduto == TipoProduto.Cabelo
+             ? p.Codigo + " - " + p.Origem + " (" + p.Tamanho + ")"
+             : p.Codigo + " - " + p.Descricao,
+         p.EstoqueGramas,
+         p.UnidadeMedida,
+         p.Status,
+         p.Origem,
+         p.Tamanho
+     })
+     .AsEnumerable() // ordenação por Tamanho numérico precisa ser no cliente
+     .OrderBy(x => x.Origem)
+     .ThenBy(x =>
+     {
+         // extrai o número do tamanho ex: "65cm" → 65
+         var num = new string(x.Tamanho?.Where(char.IsDigit).ToArray() ?? Array.Empty<char>());
+         return int.TryParse(num, out var n) ? n : 0;
+     })
+     .ToList();
 
             ViewBag.Metodos = _context.MetodosAplicacao
                 .Where(x => x.Status).ToList();
@@ -362,70 +417,98 @@ namespace MegaHairPro.Web.Controllers
             return decimal.TryParse(normalized, NumberStyles.Any, CultureInfo.InvariantCulture, out var result)
                 ? result : 0;
         }
-
-        // Adicione este método no SimulacaoController.cs
-
         [HttpGet]
         public IActionResult MensagemWhatsApp(int id)
         {
             var sim = _context.Simulacao.FirstOrDefault(x => x.Id == id);
             if (sim == null) return NotFound();
 
-            // Busca WhatsApp do cliente
+            var produto = _context.Produtos.FirstOrDefault(p => p.Id == sim.ProdutoId);
+            sim.ProdutoNome = produto != null
+                ? $"{produto.TipoProduto} {produto.Origem}"
+                : string.Empty;
+            sim.Cor = produto?.Cor;
+            sim.Tamanho = produto?.Tamanho;
+
             var cliente = _context.Clientes.FirstOrDefault(c => c.Id == sim.ClienteId);
             var whatsapp = cliente?.WhatsApp ?? cliente?.Telefone ?? "";
-
-            // Limpa número — só dígitos
             var numero = new string(whatsapp.Where(char.IsDigit).ToArray());
+            if (numero.Length <= 11) numero = "55" + numero;
 
-            // Adiciona DDI 55 se não tiver
-            if (numero.Length <= 11)
-                numero = "55" + numero;
+            // ✅ Link público do orçamento
+            var linkOrcamento = $"{Request.Scheme}://{Request.Host}/Simulacao/ImprimirPublico/{id}?token=TATIANETOGNASCAMEGAHAIR2026";
 
-            // Monta mensagem
             decimal precoFinal = sim.PrecoVenda ?? 0;
-            decimal confeccao = sim.ValorTotalConfeccao ?? 0;
             decimal desconto = sim.ValorDesconto ?? 0;
+            decimal confeccao = sim.ValorTotalConfeccao ?? 0;
             bool temDesconto = desconto > 0;
             bool temConfeccao = confeccao > 0;
-            var validade = sim.DataValidadePix != default ? sim.DataValidadePix : DateTime.Now.AddDays(7);
+            var validade = sim.DataValidadePix != default
+                ? sim.DataValidadePix
+                : DateTime.Now.AddDays(7);
 
             var sb = new System.Text.StringBuilder();
+
             sb.AppendLine($"Olá, *{sim.ClienteNome}*! 👋");
             sb.AppendLine();
-            sb.AppendLine("✨ *Simulação de Venda — Mega Hair Pro*");
+            sb.AppendLine("✨ *Seu orçamento — Mega Hair Pro*");
+            sb.AppendLine("━━━━━━━━━━━━━━━━━━━━━━");
             sb.AppendLine();
             sb.AppendLine($"💇 *Produto:* {sim.ProdutoNome}");
-            sb.AppendLine($"📏 *Quantidade:* {sim.QuantidadeGramas:N0}g");
+
+            if (!string.IsNullOrEmpty(sim.Cor))
+                sb.AppendLine($"🎨 *Cor:* {sim.Cor}");
+            if (!string.IsNullOrEmpty(sim.Tamanho))
+                sb.AppendLine($"📐 *Tamanho:* {sim.Tamanho}");
+
+            sb.AppendLine($"⚖️ *Quantidade:* {sim.QuantidadeGramas:N0}g");
+
             if (!string.IsNullOrEmpty(sim.MetodoNome))
                 sb.AppendLine($"🔧 *Método:* {sim.MetodoNome}");
+
+            if (temConfeccao)
+                sb.AppendLine($"✂️ *Confecção:* R$ {confeccao:N2}");
+
             sb.AppendLine();
+            sb.AppendLine("━━━━━━━━━━━━━━━━━━━━━━");
 
             if (temDesconto)
             {
-                sb.AppendLine($"💰 *Valor:* R$ {(sim.PrecoVendaOriginal ?? 0):N2}");
+                sb.AppendLine($"💰 *Valor:* ~R$ {(sim.PrecoVendaOriginal ?? 0):N2}~");
                 sb.AppendLine($"🎁 *Desconto ({sim.PercentualDesconto:N0}%):* − R$ {desconto:N2}");
-                sb.AppendLine($"✅ *Total com desconto:* *R$ {precoFinal:N2}*");
+                sb.AppendLine($"✅ *Total:* *R$ {precoFinal:N2}*");
             }
             else
             {
-                sb.AppendLine($"💰 *Valor total:* *R$ {precoFinal:N2}*");
+                sb.AppendLine($"✅ *Total:* *R$ {precoFinal:N2}*");
             }
 
             sb.AppendLine();
             sb.AppendLine("💳 *Formas de pagamento:*");
-            sb.AppendLine("• À vista: Dinheiro, PIX ou Débito");
-            sb.AppendLine("• Crédito parcelado (sujeito a juros)");
+            sb.AppendLine("  • Dinheiro, PIX ou Débito (à vista)");
+            sb.AppendLine("  • Cartão de crédito parcelado _(sujeito a juros)_");
             sb.AppendLine();
-            sb.AppendLine($"⏳ *Proposta válida até:* {validade:dd/MM/yyyy}");
+            sb.AppendLine($"⏳ *Válido até:* {validade:dd/MM/yyyy}");
             sb.AppendLine();
+            sb.AppendLine("━━━━━━━━━━━━━━━━━━━━━━");
+            sb.AppendLine();
+
+            // ✅ Link do orçamento na mensagem
+            sb.AppendLine("📄 *Visualize seu orçamento completo:*");
+            sb.AppendLine(linkOrcamento);
+            sb.AppendLine();
+
             sb.AppendLine("_Mega Hair Pro — Tatiane Tognasca_");
             sb.AppendLine("_Rua das Manacás, 340, Sala 1_");
             sb.AppendLine("_📞 (11) 93052-8032_");
 
             var mensagem = Uri.EscapeDataString(sb.ToString());
-            var urlWhatsAppWeb = string.IsNullOrEmpty(numero) ? $"https://wa.me/?text={mensagem}" : $"https://wa.me/{numero}?text={mensagem}";
-            var urlWhatsAppNativo = string.IsNullOrEmpty(numero) ? $"whatsapp://send?text={mensagem}" : $"whatsapp://send?phone={numero}&text={mensagem}";
+            var urlWhatsAppWeb = string.IsNullOrEmpty(numero)
+                ? $"https://wa.me/?text={mensagem}"
+                : $"https://wa.me/{numero}?text={mensagem}";
+            var urlWhatsAppNativo = string.IsNullOrEmpty(numero)
+                ? $"whatsapp://send?text={mensagem}"
+                : $"whatsapp://send?phone={numero}&text={mensagem}";
 
             return Json(new
             {
@@ -433,6 +516,13 @@ namespace MegaHairPro.Web.Controllers
                 urlNativo = urlWhatsAppNativo,
                 temNumero = !string.IsNullOrEmpty(whatsapp)
             });
+        }
+
+        public IActionResult Compartilhar(int id)
+        {
+            var arquivo = $"/imagens/simulacoes/simulacao_{id}.png";
+
+            return View(model: arquivo);
         }
 
     }

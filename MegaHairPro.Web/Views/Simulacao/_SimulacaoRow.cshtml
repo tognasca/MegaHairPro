@@ -25,8 +25,8 @@
         @{
             decimal? margem = Model.PrecoVenda > 0 ? (Model.LucroTotal / Model.PrecoVenda) * 100 : 0;
             string badgeClass = Model.LucroTotal > 200 ? "badge bg-success-soft"
-            : Model.LucroTotal > 0 ? "badge bg-warning-soft"
-            : "badge bg-danger-soft";
+                : Model.LucroTotal > 0 ? "badge bg-warning-soft"
+                : "badge bg-danger-soft";
         }
         <span class="@badgeClass">R$ @Model.LucroTotal?.ToString("N2")</span>
         <div style="font-size:10px;color:#94a3b8;margin-top:2px;">Margem: @margem?.ToString("N1")%</div>
@@ -36,8 +36,8 @@
         <div class="d-flex gap-1 flex-wrap">
             <button class="btn-act btn-act-red" onclick="excluirSimulacao(@Model.Id)">Excluir</button>
             <button class="btn-act btn-act-green" onclick="confirmarVenda(@Model.Id)">Confirmar</button>
-            <a class="btn-act btn-act-dark" target="_blank" href="@Url.Action("GerarPdf", "Simulacao", new { id = Model.Id })">PDF</a>
-            <a class="btn-act btn-act-blue" target="_blank" href="@Url.Action("Imprimir", "Simulacao", new { id = Model.Id })">Imprimir</a>
+            <a class="btn-act btn-act-blue" target="_blank"
+               href="@Url.Action("Imprimir", "Simulacao", new { id = Model.Id })">Imprimir</a>
             <button class="btn-act"
                     style="background:#dcfce7;color:#15803d;border-color:#86efac;"
                     onclick="enviarWhatsApp(@Model.Id)">

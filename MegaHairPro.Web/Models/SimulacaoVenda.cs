@@ -24,7 +24,7 @@ namespace MegaHairPro.Web.Models
         public decimal? CustoCabelo { get; set; }
 
         public decimal CustoServico { get; set; }
-        
+
 
         // LUCRO SOMENTE NO CABELO
         public decimal PercentualLucroCabelo { get; set; }
@@ -51,7 +51,7 @@ namespace MegaHairPro.Web.Models
 
         public decimal? LucroVenda { get; set; }
 
-        
+
 
         public decimal? LucroLiquido { get; set; }
         public decimal? LucroTotal { get; set; }
@@ -68,7 +68,7 @@ namespace MegaHairPro.Web.Models
         public decimal? PrecoVendaOriginal { get; set; }
         public decimal? MargemPercentual { get; set; }
 
-        public string QrCodePixBase64  { get; set; }
+        public string QrCodePixBase64 { get; set; }
 
         public string LogoCaminho { get; set; }
 
@@ -78,5 +78,14 @@ namespace MegaHairPro.Web.Models
         public string MetodoNome { get; set; }
 
         public DateTime DataValidadePix { get; set; } = DateTime.Now.AddDays(7);
+        [NotMapped]
+        public string Cabelo { get; set; }
+        [NotMapped]
+        public string Cor { get; set; }
+        [NotMapped]
+        public string Tamanho { get; set; }
+
+        [NotMapped]
+        public string UrlImagem { get; set; }
     }
 }
