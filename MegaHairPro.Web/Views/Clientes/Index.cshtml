@@ -18,12 +18,12 @@
             <div class="col-md-5">
                 <label class="form-label">Nome</label>
                 <input id="newNome" name="Nome" class="form-control" placeholder="Nome completo" />
-                <div class="invalid-feedback">Informe o nome</div>
+                @* <div class="invalid-feedback">Informe o nome</div> *@
             </div>
             <div class="col-md-2">
                 <label class="form-label">CPF</label>
                 <input id="newCpf" name="CPF" class="form-control" placeholder="000.000.000-00" />
-                <div class="invalid-feedback">CPF inválido</div>
+                @* <div class="invalid-feedback">CPF inválido</div> *@
             </div>
             @* <div class="col-md-2">
                 <label class="form-label">Telefone</label>
@@ -32,7 +32,7 @@
             <div class="col-md-2">
                 <label class="form-label">WhatsApp</label>
                 <input id="newWhats" name="WhatsApp" class="form-control" placeholder="(00) 00000-0000" />
-                <div class="invalid-feedback">WhatsApp inválido</div>
+                @* <div class="invalid-feedback">WhatsApp inválido</div> *@
             </div>
             <div class="col-md-1 d-flex align-items-end">
                 <button class="btn btn-success w-100">Salvar</button>
@@ -265,31 +265,65 @@
     }
 
 
+    // function validarCadastro(e) {
+    //     // campos do formulário de cadastro (seleciona por name)
+    //     let nomeEl = document.querySelector('input[name="Nome"]');
+    //     let cpfEl = document.querySelector('input[name="CPF"]');
+    //     let whatsEl = document.querySelector('input[name="WhatsApp"]');
+
+    //     // remover marcações anteriores
+    //     [nomeEl, cpfEl, whatsEl].forEach(function (el) { if (el) el.classList.remove('is-invalid'); });
+
+    //     let nome = nomeEl ? nomeEl.value.trim() : '';
+    //     let cpf = cpfEl ? cpfEl.value.trim() : '';
+    //     let whats = whatsEl ? whatsEl.value.trim() : '';
+
+    //     if (!nome) { if (nomeEl) nomeEl.classList.add('is-invalid'); toast('Informe o nome', 'bg-danger'); e.preventDefault(); if (nomeEl) nomeEl.focus(); return false; }
+
+    //     // validar CPF com algoritmo
+    //     if (!cpf)  { if (cpfEl) showInvalid(cpfEl, 'Informe o CPF'); toast('Informe o CPF', 'bg-danger'); e.preventDefault(); if (cpfEl) cpfEl.focus(); return false; }
+    //     if (!isValidCPF(cpf)) { if (cpfEl) showInvalid(cpfEl, 'CPF inválido'); toast('CPF inválido', 'bg-danger'); e.preventDefault(); if (cpfEl) cpfEl.focus(); return false; }
+
+    //     // validar WhatsApp (10 ou 11 dígitos: DDD + número)
+    //     let whatsDigits = onlyDigits(whats);
+    //     if (!whats){ if (whatsEl) showInvalid(whatsEl, 'Informe o WhatsApp'); toast('Informe o WhatsApp', 'bg-danger'); e.preventDefault(); if (whatsEl) whatsEl.focus(); return false; }
+    //     if (whatsDigits.length < 10 || whatsDigits.length > 11) { if (whatsEl) showInvalid(whatsEl, 'WhatsApp inválido'); toast('WhatsApp inválido', 'bg-danger'); e.preventDefault(); if (whatsEl) whatsEl.focus(); return false; }
+
+    //     return true;
+    // }
+
     function validarCadastro(e) {
-        // campos do formulário de cadastro (seleciona por name)
-        let nomeEl = document.querySelector('input[name="Nome"]');
-        let cpfEl = document.querySelector('input[name="CPF"]');
-        let whatsEl = document.querySelector('input[name="WhatsApp"]');
+    // Nenhuma validação obrigatória — apenas limpa marcações anteriores
+    let nomeEl  = document.querySelector('input[name="Nome"]');
+    let cpfEl   = document.querySelector('input[name="CPF"]');
+    let whatsEl = document.querySelector('input[name="WhatsApp"]');
 
-        // remover marcações anteriores
-        [nomeEl, cpfEl, whatsEl].forEach(function (el) { if (el) el.classList.remove('is-invalid'); });
+    [nomeEl, cpfEl, whatsEl].forEach(function (el) {
+    if (el) el.classList.remove('is-invalid');
+    });
 
-        let nome = nomeEl ? nomeEl.value.trim() : '';
-        let cpf = cpfEl ? cpfEl.value.trim() : '';
-        let whats = whatsEl ? whatsEl.value.trim() : '';
+    // Validação opcional de CPF (somente se preenchido)
+    let cpf = cpfEl ? cpfEl.value.trim() : '';
+    if (cpf && !isValidCPF(cpf)) {
+    showInvalid(cpfEl, 'CPF inválido');
+    toast('CPF inválido', 'bg-danger');
+    e.preventDefault();
+    cpfEl.focus();
+    return false;
+    }
 
-        if (!nome) { if (nomeEl) nomeEl.classList.add('is-invalid'); toast('Informe o nome', 'bg-danger'); e.preventDefault(); if (nomeEl) nomeEl.focus(); return false; }
+    // Validação opcional de WhatsApp (somente se preenchido)
+    let whats = whatsEl ? whatsEl.value.trim() : '';
+    let whatsDigits = onlyDigits(whats);
+    if (whats && (whatsDigits.length < 10 || whatsDigits.length > 11)) {
+    showInvalid(whatsEl, 'WhatsApp inválido');
+    toast('WhatsApp inválido', 'bg-danger');
+    e.preventDefault();
+    whatsEl.focus();
+    return false;
+    }
 
-        // validar CPF com algoritmo
-        if (!cpf)  { if (cpfEl) showInvalid(cpfEl, 'Informe o CPF'); toast('Informe o CPF', 'bg-danger'); e.preventDefault(); if (cpfEl) cpfEl.focus(); return false; }
-        if (!isValidCPF(cpf)) { if (cpfEl) showInvalid(cpfEl, 'CPF inválido'); toast('CPF inválido', 'bg-danger'); e.preventDefault(); if (cpfEl) cpfEl.focus(); return false; }
-
-        // validar WhatsApp (10 ou 11 dígitos: DDD + número)
-        let whatsDigits = onlyDigits(whats);
-        if (!whats){ if (whatsEl) showInvalid(whatsEl, 'Informe o WhatsApp'); toast('Informe o WhatsApp', 'bg-danger'); e.preventDefault(); if (whatsEl) whatsEl.focus(); return false; }
-        if (whatsDigits.length < 10 || whatsDigits.length > 11) { if (whatsEl) showInvalid(whatsEl, 'WhatsApp inválido'); toast('WhatsApp inválido', 'bg-danger'); e.preventDefault(); if (whatsEl) whatsEl.focus(); return false; }
-
-        return true;
+    return true;
     }
 
     function editarCliente(id) {

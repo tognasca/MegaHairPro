@@ -38,11 +38,23 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<ISimulacaoService, SimulacaoService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IVendaService, VendaService>();
-
+builder.Services.AddScoped<ICustoMedioService, CustoMedioService>();
 builder.Services.AddScoped<IPdfService, PdfService>();
 builder.Services.AddScoped<IViewRenderService, ViewRenderService>();
 builder.Services.AddScoped<INotificationService, EmailNotificationService>();
 builder.Services.AddScoped<AgendamentoService>();
+builder.Services.AddScoped<BookingConfigService>();
+builder.Services.AddScoped<PixBookingService>();
+builder.Services.AddScoped<BookingPortalService>();
+
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.Cookie.Name = ".MegaHair.Booking";
+    options.IdleTimeout = TimeSpan.FromDays(7);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 builder.Services.AddControllersWithViews(options =>
 {
@@ -75,6 +87,18 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Account/AcessoNegado";
 });
 
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("React",
+        policy =>
+        {
+            policy
+                .AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
 var app = builder.Build();
 
 // ✅ CULTURA: InvariantCulture para model binding receber ponto decimal do JS
@@ -89,12 +113,15 @@ app.UseRequestLocalization(new RequestLocalizationOptions
 
 app.UseStaticFiles();
 app.UseRouting();
+app.UseSession();
 
 app.UseAuthentication();
+app.UseCors("React");
 app.UseAuthorization();
 
 app.UseDeveloperExceptionPage();
 
+//app.MapControllers();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Login}/{id?}"

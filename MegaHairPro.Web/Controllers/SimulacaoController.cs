@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MegaHairPro.Web.Controllers
 {
@@ -20,17 +21,20 @@ namespace MegaHairPro.Web.Controllers
         private readonly IViewRenderService _viewRender;
         private readonly IPdfService _pdfService;
         private readonly ISimulacaoService _simulacao;
+        private readonly ICustoMedioService _custoMedio;
 
         public SimulacaoController(
             AppDbContext context,
             IViewRenderService viewRender,
             IPdfService pdfService,
-            ISimulacaoService simulacao)
+            ISimulacaoService simulacao,
+            ICustoMedioService custoMedio)
         {
             _context = context;
             _viewRender = viewRender;
             _pdfService = pdfService;
             _simulacao = simulacao;
+            _custoMedio = custoMedio;
         }
 
         // ✅ GET
@@ -125,7 +129,97 @@ namespace MegaHairPro.Web.Controllers
             return RedirectToAction("Index");
         }
 
-        // ✅ EDIT AJAX
+
+        [HttpPost]
+        [AllowAnonymous]
+        [IgnoreAntiforgeryToken]
+        [Route("api/whatsapp/simulacao")]
+        public IActionResult CalcularSimulacao([FromBody] WhatsAppSimulacaoModel model)
+        {
+            try
+            {
+                var produto = _context.Produtos
+                    .FirstOrDefault(p => p.Id == model.ProdutoId);
+
+                var metodo = _context.MetodosAplicacao
+                    .FirstOrDefault(m => m.Id == model.MetodoId);
+
+                if (produto == null)
+                {
+                    return BadRequest(
+                        "Produto não encontrado"
+                    );
+                }
+
+                if (metodo == null)
+                {
+                    return BadRequest(
+                        "Método não encontrado"
+                    );
+                }
+
+                decimal totalDespesas = 0;
+                int mediaAtendimentosMes = 50;
+                model.DespesasSelecionadas = _context.Despesas.Where(d => d.Ratear == true).Select(x => x.Id).ToList();
+                var despesasSelecionadas = _context.Despesas.Where(d => model.DespesasSelecionadas.Contains(d.Id)).ToList();
+
+                foreach (var desp in despesasSelecionadas)
+                {
+                    totalDespesas += desp.Ratear
+                        ? desp.Valor / mediaAtendimentosMes
+                        : desp.Valor;
+                }
+
+                var custoLucroCabelo = _custoMedio.CalculaCustoCabelo(model.ProdutoId,
+                                                                      model.QuantidadeGramas, 70M);
+
+                decimal custo = Convert.ToDecimal(custoLucroCabelo[0]["custo"]);
+                decimal lucro = Convert.ToDecimal(custoLucroCabelo[0]["lucro"]);
+                decimal confeccao = (metodo?.ValorPorGrama ?? 0M) * model.QuantidadeGramas;
+                decimal precoOriginal = custo + lucro + confeccao + totalDespesas;
+
+
+                // =====================================
+                // CÁLCULOS
+                // =====================================
+
+                decimal valorCabelo = custo + lucro;
+                decimal valorMetodo = confeccao;
+                decimal valorFinal = valorCabelo + valorMetodo + totalDespesas;
+
+                // =====================================
+                // RETORNO
+                // =====================================
+
+                return Ok(new
+                {
+                    sucesso = true,
+                    mensagem = $@"✨ *Simulação Mega Hair* ✨
+
+💎 Cabelo:
+{produto?.Origem} {produto?.Cor}
+
+🪄 Método:
+{metodo?.Nome ?? "Não encontrado"}
+
+📏 Quantidade:
+{model.QuantidadeGramas}g
+
+💰 Valor total:
+R$ {valorFinal:N2}
+
+Se estiver de acordo responda:
+*CONFIRMAR* 💖"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+
+        // ✅ EDIT AJAX — completo com todos os campos
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult EditAjax(SimulacaoVenda model)
@@ -133,12 +227,63 @@ namespace MegaHairPro.Web.Controllers
             var simulacao = _context.Simulacao.FirstOrDefault(x => x.Id == model.Id);
             if (simulacao == null) return NotFound();
 
+            int mediaAtendimentosMes = 50;
+
+            // ── Campos básicos ────────────────────────────────────────────────
+            simulacao.ProdutoId = model.ProdutoId;
+            simulacao.QuantidadeGramas = model.QuantidadeGramas;
+            simulacao.MetodoId = model.MetodoId;
+
+            // ── Percentuais ───────────────────────────────────────────────────
+            simulacao.PercentualLucroCabelo = ParseDecimal(Request.Form["PercentualLucroCabelo"]);
+            simulacao.PercentualComissaoVendedora = ParseDecimal(Request.Form["PercentualComissaoVendedora"]);
+            simulacao.PercentualComissaoCabeleireira = ParseDecimal(Request.Form["PercentualComissaoCabeleireira"]);
+            simulacao.PercentualDesconto = ParseDecimal(Request.Form["PercentualDesconto"]);
+
+            // ── Valores calculados vindos do front (já calculados com a mesma lógica) ──
             simulacao.PrecoVenda = ParseDecimal(Request.Form["PrecoVenda"]);
             simulacao.CustoTotal = ParseDecimal(Request.Form["CustoTotal"]);
-            simulacao.LucroLiquido = simulacao.PrecoVenda - simulacao.CustoTotal;
+            simulacao.LucroLiquido = ParseDecimal(Request.Form["LucroLiquido"]);
             simulacao.LucroTotal = simulacao.LucroLiquido;
+            simulacao.ValorDesconto = ParseDecimal(Request.Form["ValorDesconto"]);
+            simulacao.ValorTotalConfeccao = ParseDecimal(Request.Form["ValorConfeccao"]);
+            simulacao.ValorComissaoVendedora = ParseDecimal(Request.Form["ValorComissaoVendedora"]);
+            simulacao.ValorComissaoCabeleireira = ParseDecimal(Request.Form["ValorComissaoCabeleireira"]);
+            simulacao.TotalDespesasSelecionadas = ParseDecimal(Request.Form["TotalDespesas"]);
+
+            // ── Despesas selecionadas ─────────────────────────────────────────
+            var idsDespesas = Request.Form["DespesasSelecionadas"]
+                .Select(v => int.TryParse(v, out var n) ? n : 0)
+                .Where(n => n > 0)
+                .ToList();
+
+            decimal totalDespesas = 0;
+            var despesas = _context.Despesas.Where(d => idsDespesas.Contains(d.Id)).ToList();
+            foreach (var d in despesas)
+                totalDespesas += d.Ratear ? d.Valor / mediaAtendimentosMes : d.Valor;
+
+            simulacao.DespesaSalaoRateada = totalDespesas;
+            simulacao.TotalDespesasSelecionadas = totalDespesas;
+
+            // ── Dados de exibição ─────────────────────────────────────────────
+            var produto = _context.Produtos.FirstOrDefault(p => p.Id == simulacao.ProdutoId);
+            var metodo = _context.MetodosAplicacao.FirstOrDefault(m => m.Id == simulacao.MetodoId);
+
+            simulacao.ProdutoNome = produto != null
+                ? $"{produto.TipoProduto} {produto.Origem}"
+                : simulacao.ProdutoNome;
+            simulacao.MetodoNome = metodo?.Nome ?? simulacao.MetodoNome;
+            simulacao.Cor = produto?.Cor;
+            simulacao.Tamanho = produto?.Tamanho;
+
+            // ── Preço original (sem desconto) ─────────────────────────────────
+            if (simulacao.PercentualDesconto > 0)
+                simulacao.PrecoVendaOriginal = simulacao.PrecoVenda.HasValue && simulacao.ValorDesconto.HasValue
+                    ? simulacao.PrecoVenda + simulacao.ValorDesconto
+                    : simulacao.PrecoVenda;
 
             _context.SaveChanges();
+
             return PartialView("_SimulacaoRow", simulacao);
         }
 
@@ -165,7 +310,6 @@ namespace MegaHairPro.Web.Controllers
             _context.SaveChanges();
             return Ok();
         }
-
 
         [AllowAnonymous]
         [HttpGet]
@@ -348,7 +492,6 @@ namespace MegaHairPro.Web.Controllers
             var sim = _context.Simulacao.FirstOrDefault(x => x.Id == id);
             if (sim == null) return NotFound();
 
-            // Converte logo para base64 para exibir no browser
             var logoPath = Path.Combine(
                 Directory.GetCurrentDirectory(),
                 "wwwroot/Imagem/LogoMegaHairPro.png");
@@ -378,29 +521,28 @@ namespace MegaHairPro.Web.Controllers
                 .Select(p => new { p.Id, p.CPF, p.Nome }).ToList();
 
             ViewBag.Produtos = _context.Produtos
-     .Where(x => x.Status == true && x.EstoqueGramas > 0)
-     .Select(p => new
-     {
-         p.Id,
-         p.Codigo,
-         Nome = p.TipoProduto == TipoProduto.Cabelo
-             ? p.Codigo + " - " + p.Origem + " (" + p.Tamanho + ")"
-             : p.Codigo + " - " + p.Descricao,
-         p.EstoqueGramas,
-         p.UnidadeMedida,
-         p.Status,
-         p.Origem,
-         p.Tamanho
-     })
-     .AsEnumerable() // ordenação por Tamanho numérico precisa ser no cliente
-     .OrderBy(x => x.Origem)
-     .ThenBy(x =>
-     {
-         // extrai o número do tamanho ex: "65cm" → 65
-         var num = new string(x.Tamanho?.Where(char.IsDigit).ToArray() ?? Array.Empty<char>());
-         return int.TryParse(num, out var n) ? n : 0;
-     })
-     .ToList();
+                .Where(x => x.Status == true && x.EstoqueGramas > 0)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Codigo,
+                    Nome = p.TipoProduto == TipoProduto.Cabelo
+                        ? p.Codigo + " - " + p.Origem + " (" + p.Tamanho + ")"
+                        : p.Codigo + " - " + p.Descricao,
+                    p.EstoqueGramas,
+                    p.UnidadeMedida,
+                    p.Status,
+                    p.Origem,
+                    p.Tamanho
+                })
+                .AsEnumerable()
+                .OrderBy(x => x.Origem)
+                .ThenBy(x =>
+                {
+                    var num = new string(x.Tamanho?.Where(char.IsDigit).ToArray() ?? Array.Empty<char>());
+                    return int.TryParse(num, out var n) ? n : 0;
+                })
+                .ToList();
 
             ViewBag.Metodos = _context.MetodosAplicacao
                 .Where(x => x.Status).ToList();
@@ -412,11 +554,11 @@ namespace MegaHairPro.Web.Controllers
         private static decimal ParseDecimal(string? value)
         {
             if (string.IsNullOrWhiteSpace(value)) return 0;
-            // aceita "1.234,56" (pt-BR) ou "1234.56" (en-US)
             var normalized = value.Replace(".", "").Replace(",", ".");
             return decimal.TryParse(normalized, NumberStyles.Any, CultureInfo.InvariantCulture, out var result)
                 ? result : 0;
         }
+
         [HttpGet]
         public IActionResult MensagemWhatsApp(int id)
         {
@@ -435,7 +577,6 @@ namespace MegaHairPro.Web.Controllers
             var numero = new string(whatsapp.Where(char.IsDigit).ToArray());
             if (numero.Length <= 11) numero = "55" + numero;
 
-            // ✅ Link público do orçamento
             var linkOrcamento = $"{Request.Scheme}://{Request.Host}/Simulacao/ImprimirPublico/{id}?token=TATIANETOGNASCAMEGAHAIR2026";
 
             decimal precoFinal = sim.PrecoVenda ?? 0;
@@ -492,12 +633,9 @@ namespace MegaHairPro.Web.Controllers
             sb.AppendLine();
             sb.AppendLine("━━━━━━━━━━━━━━━━━━━━━━");
             sb.AppendLine();
-
-            // ✅ Link do orçamento na mensagem
             sb.AppendLine("📄 *Visualize seu orçamento completo:*");
             sb.AppendLine(linkOrcamento);
             sb.AppendLine();
-
             sb.AppendLine("_Mega Hair Pro — Tatiane Tognasca_");
             sb.AppendLine("_Rua das Manacás, 340, Sala 1_");
             sb.AppendLine("_📞 (11) 93052-8032_");
@@ -521,9 +659,7 @@ namespace MegaHairPro.Web.Controllers
         public IActionResult Compartilhar(int id)
         {
             var arquivo = $"/imagens/simulacoes/simulacao_{id}.png";
-
             return View(model: arquivo);
         }
-
     }
 }

@@ -37,28 +37,28 @@ namespace MegaHairPro.Web.Controllers
         public IActionResult Index(Cliente cliente)
         {
             // server-side required fields
-            if (cliente == null
-                || string.IsNullOrWhiteSpace(cliente.Nome)
-                || string.IsNullOrWhiteSpace(cliente.CPF)
-                || string.IsNullOrWhiteSpace(cliente.WhatsApp))
-            {
-                TempData["Error"] = "Preencha Nome, CPF e WhatsApp";
-                return RedirectToAction("Index");
-            }
+            //if (cliente == null
+            //    || string.IsNullOrWhiteSpace(cliente.Nome)
+            //    || string.IsNullOrWhiteSpace(cliente.CPF)
+            //    || string.IsNullOrWhiteSpace(cliente.WhatsApp))
+            //{
+            //    TempData["Error"] = "Preencha Nome, CPF e WhatsApp";
+            //    return RedirectToAction("Index");
+            //}
 
-            // validar CPF (algoritmo) e WhatsApp (10 ou 11 dígitos)
-            if (!IsValidCPF(cliente.CPF))
-            {
-                TempData["Error"] = "CPF inválido";
-                return RedirectToAction("Index");
-            }
+            //// validar CPF (algoritmo) e WhatsApp (10 ou 11 dígitos)
+            //if (!IsValidCPF(cliente.CPF))
+            //{
+            //    TempData["Error"] = "CPF inválido";
+            //    return RedirectToAction("Index");
+            //}
 
-            var whatsDigits = OnlyDigits(cliente.WhatsApp);
-            if (whatsDigits.Length < 10 || whatsDigits.Length > 11)
-            {
-                TempData["Error"] = "WhatsApp inválido";
-                return RedirectToAction("Index");
-            }
+            //var whatsDigits = OnlyDigits(cliente.WhatsApp);
+            //if (whatsDigits.Length < 10 || whatsDigits.Length > 11)
+            //{
+            //    TempData["Error"] = "WhatsApp inválido";
+            //    return RedirectToAction("Index");
+            //}
 
             cliente.Status = true;
 

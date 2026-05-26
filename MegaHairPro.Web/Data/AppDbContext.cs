@@ -30,6 +30,8 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
     public DbSet<Profissional> Profissionais { get; set; }
     public DbSet<Agendamento> Agendamentos { get; set; }
     public DbSet<AgendamentoServico> AgendamentoServicos { get; set; }
+    public DbSet<ConfiguracaoBooking> ConfiguracoesBooking { get; set; }
+    public DbSet<UsuarioCliente> UsuariosClientes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
