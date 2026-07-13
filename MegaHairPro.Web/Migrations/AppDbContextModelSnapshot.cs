@@ -91,7 +91,15 @@ namespace MegaHairPro.Web.Migrations
                     b.Property<int>("ServicoId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ProfissionalId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("Realizado")
+                        .HasColumnType("bit");
+
                     b.HasKey("AgendamentoId", "ServicoId");
+
+                    b.HasIndex("ProfissionalId");
 
                     b.HasIndex("ServicoId");
 
@@ -315,6 +323,24 @@ namespace MegaHairPro.Web.Migrations
                     b.HasIndex("ProdutoId");
 
                     b.ToTable("Compras");
+                });
+
+            modelBuilder.Entity("MegaHairPro.Web.Models.ConfiguracaoBooking", b =>
+                {
+                    b.Property<string>("Chave")
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<DateTime>("AtualizadoEm")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Valor")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Chave");
+
+                    b.ToTable("ConfiguracoesBooking");
                 });
 
             modelBuilder.Entity("MegaHairPro.Web.Models.ContaFinanceira", b =>
@@ -818,6 +844,34 @@ namespace MegaHairPro.Web.Migrations
                     b.ToTable("Usuarios");
                 });
 
+            modelBuilder.Entity("MegaHairPro.Web.Models.UsuarioCliente", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Ativo")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("ClienteId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DataCadastro")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Senha")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClienteId");
+
+                    b.ToTable("UsuariosClientes");
+                });
+
             modelBuilder.Entity("MegaHairPro.Web.Models.Venda", b =>
                 {
                     b.Property<int>("Id")
@@ -1032,6 +1086,11 @@ namespace MegaHairPro.Web.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("MegaHairPro.Web.Models.Profissional", "Profissional")
+                        .WithMany()
+                        .HasForeignKey("ProfissionalId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("MegaHairPro.Web.Models.Servico", "Servico")
                         .WithMany()
                         .HasForeignKey("ServicoId")
@@ -1039,6 +1098,8 @@ namespace MegaHairPro.Web.Migrations
                         .IsRequired();
 
                     b.Navigation("Agendamento");
+
+                    b.Navigation("Profissional");
 
                     b.Navigation("Servico");
                 });
@@ -1112,6 +1173,17 @@ namespace MegaHairPro.Web.Migrations
                         .HasForeignKey("FornecedorId");
 
                     b.Navigation("Fornecedor");
+                });
+
+            modelBuilder.Entity("MegaHairPro.Web.Models.UsuarioCliente", b =>
+                {
+                    b.HasOne("MegaHairPro.Web.Models.Cliente", "Cliente")
+                        .WithMany()
+                        .HasForeignKey("ClienteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Cliente");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

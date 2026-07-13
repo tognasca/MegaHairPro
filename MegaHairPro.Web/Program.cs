@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using System;
 using System.Globalization;
 using System.IO;
@@ -25,6 +26,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+    var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+    options.Filters.Add(new AuthorizeFilter(policy));
 });
 
 // ✅ BANCO DE DADOS
@@ -43,6 +46,7 @@ builder.Services.AddScoped<IPdfService, PdfService>();
 builder.Services.AddScoped<IViewRenderService, ViewRenderService>();
 builder.Services.AddScoped<INotificationService, EmailNotificationService>();
 builder.Services.AddScoped<AgendamentoService>();
+builder.Services.AddScoped<AtendimentoService>();
 builder.Services.AddScoped<BookingConfigService>();
 builder.Services.AddScoped<PixBookingService>();
 builder.Services.AddScoped<BookingPortalService>();
@@ -56,17 +60,19 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-builder.Services.AddControllersWithViews(options =>
-{
-    var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
-    options.Filters.Add(new AuthorizeFilter(policy));
-});
-
 builder.Services.AddSingleton(typeof(IConverter),
     new SynchronizedConverter(new PdfTools()));
 
-var context = new CustomAssemblyLoadContext();
-context.LoadUnmanagedLibrary(Path.Combine(Directory.GetCurrentDirectory(), "libwkhtmltox.dll"));
+var wkhtmlPath = Path.Combine(Directory.GetCurrentDirectory(), "libwkhtmltox.dll");
+if (File.Exists(wkhtmlPath))
+{
+    var context = new CustomAssemblyLoadContext();
+    context.LoadUnmanagedLibrary(wkhtmlPath);
+}
+else
+{
+    Console.WriteLine("Aviso: libwkhtmltox.dll não encontrada — geração de PDF desabilitada.");
+}
 
 // ✅ IDENTITY COMPLETO
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -101,8 +107,12 @@ builder.Services.AddCors(options =>
 });
 var app = builder.Build();
 
-// ✅ CULTURA: InvariantCulture para model binding receber ponto decimal do JS
-//    A exibição em pt-BR é feita via .ToString("N2") nas views
+if (app.Environment.IsDevelopment())
+    app.UseDeveloperExceptionPage();
+else
+    app.UseExceptionHandler("/Home/Error");
+
+// Cultura pt-BR para exibição e binding
 var invariantCulture = new CultureInfo("pt-BR");
 app.UseRequestLocalization(new RequestLocalizationOptions
 {
@@ -119,9 +129,7 @@ app.UseAuthentication();
 app.UseCors("React");
 app.UseAuthorization();
 
-app.UseDeveloperExceptionPage();
-
-//app.MapControllers();
+app.MapControllers();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Login}/{id?}"

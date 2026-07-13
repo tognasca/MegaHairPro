@@ -44,6 +44,33 @@ public class BookingPortalController : Controller
 
     private int? ClienteIdSessao => HttpContext.Session.GetInt32(SessionClienteId);
 
+    private IActionResult ServirPagina(string arquivo)
+    {
+        var path = Path.Combine(_env.WebRootPath, arquivo);
+        if (!System.IO.File.Exists(path))
+            return NotFound("Portal de agendamento não configurado. Copie os arquivos PWA para wwwroot.");
+        return PhysicalFile(path, "text/html");
+    }
+
+    // ─── Páginas PWA ─────────────────────────────────────────────────────────
+    [HttpGet("/")]
+    public IActionResult PortalHome() => ServirPagina("index.html");
+
+    [HttpGet("/agendar")]
+    public IActionResult PortalAgendar() => ServirPagina("agendar.html");
+
+    [HttpGet("/pagamento/{id:int}")]
+    public IActionResult PortalPagamento(int id) => ServirPagina("pagamento.html");
+
+    [HttpGet("/meus-agendamentos")]
+    public IActionResult PortalMeusAgendamentos() => ServirPagina("meus-agendamentos.html");
+
+    [HttpGet("/admin")]
+    public IActionResult PortalAdmin() => ServirPagina("admin.html");
+
+    [HttpGet("/admin/agenda")]
+    public IActionResult PortalAdminAgenda() => ServirPagina("admin-agenda.html");
+
     private void SetClienteSessao(int id, string nome)
     {
         HttpContext.Session.SetInt32(SessionClienteId, id);

@@ -80,6 +80,18 @@ public class BookingPortalService
         var cliente = await _context.Clientes
             .FirstOrDefaultAsync(c => c.Status && (c.WhatsApp == id || c.Email == id));
         if (cliente == null) return (false, "Cliente não encontrado. Por favor, se cadastre.", null);
+
+        var usuario = await _context.Set<UsuarioCliente>()
+            .FirstOrDefaultAsync(u => u.ClienteId == cliente.Id && u.Ativo);
+
+        if (usuario != null && !string.IsNullOrEmpty(usuario.Senha))
+        {
+            if (string.IsNullOrWhiteSpace(req.Senha))
+                return (false, "Informe sua senha para entrar.", null);
+            if (!BCrypt.Net.BCrypt.Verify(req.Senha, usuario.Senha))
+                return (false, "Senha incorreta.", null);
+        }
+
         return (true, null, cliente);
     }
 
@@ -261,7 +273,7 @@ public class BookingPortalService
         var token = _configuration["Booking:AdminToken"] ?? "";
         var salaoEmail = _configuration["Booking:SalaoEmail"] ?? _configuration["Email:Remetente"];
         var msg = $"Sinal informado — aprovar agendamento #{ag.Id}. Cliente: {ag.Cliente?.Nome}. " +
-                  $"Link: {appUrl}/BookingPortal/Aprovar/{ag.Id}?token={token}";
+                  $"Link: {appUrl}/admin/aprovar/{ag.Id}?token={token}";
 
         if (!string.IsNullOrWhiteSpace(salaoEmail))
             await _notifier.EnviarEmailAsync(salaoEmail, $"Sinal aguardando aprovação — {ag.Cliente?.Nome}", $"<p>{msg}</p>");
@@ -277,7 +289,7 @@ public class BookingPortalService
         await _notifier.EnviarEmailAsync(salaoEmail, $"Novo agendamento — {cliente.Nome}",
             $"<p>Novo agendamento pendente de PIX.</p>" +
             $"<p>Cliente: {cliente.Nome}<br/>Serviço: {servico}<br/>Sinal: R$ {valorSinal:N2}</p>" +
-            $"<p><a href=\"{appUrl}/BookingPortal/Aprovar/{ag.Id}?token={token}\">Aprovar</a></p>");
+            $"<p><a href=\"{appUrl}/admin/aprovar/{ag.Id}?token={token}\">Aprovar</a></p>");
     }
 
     private static DateTime ArredondarIntervalo(DateTime dt, int minutos)

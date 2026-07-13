@@ -51,5 +51,11 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
             .WithMany()
             .HasForeignKey(x => x.ServicoId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<AgendamentoServico>()
+            .HasOne(x => x.Profissional)
+            .WithMany()
+            .HasForeignKey(x => x.ProfissionalId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

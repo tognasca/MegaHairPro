@@ -29,6 +29,7 @@ public class LoginClienteRequest
 {
     public string? WhatsApp { get; set; }
     public string? Email { get; set; }
+    public string? Senha { get; set; }
 }
 
 public class ReagendarRequest

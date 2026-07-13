@@ -1,0 +1,39 @@
+<Window x:Class="MegaHairPro.Desktop.WalkInWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Walk-in — Cliente sem horário" Height="520" Width="480"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        Background="#f8fafc">
+    <Border Margin="20" Background="White" CornerRadius="12" Padding="20" BorderBrush="#e2e8f0" BorderThickness="1">
+        <StackPanel>
+            <TextBlock Text="Nova cliente — Walk-in" FontSize="18" FontWeight="Bold"/>
+            <TextBlock Text="Cliente chegou sem horário marcado. Selecione serviços e profissional."
+                       Foreground="#64748b" Margin="0,4,0,16" TextWrapping="Wrap"/>
+
+            <TextBlock Text="Buscar cliente" FontWeight="SemiBold" Margin="0,0,0,4"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="TxtFiltroCliente" Padding="8" Margin="0,0,8,0"/>
+                <Button Grid.Column="1" Content="Buscar" Padding="12,6" Click="BtnBuscarCliente_Click"/>
+            </Grid>
+            <ComboBox x:Name="CboCliente" DisplayMemberPath="Nome" Margin="0,8,0,0" Padding="6"
+                      SelectionChanged="CboCliente_SelectionChanged"/>
+
+            <TextBlock Text="Profissional principal" FontWeight="SemiBold" Margin="0,16,0,4"/>
+            <ComboBox x:Name="CboProfissional" DisplayMemberPath="Nome" Padding="6"/>
+
+            <TextBlock Text="Serviços (unha + maquiagem, etc.)" FontWeight="SemiBold" Margin="0,16,0,4"/>
+            <ListBox x:Name="LstServicos" DisplayMemberPath="Nome" SelectionMode="Multiple"
+                     MaxHeight="140" BorderBrush="#e2e8f0"/>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+                <Button Content="Cancelar" Padding="14,8" Margin="0,0,8,0" Click="BtnCancelar_Click"/>
+                <Button Content="Iniciar atendimento" Padding="14,8" Background="#7c3aed" Foreground="White"
+                        BorderThickness="0" Click="BtnIniciar_Click"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

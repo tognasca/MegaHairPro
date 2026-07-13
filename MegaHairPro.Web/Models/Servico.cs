@@ -7,7 +7,8 @@ namespace MegaHairPro.Web.Models
         Cabelo = 1,
         Unha = 2,
         Tratamento = 3,
-        MegaHair = 4
+        MegaHair = 4,
+        Maquiagem = 5
     }
 
     public class Servico
