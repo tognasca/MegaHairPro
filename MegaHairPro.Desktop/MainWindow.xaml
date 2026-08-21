@@ -302,52 +302,101 @@
                                 <Grid>
                                     <TextBlock Text="Serviços" FontWeight="SemiBold" FontSize="15"/>
                                     <Button HorizontalAlignment="Right" Content="Marcar todos feitos" Style="{StaticResource GhostBtn}"
-                                            Click="BtnMarcarTodos_Click"/>
+                                            Click="BtnMarcarTodos_Click"
+                                            AutomationProperties.Name="Marcar todos os serviços como feitos"/>
                                 </Grid>
-                                <TextBlock Text="Defina a profissional de cada serviço — unha, maquiagem, mega hair podem ser pessoas diferentes."
-                                           FontSize="11" Foreground="{StaticResource Muted}" Margin="0,2,0,10"/>
+                                <TextBlock Text="Toque no cartão para marcar feito. Troque a profissional se unha, make e cabelo forem pessoas diferentes."
+                                           FontSize="11" Foreground="{StaticResource Muted}" Margin="0,2,0,10" TextWrapping="Wrap"/>
 
-                                <DataGrid x:Name="GridServicos" MinHeight="140" MaxHeight="240"
-                                          ItemsSource="{Binding ServicosAtendimento}">
-                                    <DataGrid.Columns>
-                                        <DataGridCheckBoxColumn Header="Feito" Binding="{Binding Realizado, UpdateSourceTrigger=PropertyChanged}" Width="58"/>
-                                        <DataGridTextColumn Header="Serviço" Binding="{Binding Nome}" Width="*" IsReadOnly="True"/>
-                                        <DataGridTextColumn Header="Categoria" Binding="{Binding Categoria}" Width="100" IsReadOnly="True"/>
-                                        <DataGridTemplateColumn Header="Profissional" Width="160">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <ComboBox ItemsSource="{Binding DataContext.Profissionais, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                              DisplayMemberPath="Nome" SelectedValuePath="Id"
-                                                              SelectedValue="{Binding ProfissionalId, UpdateSourceTrigger=PropertyChanged}"/>
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                        <DataGridTextColumn Header="Valor" Binding="{Binding Valor, StringFormat=R$ {0:N2}}" Width="90" IsReadOnly="True"/>
-                                        <DataGridTemplateColumn Header="" Width="42">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <Button Content="✕" Style="{StaticResource GhostBtn}" Foreground="{StaticResource Danger}"
-                                                            Click="BtnRemoverServico_Click" Tag="{Binding}"/>
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                    </DataGrid.Columns>
-                                </DataGrid>
+                                <ItemsControl ItemsSource="{Binding ServicosAtendimento}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="14" Padding="12" Margin="0,0,0,8"
+                                                    BorderBrush="{StaticResource Line}" BorderThickness="1"
+                                                    Background="{Binding Categoria, Converter={StaticResource CatFundo}}">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <ToggleButton Width="48" Height="48" Cursor="Hand"
+                                                                  IsChecked="{Binding Realizado, UpdateSourceTrigger=PropertyChanged}"
+                                                                  AutomationProperties.Name="Serviço realizado"
+                                                                  ToolTip="Toque quando o serviço estiver pronto">
+                                                        <ToggleButton.Template>
+                                                            <ControlTemplate TargetType="ToggleButton">
+                                                                <Border x:Name="chk" Width="48" Height="48" CornerRadius="12"
+                                                                        Background="White" BorderBrush="{StaticResource Line}" BorderThickness="1.5">
+                                                                    <TextBlock x:Name="mark"
+                                                                               Text="{Binding DataContext.Categoria, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource CatIcone}}"
+                                                                               FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsChecked" Value="True">
+                                                                        <Setter TargetName="chk" Property="Background" Value="{StaticResource Success}"/>
+                                                                        <Setter TargetName="chk" Property="BorderBrush" Value="{StaticResource Success}"/>
+                                                                        <Setter TargetName="mark" Property="Text" Value="✓"/>
+                                                                        <Setter TargetName="mark" Property="Foreground" Value="White"/>
+                                                                        <Setter TargetName="mark" Property="FontWeight" Value="Bold"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </ToggleButton.Template>
+                                                    </ToggleButton>
+                                                    <StackPanel Grid.Column="1" Margin="12,0,10,0" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                        <TextBlock Text="{Binding Categoria}" FontSize="11" Foreground="{StaticResource Muted}"/>
+                                                        <ComboBox Margin="0,6,0,0" MinWidth="160"
+                                                                  AutomationProperties.Name="Profissional deste serviço"
+                                                                  ItemsSource="{Binding DataContext.Profissionais, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                  DisplayMemberPath="Nome" SelectedValuePath="Id"
+                                                                  SelectedValue="{Binding ProfissionalId, UpdateSourceTrigger=PropertyChanged}"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                                        <TextBlock Text="{Binding Valor, StringFormat=R$ {0:N2}}" FontWeight="Bold"
+                                                                   HorizontalAlignment="Right"/>
+                                                        <Button Content="Remover" Style="{StaticResource GhostBtn}" Foreground="{StaticResource Danger}"
+                                                                Padding="8,4" Margin="0,6,0,0" FontSize="11"
+                                                                Click="BtnRemoverServico_Click" Tag="{Binding}"
+                                                                AutomationProperties.Name="Remover serviço"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
 
-                                <Grid Margin="0,10,0,0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <ComboBox x:Name="CboServicoAdd" DisplayMemberPath="Nome"
-                                              ItemsSource="{Binding ServicosDisponiveis}"
-                                              SelectedItem="{Binding ServicoParaAdicionar}"/>
-                                    <Button Grid.Column="1" Content="+ Serviço" Margin="8,0,0,0"
-                                            Style="{StaticResource OutlineBtn}" Click="BtnAdicionarServico_Click"/>
-                                    <Button Grid.Column="2" Content="Salvar" Margin="8,0,0,0"
-                                            Style="{StaticResource PrimaryBtn}" Click="BtnSalvarServicos_Click"/>
-                                </Grid>
+                                <TextBlock Text="Toque para adicionar" FontWeight="SemiBold" Margin="0,6,0,6"
+                                           FontSize="12" Foreground="{StaticResource Muted}"/>
+                                <ItemsControl ItemsSource="{Binding ServicosParaEscolher}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Button Style="{StaticResource OutlineBtn}" Padding="10,8" Margin="0,0,8,8"
+                                                    Click="BtnCatalogoServico_Click" Tag="{Binding}"
+                                                    AutomationProperties.Name="{Binding Nome}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding Categoria, Converter={StaticResource CatIcone}}" FontSize="16" Margin="0,0,8,0"/>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Nome}" FontWeight="SemiBold"/>
+                                                        <TextBlock FontSize="11" Foreground="{StaticResource Muted}"
+                                                                   Text="{Binding ValorFinal, StringFormat=R$ {0:N0}}"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <Button Content="Salvar serviços" Style="{StaticResource PrimaryBtn}"
+                                        HorizontalAlignment="Left" Margin="0,4,0,0"
+                                        Click="BtnSalvarServicos_Click"
+                                        AutomationProperties.Name="Salvar serviços do atendimento"/>
 
                                 <Separator Margin="0,16" Background="{StaticResource Line}"/>
 
@@ -378,11 +427,51 @@
                                     </Border>
                                 </Grid>
 
-                                <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
-                                    <TextBlock Text="Forma de pagamento" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                    <ComboBox Width="180" ItemsSource="{Binding FormasPagamento}"
-                                              SelectedItem="{Binding FormaPagamento}"/>
-                                </StackPanel>
+                                <TextBlock Text="Como pagou" FontWeight="SemiBold" FontSize="15" Margin="0,14,0,4"/>
+                                <TextBlock Text="Toque no ícone — Pix, dinheiro ou cartão. Uma escolha, sem lista."
+                                           FontSize="11" Foreground="{StaticResource Muted}" Margin="0,0,0,10"/>
+                                <UniformGrid Columns="4">
+                                    <RadioButton GroupName="Pagamento" Style="{StaticResource ChoiceTile}" Margin="0,0,6,0"
+                                                 Tag="PIX" Checked="Pagamento_Checked"
+                                                 IsChecked="{Binding FormaPagamento, Mode=TwoWay, Converter={StaticResource StrEq}, ConverterParameter=PIX}"
+                                                 AutomationProperties.Name="Pix">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <TextBlock Text="⚡" FontSize="22" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="Pix" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="Na hora" FontSize="10" Foreground="{StaticResource Muted}" HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </RadioButton>
+                                    <RadioButton GroupName="Pagamento" Style="{StaticResource ChoiceTile}" Margin="3,0"
+                                                 Tag="Dinheiro" Checked="Pagamento_Checked"
+                                                 IsChecked="{Binding FormaPagamento, Mode=TwoWay, Converter={StaticResource StrEq}, ConverterParameter=Dinheiro}"
+                                                 AutomationProperties.Name="Dinheiro">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <TextBlock Text="💵" FontSize="22" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="Dinheiro" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="Espécie" FontSize="10" Foreground="{StaticResource Muted}" HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </RadioButton>
+                                    <RadioButton GroupName="Pagamento" Style="{StaticResource ChoiceTile}" Margin="3,0"
+                                                 Tag="Cartão Débito" Checked="Pagamento_Checked"
+                                                 IsChecked="{Binding FormaPagamento, Mode=TwoWay, Converter={StaticResource StrEq}, ConverterParameter=Cartão Débito}"
+                                                 AutomationProperties.Name="Cartão débito">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <TextBlock Text="💳" FontSize="22" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="Débito" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="Maquininha" FontSize="10" Foreground="{StaticResource Muted}" HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </RadioButton>
+                                    <RadioButton GroupName="Pagamento" Style="{StaticResource ChoiceTile}" Margin="6,0,0,0"
+                                                 Tag="Cartão Crédito" Checked="Pagamento_Checked"
+                                                 IsChecked="{Binding FormaPagamento, Mode=TwoWay, Converter={StaticResource StrEq}, ConverterParameter=Cartão Crédito}"
+                                                 AutomationProperties.Name="Cartão crédito">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <TextBlock Text="💎" FontSize="22" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="Crédito" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="Maquininha" FontSize="10" Foreground="{StaticResource Muted}" HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </RadioButton>
+                                </UniformGrid>
 
                                 <WrapPanel Margin="0,16,0,8">
                                     <Button Content="Receber sinal" Style="{StaticResource SuccessBtn}" Margin="0,0,8,8"

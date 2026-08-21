@@ -9,8 +9,8 @@ namespace MegaHairPro.Web.Models
         public int Id { get; set; }
         // ================= CLIENTES =================
         public int ClienteId { get; set; }
-        public string ClienteNome { get; set; } = "";
-        public string ProdutoNome { get; set; } = "";
+        public string? ClienteNome { get; set; }
+        public string? ProdutoNome { get; set; }
 
         // ================= PRODUTO / ESTOQUE =================
         public int ProdutoId { get; set; }
@@ -68,14 +68,14 @@ namespace MegaHairPro.Web.Models
         public decimal? PrecoVendaOriginal { get; set; }
         public decimal? MargemPercentual { get; set; }
 
-        public string QrCodePixBase64 { get; set; }
+        public string? QrCodePixBase64 { get; set; }
 
-        public string LogoCaminho { get; set; }
+        public string? LogoCaminho { get; set; }
 
         public decimal? ValorTotalConfeccao { get; set; }
 
         public int MetodoId { get; set; }
-        public string MetodoNome { get; set; }
+        public string? MetodoNome { get; set; }
 
         public DateTime DataValidadePix { get; set; } = DateTime.Now.AddDays(7);
         [NotMapped]

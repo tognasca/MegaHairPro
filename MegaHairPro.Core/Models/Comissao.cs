@@ -6,7 +6,7 @@ namespace MegaHairPro.Web.Models
         public int Id { get; set; }
 
         public int VendaId { get; set; }
-        public string Profissional { get; set; } = "";
+        public string? Profissional { get; set; }
 
         public decimal Valor { get; set; }
 

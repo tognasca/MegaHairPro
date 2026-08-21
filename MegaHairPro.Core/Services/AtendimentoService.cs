@@ -130,7 +130,7 @@ public class AtendimentoService
 
         termo = termo.Trim().ToLower();
         var clientes = await context.Clientes
-            .Where(c => c.Nome.ToLower().Contains(termo) ||
+            .Where(c => (c.Nome != null && c.Nome.ToLower().Contains(termo)) ||
                         (c.Telefone != null && c.Telefone.Contains(termo)) ||
                         (c.WhatsApp != null && c.WhatsApp.Contains(termo)))
             .Take(20)
@@ -362,7 +362,7 @@ public class AtendimentoService
         {
             filtro = filtro.Trim().ToLower();
             query = query.Where(c =>
-                c.Nome.ToLower().Contains(filtro) ||
+                (c.Nome != null && c.Nome.ToLower().Contains(filtro)) ||
                 (c.Telefone != null && c.Telefone.Contains(filtro)) ||
                 (c.WhatsApp != null && c.WhatsApp.Contains(filtro)));
         }

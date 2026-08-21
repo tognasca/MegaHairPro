@@ -17,6 +17,12 @@
             <local:BoolToVisibilityConverter x:Key="BoolToVis"/>
             <local:InverseBoolToVisibilityConverter x:Key="BoolToVisInv"/>
             <local:HasTextToVisibilityConverter x:Key="HasText"/>
+            <local:CategoriaIconeConverter x:Key="CatIcone"/>
+            <local:CategoriaFundoConverter x:Key="CatFundo"/>
+            <local:PagamentoIconeConverter x:Key="PagIcone"/>
+            <local:PagamentoDescricaoConverter x:Key="PagDesc"/>
+            <local:StringEqualsConverter x:Key="StrEq"/>
+            <local:FirstCharConverter x:Key="FirstChar"/>
 
             <!-- ===================== Cantos padrão ===================== -->
             <CornerRadius x:Key="ButtonRadius">10</CornerRadius>
@@ -200,6 +206,89 @@
                 <Setter Property="FontWeight" Value="SemiBold"/>
                 <Setter Property="Padding" Value="10,8"/>
                 <Setter Property="BorderThickness" Value="0"/>
+            </Style>
+
+            <!-- ===================== Cartão de escolha (serviço / pagamento) ===================== -->
+            <Style x:Key="ChoiceTile" TargetType="RadioButton">
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
+                <Setter Property="Foreground" Value="{StaticResource Ink}"/>
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                <Setter Property="Margin" Value="0,0,8,8"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="RadioButton">
+                            <Border x:Name="bd"
+                                    Background="{StaticResource Surface}"
+                                    BorderBrush="{StaticResource Line}"
+                                    BorderThickness="1.5"
+                                    CornerRadius="14"
+                                    Padding="12,10"
+                                    MinWidth="118" MinHeight="76"
+                                    SnapsToDevicePixels="True">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource WineLight}"/>
+                                    <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Wine}"/>
+                                    <Setter TargetName="bd" Property="BorderThickness" Value="2"/>
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="#FBF3F5"/>
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Gold}"/>
+                                    <Setter TargetName="bd" Property="BorderThickness" Value="2"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter TargetName="bd" Property="Opacity" Value="0.45"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="ChoiceTileToggle" TargetType="ToggleButton">
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
+                <Setter Property="Foreground" Value="{StaticResource Ink}"/>
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                <Setter Property="Margin" Value="0,0,8,8"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ToggleButton">
+                            <Border x:Name="bd"
+                                    Background="{StaticResource Surface}"
+                                    BorderBrush="{StaticResource Line}"
+                                    BorderThickness="1.5"
+                                    CornerRadius="14"
+                                    Padding="12,10"
+                                    MinWidth="148" MinHeight="88"
+                                    SnapsToDevicePixels="True">
+                                <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource WineLight}"/>
+                                    <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Wine}"/>
+                                    <Setter TargetName="bd" Property="BorderThickness" Value="2"/>
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="#FBF3F5"/>
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Gold}"/>
+                                    <Setter TargetName="bd" Property="BorderThickness" Value="2"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter TargetName="bd" Property="Opacity" Value="0.45"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
 
             <!-- ===================== Separator padrão ===================== -->

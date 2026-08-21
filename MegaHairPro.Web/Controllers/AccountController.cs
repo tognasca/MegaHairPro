@@ -84,7 +84,15 @@ namespace MegaHairPro.Web.Controllers
         // ── Minha Conta ───────────────────────────────────────────────────────
         [HttpGet]
         [Authorize]
-        public IActionResult MinhaConta() => View();
+        public async Task<IActionResult> MinhaConta()
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+                return Unauthorized();
+
+            return View(user);
+        }
 
         // ── Atualizar Nome ────────────────────────────────────────────────────
         [HttpPost]
@@ -96,17 +104,22 @@ namespace MegaHairPro.Web.Controllers
                 return BadRequest("Nome não pode ser vazio.");
 
             var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Unauthorized();
 
-            user.Nome = nome;
+            if (user == null)
+                return Unauthorized();
+
+            user.Nome = nome.Trim();
+
             var result = await _userManager.UpdateAsync(user);
 
             if (!result.Succeeded)
                 return BadRequest("Erro ao atualizar dados.");
 
+            // Atualiza o cookie/sessão do Identity
+            await _signInManager.RefreshSignInAsync(user);
+
             return Ok();
         }
-
         // ── Alterar Senha ─────────────────────────────────────────────────────
         [HttpPost]
         [Authorize]

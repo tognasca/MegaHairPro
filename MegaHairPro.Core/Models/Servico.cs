@@ -18,7 +18,7 @@ namespace MegaHairPro.Web.Models
         [Required]
         public string Nome { get; set; }
 
-        public string Descricao { get; set; }
+        public string? Descricao { get; set; }
 
         [Required]
         public decimal Valor { get; set; }
@@ -30,7 +30,7 @@ namespace MegaHairPro.Web.Models
 
         public CategoriaServico Categoria { get; set; }
 
-        public string ImagemUrl { get; set; }
+        public string? ImagemUrl { get; set; }
 
         public decimal ValorFinal =>
             ValorPromocional.HasValue && ValorPromocional.Value > 0

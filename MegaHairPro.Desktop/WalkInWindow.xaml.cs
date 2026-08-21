@@ -1,56 +1,147 @@
 using MegaHairPro.Desktop.ViewModels;
 using MegaHairPro.Web.Models;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Input;
+using System.Windows.Threading;
 
 namespace MegaHairPro.Desktop;
 
 public partial class WalkInWindow : Window
 {
     private readonly MainViewModel _vm;
+    private readonly HashSet<int> _servicosMarcados = [];
+    private readonly DispatcherTimer _buscaTimer = new() { Interval = TimeSpan.FromMilliseconds(280) };
+    private int _buscaSeq;
 
     public WalkInWindow(MainViewModel vm)
     {
         InitializeComponent();
         _vm = vm;
+        DataContext = vm;
         CboProfissional.ItemsSource = _vm.Profissionais;
         LstServicos.ItemsSource = _vm.ServicosDisponiveis;
+        LstClientes.ItemsSource = _vm.Clientes;
         if (_vm.Profissionais.Any())
             CboProfissional.SelectedIndex = 0;
+
+        _buscaTimer.Tick += async (_, _) =>
+        {
+            _buscaTimer.Stop();
+            await BuscarClientesAsync();
+        };
+
+        Loaded += async (_, _) => await BuscarClientesAsync();
     }
 
-    private async void BtnBuscarCliente_Click(object sender, RoutedEventArgs e)
+    private void TxtFiltroCliente_TextChanged(object sender, TextChangedEventArgs e)
     {
-        await _vm.BuscarClientesAsync(TxtFiltroCliente.Text);
-        CboCliente.ItemsSource = _vm.Clientes;
-        if (_vm.Clientes.Any())
-            CboCliente.SelectedIndex = 0;
+        _buscaTimer.Stop();
+        _buscaTimer.Start();
     }
 
-    private void CboCliente_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    private async void TxtFiltroCliente_KeyDown(object sender, KeyEventArgs e)
     {
-        _vm.ClienteWalkIn = CboCliente.SelectedItem as Cliente;
+        if (e.Key != Key.Enter) return;
+        _buscaTimer.Stop();
+        await BuscarClientesAsync();
     }
 
-    private void BtnNovaCliente_Click(object sender, RoutedEventArgs e)
+    private async Task BuscarClientesAsync()
+    {
+        var seq = ++_buscaSeq;
+        TxtStatusClientes.Text = "Buscando…";
+        try
+        {
+            await _vm.BuscarClientesAsync(TxtFiltroCliente.Text);
+            if (seq != _buscaSeq) return;
+
+            LstClientes.ItemsSource = null;
+            LstClientes.ItemsSource = _vm.Clientes;
+
+            if (_vm.Clientes.Count == 0)
+            {
+                TxtStatusClientes.Text = "Nenhuma cliente encontrada. Toque em + Nova para cadastrar.";
+                return;
+            }
+
+            TxtStatusClientes.Text = _vm.Clientes.Count == 1
+                ? "1 cliente — toque para selecionar"
+                : $"{_vm.Clientes.Count} clientes — toque para selecionar";
+
+            if (_vm.ClienteWalkIn != null)
+            {
+                var match = _vm.Clientes.FirstOrDefault(c => c.Id == _vm.ClienteWalkIn.Id);
+                if (match != null)
+                    LstClientes.SelectedItem = match;
+            }
+            else if (LstClientes.SelectedItem == null && _vm.Clientes.Count > 0)
+            {
+                LstClientes.SelectedIndex = 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            TxtStatusClientes.Text = "Não foi possível carregar as clientes.";
+            MessageBox.Show(ex.Message, "Erro ao buscar clientes", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void LstClientes_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        _vm.ClienteWalkIn = LstClientes.SelectedItem as Cliente;
+    }
+
+    private async void BtnNovaCliente_Click(object sender, RoutedEventArgs e)
     {
         var dlg = new ClienteRapidoWindow(_vm) { Owner = this };
         if (dlg.ShowDialog() == true && dlg.ClienteCriado != null)
         {
             _vm.Clientes.Insert(0, dlg.ClienteCriado);
-            CboCliente.ItemsSource = null;
-            CboCliente.ItemsSource = _vm.Clientes;
-            CboCliente.SelectedItem = dlg.ClienteCriado;
+            LstClientes.ItemsSource = null;
+            LstClientes.ItemsSource = _vm.Clientes;
+            LstClientes.SelectedItem = dlg.ClienteCriado;
             _vm.ClienteWalkIn = dlg.ClienteCriado;
+            TxtStatusClientes.Text = "Cliente cadastrada — pronta para atender.";
         }
+    }
+
+    private void ServicoTile_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not ToggleButton btn || btn.Tag is not Servico servico)
+            return;
+
+        if (btn.IsChecked == true)
+            _servicosMarcados.Add(servico.Id);
+        else
+            _servicosMarcados.Remove(servico.Id);
+
+        AtualizarResumoServicos();
+    }
+
+    private void AtualizarResumoServicos()
+    {
+        var escolhidos = _vm.ServicosDisponiveis.Where(s => _servicosMarcados.Contains(s.Id)).ToList();
+        if (escolhidos.Count == 0)
+        {
+            TxtResumoServicos.Text = "";
+            return;
+        }
+
+        var total = escolhidos.Sum(s => s.ValorFinal);
+        TxtResumoServicos.Text = escolhidos.Count == 1
+            ? $"1 serviço · R$ {total:N0}"
+            : $"{escolhidos.Count} serviços · R$ {total:N0}";
     }
 
     private async void BtnIniciar_Click(object sender, RoutedEventArgs e)
     {
-        _vm.ClienteWalkIn = CboCliente.SelectedItem as Cliente;
+        _vm.ClienteWalkIn = LstClientes.SelectedItem as Cliente;
         _vm.ProfissionalWalkIn = CboProfissional.SelectedItem as Profissional;
 
         _vm.ServicosAtendimento.Clear();
-        foreach (Servico s in LstServicos.SelectedItems)
+        foreach (var s in _vm.ServicosDisponiveis.Where(x => _servicosMarcados.Contains(x.Id)))
         {
             _vm.ServicosAtendimento.Add(new ServicoAtendimentoItem
             {

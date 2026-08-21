@@ -1,4 +1,7 @@
 <!DOCTYPE html>
+@using MegaHairPro.Web.Models
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
 <html lang="pt-br">
 <head>
     <meta charset="utf-8" />
@@ -263,13 +266,21 @@
 </head>
 <body>
 
-@{
-    bool isAdmin = User.IsInRole("Admin");
-    string ctrl  = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
-    string email = User.Identity?.Name ?? "";
-    string ini   = email.Length > 0 ? email[0].ToString().ToUpper() : "U";
-    string A(string c) => ctrl == c ? "active" : "";
-}
+    @{
+        bool isAdmin = User.IsInRole("Admin");
+        string ctrl = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+
+        var usuarioAtual = await UserManager.GetUserAsync(User);
+
+        string email = usuarioAtual?.Email ?? User.Identity?.Name ?? "";
+        string nome = usuarioAtual?.Nome ?? "Usuário";
+
+        string ini = !string.IsNullOrWhiteSpace(nome)
+            ? nome.Trim()[0].ToString().ToUpper()
+            : "U";
+
+        string A(string c) => ctrl == c ? "active" : "";
+    }
 
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
@@ -283,7 +294,9 @@
     </div>
     <div class="topbar-right">
         <span class="badge @(isAdmin ? "bg-danger" : "bg-primary") d-none d-sm-inline">
-            @(isAdmin ? "Admin" : "Usuário")
+                @(nome) (@(isAdmin ? "Admin" : "Usuário"))
+
+
         </span>
         <a href="/Account/MinhaConta" class="btn btn-sm btn-outline-secondary">
             <i class="bi bi-person-circle"></i><span class="topbar-label"> Minha Conta</span>

@@ -10,7 +10,7 @@ namespace MegaHairPro.Web.Models
         [Required]
         public string Nome { get; set; }
 
-        public string Especialidade { get; set; }
+        public string? Especialidade { get; set; }
 
         public virtual List<Agendamento> Agendamentos { get; set; }
     }

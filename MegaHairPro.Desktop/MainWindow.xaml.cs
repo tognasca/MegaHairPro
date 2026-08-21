@@ -110,6 +110,18 @@ public partial class MainWindow : Window
     private void BtnAdicionarServico_Click(object sender, RoutedEventArgs e)
         => _vm.AdicionarServico();
 
+    private void BtnCatalogoServico_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is MegaHairPro.Web.Models.Servico servico)
+            _vm.AdicionarServico(servico);
+    }
+
+    private void Pagamento_Checked(object sender, RoutedEventArgs e)
+    {
+        if (sender is RadioButton { Tag: string forma })
+            _vm.FormaPagamento = forma;
+    }
+
     private void BtnMarcarTodos_Click(object sender, RoutedEventArgs e)
         => _vm.MarcarTodosRealizados();
 

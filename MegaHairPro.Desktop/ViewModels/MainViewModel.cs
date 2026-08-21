@@ -82,6 +82,9 @@ public class MainViewModel : INotifyPropertyChanged
 
     public string[] FormasPagamento { get; } = ["PIX", "Dinheiro", "Cartão Débito", "Cartão Crédito"];
 
+    public IEnumerable<Servico> ServicosParaEscolher =>
+        ServicosDisponiveis.Where(s => ServicosAtendimento.All(a => a.ServicoId != s.Id));
+
     private string _busca = "";
     public string Busca
     {
@@ -272,6 +275,7 @@ public class MainViewModel : INotifyPropertyChanged
     public MainViewModel(AtendimentoService atendimento)
     {
         _atendimento = atendimento;
+        ServicosAtendimento.CollectionChanged += (_, _) => OnPropertyChanged(nameof(ServicosParaEscolher));
     }
 
     public void TickRelogio()
@@ -316,6 +320,7 @@ public class MainViewModel : INotifyPropertyChanged
             foreach (var s in servs)
                 ServicosDisponiveis.Add(s);
 
+            OnPropertyChanged(nameof(ServicosParaEscolher));
             await AtualizarAgendaAsync();
         }
         finally
@@ -464,17 +469,18 @@ public class MainViewModel : INotifyPropertyChanged
         await AtualizarAgendaAsync();
     }
 
-    public void AdicionarServico()
+    public void AdicionarServico(Servico? servico = null)
     {
-        if (ServicoParaAdicionar == null) return;
-        if (ServicosAtendimento.Any(s => s.ServicoId == ServicoParaAdicionar.Id)) return;
+        var origem = servico ?? ServicoParaAdicionar;
+        if (origem == null) return;
+        if (ServicosAtendimento.Any(s => s.ServicoId == origem.Id)) return;
 
         ServicosAtendimento.Add(new ServicoAtendimentoItem
         {
-            ServicoId = ServicoParaAdicionar.Id,
-            Nome = ServicoParaAdicionar.Nome,
-            Categoria = ServicoParaAdicionar.Categoria.ToString(),
-            Valor = ServicoParaAdicionar.ValorFinal,
+            ServicoId = origem.Id,
+            Nome = origem.Nome,
+            Categoria = origem.Categoria.ToString(),
+            Valor = origem.ValorFinal,
             ProfissionalId = Profissionais.FirstOrDefault()?.Id,
             Realizado = false
         });
@@ -484,6 +490,8 @@ public class MainViewModel : INotifyPropertyChanged
             ValorRestante = ValorTotal;
         else
             ValorRestante = Math.Max(0, ValorTotal - ValorSinal);
+
+        ServicoParaAdicionar = null;
     }
 
     public void RemoverServico(ServicoAtendimentoItem item)

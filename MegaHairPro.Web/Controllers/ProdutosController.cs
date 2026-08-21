@@ -1,6 +1,7 @@
 using MegaHairPro.Web.Data;
 using MegaHairPro.Web.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 
 namespace MegaHairPro.Web.Controllers
@@ -19,6 +20,7 @@ namespace MegaHairPro.Web.Controllers
         public IActionResult Index()
         {
             var produtos = _context.Produtos
+                .AsNoTracking()
                 .OrderByDescending(p => p.Id)
                 .ToList();
 
@@ -135,7 +137,7 @@ namespace MegaHairPro.Web.Controllers
             };
 
             var ultimoCodigo = _context.Produtos
-                .Where(p => p.TipoProduto == tipo && p.Codigo.StartsWith(prefixo + "-"))
+                .Where(p => p.TipoProduto == tipo && p.Codigo != null && p.Codigo.StartsWith(prefixo + "-"))
                 .OrderByDescending(p => p.Codigo)
                 .Select(p => p.Codigo)
                 .FirstOrDefault();

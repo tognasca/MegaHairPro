@@ -1,49 +1,157 @@
 <Window x:Class="MegaHairPro.Desktop.WalkInWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Walk-in — chegou sem horário" Height="620" Width="520"
-        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        Title="Walk-in — chegou sem horário"
+        Height="760" Width="780" MinHeight="600" MinWidth="640"
+        WindowStartupLocation="CenterOwner" ResizeMode="CanResizeWithGrip"
         Background="{StaticResource Cream}"
         FontFamily="{StaticResource AppFont}"
-        Foreground="{StaticResource Ink}">
-    <Border Margin="18" Style="{StaticResource Card}" Padding="22">
-        <DockPanel>
-            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
-                <Button Content="Cancelar" Style="{StaticResource GhostBtn}" Margin="0,0,8,0" Click="BtnCancelar_Click"/>
-                <Button Content="Iniciar atendimento" Style="{StaticResource PrimaryBtn}" Click="BtnIniciar_Click"/>
-            </StackPanel>
+        Foreground="{StaticResource Ink}"
+        TextOptions.TextFormattingMode="Display"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True">
+    <DockPanel Margin="18">
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+            <Button Content="Cancelar" Style="{StaticResource GhostBtn}" Margin="0,0,8,0"
+                    Click="BtnCancelar_Click" AutomationProperties.Name="Cancelar walk-in"/>
+            <Button Content="Iniciar atendimento" Style="{StaticResource PrimaryBtn}"
+                    Click="BtnIniciar_Click" AutomationProperties.Name="Iniciar atendimento"/>
+        </StackPanel>
 
-            <StackPanel>
-                <TextBlock Text="Walk-in" FontSize="20" FontWeight="Bold"/>
-                <TextBlock Text="Cliente chegou agora. Encontre o cadastro ou crie um novo e escolha os serviços."
-                           Foreground="{StaticResource Muted}" Margin="0,4,0,16" TextWrapping="Wrap"/>
+        <Border Style="{StaticResource Card}" Padding="22">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel>
+                    <TextBlock Text="Walk-in" FontSize="20" FontWeight="Bold"/>
+                    <TextBlock Text="Toque na cliente, escolha os serviços e inicie. Sem lista longa, sem Ctrl."
+                               Foreground="{StaticResource Muted}" Margin="0,4,0,16" TextWrapping="Wrap"/>
 
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="8"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBox x:Name="TxtFiltroCliente"/>
-                    <Button Grid.Column="2" Content="Buscar" Style="{StaticResource OutlineBtn}" Click="BtnBuscarCliente_Click"/>
-                </Grid>
-                <TextBlock Text="Nome, telefone ou WhatsApp" FontSize="10" Foreground="{StaticResource Muted}" Margin="2,4,0,0"/>
+                    <TextBlock Text="Cliente" FontWeight="SemiBold" FontSize="14"/>
+                    <Grid Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="TxtFiltroCliente"
+                                 AutomationProperties.Name="Buscar cliente por nome, telefone ou WhatsApp"
+                                 TextChanged="TxtFiltroCliente_TextChanged"
+                                 KeyDown="TxtFiltroCliente_KeyDown"/>
+                        <Button Grid.Column="2" Content="+ Nova" Style="{StaticResource OutlineBtn}"
+                                Click="BtnNovaCliente_Click"
+                                AutomationProperties.Name="Cadastrar nova cliente"/>
+                    </Grid>
+                    <TextBlock Text="Nome, telefone ou WhatsApp — a lista atualiza sozinha"
+                               FontSize="11" Foreground="{StaticResource Muted}" Margin="2,4,0,8"/>
 
-                <ComboBox x:Name="CboCliente" DisplayMemberPath="Nome" Margin="0,8,0,0"
-                          SelectionChanged="CboCliente_SelectionChanged"/>
+                    <TextBlock x:Name="TxtStatusClientes" FontSize="12" Foreground="{StaticResource Muted}"
+                               Margin="0,0,0,6" Text="Carregando clientes…"/>
 
-                <Button Content="+ Nova cliente" Style="{StaticResource GhostBtn}" HorizontalAlignment="Left"
-                        Margin="0,6,0,0" Click="BtnNovaCliente_Click"/>
+                    <ListBox x:Name="LstClientes" Height="168" BorderBrush="{StaticResource Line}"
+                             BorderThickness="1" Background="Transparent"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             SelectionChanged="LstClientes_SelectionChanged"
+                             AutomationProperties.Name="Lista de clientes">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Padding" Value="0"/>
+                                <Setter Property="Margin" Value="4"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <Border x:Name="bd" Background="{StaticResource Surface}"
+                                                    BorderBrush="{StaticResource Line}" BorderThickness="1"
+                                                    CornerRadius="12" Padding="10" MinHeight="48">
+                                                <ContentPresenter/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource WineLight}"/>
+                                                    <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Wine}"/>
+                                                    <Setter TargetName="bd" Property="BorderThickness" Value="2"/>
+                                                </Trigger>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="bd" Property="Background" Value="#FBF3F5"/>
+                                                </Trigger>
+                                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                                    <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Gold}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="36" Height="36" CornerRadius="18" Background="{StaticResource Wine}">
+                                        <TextBlock Text="{Binding Nome, Converter={StaticResource FirstChar}}" Foreground="White" FontWeight="Bold"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock FontSize="11" Foreground="{StaticResource Muted}">
+                                            <Run Text="{Binding Telefone, Mode=OneWay}"/>
+                                            <Run Text="  ·  "/>
+                                            <Run Text="{Binding WhatsApp, Mode=OneWay}"/>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
 
-                <TextBlock Text="Profissional principal" FontWeight="SemiBold" Margin="0,16,0,6"/>
-                <ComboBox x:Name="CboProfissional" DisplayMemberPath="Nome"/>
+                    <TextBlock Text="Profissional principal" FontWeight="SemiBold" Margin="0,16,0,6"/>
+                    <ComboBox x:Name="CboProfissional" DisplayMemberPath="Nome"
+                              AutomationProperties.Name="Profissional principal"/>
 
-                <TextBlock Text="Serviços" FontWeight="SemiBold" Margin="0,16,0,6"/>
-                <TextBlock Text="Segure Ctrl para marcar unha + maquiagem + cabelo juntos."
-                           FontSize="11" Foreground="{StaticResource Muted}" Margin="0,0,0,6"/>
-                <ListBox x:Name="LstServicos" DisplayMemberPath="Nome" SelectionMode="Multiple"
-                         Height="180" BorderBrush="{StaticResource Line}" BorderThickness="1"/>
-            </StackPanel>
-        </DockPanel>
-    </Border>
+                    <Grid Margin="0,16,0,6">
+                        <TextBlock Text="Serviços" FontWeight="SemiBold" FontSize="14"/>
+                        <TextBlock x:Name="TxtResumoServicos" HorizontalAlignment="Right"
+                                   Foreground="{StaticResource Wine}" FontWeight="SemiBold"/>
+                    </Grid>
+                    <TextBlock Text="Toque no cartão para marcar. Pode escolher vários — unha, make e cabelo juntos."
+                               FontSize="11" Foreground="{StaticResource Muted}" Margin="0,0,0,8" TextWrapping="Wrap"/>
+
+                    <ItemsControl x:Name="LstServicos">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <ToggleButton Style="{StaticResource ChoiceTileToggle}"
+                                              Click="ServicoTile_Click" Tag="{Binding}"
+                                              AutomationProperties.Name="{Binding Nome}">
+                                    <StackPanel Width="168">
+                                        <Grid>
+                                            <Border Width="36" Height="36" CornerRadius="10" HorizontalAlignment="Left"
+                                                    Background="{Binding Categoria, Converter={StaticResource CatFundo}}">
+                                                <TextBlock Text="{Binding Categoria, Converter={StaticResource CatIcone}}"
+                                                           FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                       FontWeight="Bold" Foreground="{StaticResource Wine}"
+                                                       Text="{Binding ValorFinal, StringFormat=R$ {0:N0}}"/>
+                                        </Grid>
+                                        <TextBlock Text="{Binding Nome}" FontWeight="SemiBold" Margin="0,8,0,2"
+                                                   TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding Descricao}" FontSize="11" Foreground="{StaticResource Muted}"
+                                                   TextWrapping="Wrap" MaxHeight="36" TextTrimming="CharacterEllipsis"/>
+                                    </StackPanel>
+                                </ToggleButton>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+    </DockPanel>
 </Window>
