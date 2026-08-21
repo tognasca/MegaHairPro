@@ -15,8 +15,8 @@ using System.Threading.Tasks;
 namespace MegaHairPro.Web.Controllers;
 
 /// <summary>
-/// Portal de agendamento online (migrado do bookingController.js do Node).
-/// Rotas compatíveis com o front em wwwroot/booking.
+/// Portal do cliente no smartphone (PWA).
+/// Páginas em /app; APIs em /api e /auth. O sistema da equipe fica em /Account/Login.
 /// </summary>
 [AllowAnonymous]
 [IgnoreAntiforgeryToken]
@@ -46,29 +46,41 @@ public class BookingPortalController : Controller
 
     private IActionResult ServirPagina(string arquivo)
     {
-        var path = Path.Combine(_env.WebRootPath, arquivo);
-        if (!System.IO.File.Exists(path))
-            return NotFound("Portal de agendamento não configurado. Copie os arquivos PWA para wwwroot.");
+        var webRoot = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
+        var candidatos = new[]
+        {
+            Path.Combine(webRoot, "booking", arquivo),
+            Path.Combine(webRoot, arquivo)
+        };
+
+        var path = candidatos.FirstOrDefault(System.IO.File.Exists);
+        if (path == null)
+            return NotFound("Portal do cliente (PWA) não configurado. Copie os arquivos para wwwroot/booking.");
+
         return PhysicalFile(path, "text/html");
     }
 
-    // ─── Páginas PWA ─────────────────────────────────────────────────────────
-    [HttpGet("/")]
+    // Páginas do PWA (cliente no smartphone). A raiz "/" é o login da equipe (MVC).
+    [HttpGet("/app")]
+    [HttpGet("/app/index.html")]
     public IActionResult PortalHome() => ServirPagina("index.html");
 
     [HttpGet("/agendar")]
+    [HttpGet("/app/agendar")]
     public IActionResult PortalAgendar() => ServirPagina("agendar.html");
 
     [HttpGet("/pagamento/{id:int}")]
+    [HttpGet("/app/pagamento/{id:int}")]
     public IActionResult PortalPagamento(int id) => ServirPagina("pagamento.html");
 
     [HttpGet("/meus-agendamentos")]
+    [HttpGet("/app/meus-agendamentos")]
     public IActionResult PortalMeusAgendamentos() => ServirPagina("meus-agendamentos.html");
 
-    [HttpGet("/admin")]
+    [HttpGet("/app/admin")]
     public IActionResult PortalAdmin() => ServirPagina("admin.html");
 
-    [HttpGet("/admin/agenda")]
+    [HttpGet("/app/admin/agenda")]
     public IActionResult PortalAdminAgenda() => ServirPagina("admin-agenda.html");
 
     private void SetClienteSessao(int id, string nome)
@@ -100,7 +112,7 @@ public class BookingPortalController : Controller
     public IActionResult Logout()
     {
         HttpContext.Session.Clear();
-        return Redirect("/");
+        return Redirect("/app");
     }
 
     [HttpGet("/auth/session")]

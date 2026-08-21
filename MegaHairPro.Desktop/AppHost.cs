@@ -20,7 +20,9 @@ public static class AppHost
 
         services.AddSingleton<IConfiguration>(config);
         services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlServer(config.GetConnectionString("DefaultConnection")));
+            options.UseSqlServer(
+                config.GetConnectionString("DefaultConnection"),
+                sql => sql.MigrationsAssembly("MegaHairPro.Web")));
         services.AddScoped<AtendimentoService>();
 
         return services.BuildServiceProvider();

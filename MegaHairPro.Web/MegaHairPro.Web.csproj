@@ -17,6 +17,9 @@
     <PackageReference Include="WkHtmlToPdf" Version="1.0.2" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MegaHairPro.Core\MegaHairPro.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <Folder Include="Migrations\" />
     <Folder Include="Services\Implementations\" />
     <Folder Include="Views\Profissional\" />

@@ -9,6 +9,7 @@ using MegaHairPro.Web.Services.Implementations;
 using MegaHairPro.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,24 +21,27 @@ using Microsoft.Extensions.Hosting;
 using System;
 using System.Globalization;
 using System.IO;
+using System.Threading.Tasks;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
-    var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+
+    var policy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
     options.Filters.Add(new AuthorizeFilter(policy));
 });
 
-// ✅ BANCO DE DADOS
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sql => sql.MigrationsAssembly("MegaHairPro.Web")
     )
 );
 
-// ✅ SERVICES
 builder.Services.AddScoped<ISimulacaoService, SimulacaoService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IVendaService, VendaService>();
@@ -45,6 +49,7 @@ builder.Services.AddScoped<ICustoMedioService, CustoMedioService>();
 builder.Services.AddScoped<IPdfService, PdfService>();
 builder.Services.AddScoped<IViewRenderService, ViewRenderService>();
 builder.Services.AddScoped<INotificationService, EmailNotificationService>();
+
 builder.Services.AddScoped<AgendamentoService>();
 builder.Services.AddScoped<AtendimentoService>();
 builder.Services.AddScoped<BookingConfigService>();
@@ -52,6 +57,7 @@ builder.Services.AddScoped<PixBookingService>();
 builder.Services.AddScoped<BookingPortalService>();
 
 builder.Services.AddDistributedMemoryCache();
+
 builder.Services.AddSession(options =>
 {
     options.Cookie.Name = ".MegaHair.Booking";
@@ -60,10 +66,15 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-builder.Services.AddSingleton(typeof(IConverter),
-    new SynchronizedConverter(new PdfTools()));
+builder.Services.AddSingleton<IConverter>(
+    new SynchronizedConverter(new PdfTools())
+);
 
-var wkhtmlPath = Path.Combine(Directory.GetCurrentDirectory(), "libwkhtmltox.dll");
+var wkhtmlPath = Path.Combine(
+    Directory.GetCurrentDirectory(),
+    "libwkhtmltox.dll"
+);
+
 if (File.Exists(wkhtmlPath))
 {
     var context = new CustomAssemblyLoadContext();
@@ -71,62 +82,84 @@ if (File.Exists(wkhtmlPath))
 }
 else
 {
-    Console.WriteLine("Aviso: libwkhtmltox.dll não encontrada — geração de PDF desabilitada.");
+    Console.WriteLine(
+        "Aviso: libwkhtmltox.dll não encontrada — geração de PDF desabilitada."
+    );
 }
 
-// ✅ IDENTITY COMPLETO
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
-{
-    options.Password.RequireDigit = true;
-    options.Password.RequiredLength = 6;
-    options.Password.RequireNonAlphanumeric = false;
+builder.Services
+    .AddIdentity<ApplicationUser, IdentityRole>(options =>
+    {
+        options.Password.RequireDigit = true;
+        options.Password.RequiredLength = 6;
+        options.Password.RequireNonAlphanumeric = false;
 
-    options.User.RequireUniqueEmail = true;
-})
-.AddEntityFrameworkStores<AppDbContext>()
-.AddDefaultTokenProviders();
+        options.User.RequireUniqueEmail = true;
+    })
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();
 
-// ✅ LOGIN PATH
 builder.Services.ConfigureApplicationCookie(options =>
 {
+    options.Cookie.Name = ".MegaHair.Identity";
     options.LoginPath = "/Account/Login";
     options.AccessDeniedPath = "/Account/AcessoNegado";
-});
+    options.ExpireTimeSpan = TimeSpan.FromDays(7);
+    options.SlidingExpiration = true;
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
 
+    options.Events.OnRedirectToLogin = context =>
+    {
+        if (EhPedidoApi(context.Request.Path))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        }
+
+        context.Response.Redirect(context.RedirectUri);
+        return Task.CompletedTask;
+    };
+});
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("React",
-        policy =>
-        {
-            policy
-                .AllowAnyOrigin()
-                .AllowAnyHeader()
-                .AllowAnyMethod();
-        });
+    options.AddPolicy("React", policy =>
+    {
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
 });
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
-    app.UseDeveloperExceptionPage();
-else
-    app.UseExceptionHandler("/Home/Error");
-
-// Cultura pt-BR para exibição e binding
-var invariantCulture = new CultureInfo("pt-BR");
-app.UseRequestLocalization(new RequestLocalizationOptions
 {
-    DefaultRequestCulture = new RequestCulture(invariantCulture),
-    SupportedCultures = new[] { invariantCulture },
-    SupportedUICultures = new[] { invariantCulture }
-});
+    app.UseDeveloperExceptionPage();
+}
+else
+{
+    app.UseExceptionHandler("/Home/Error");
+}
+
+var culturaPtBr = new CultureInfo("pt-BR");
+
+app.UseRequestLocalization(
+    new RequestLocalizationOptions
+    {
+        DefaultRequestCulture = new RequestCulture(culturaPtBr),
+        SupportedCultures = new[] { culturaPtBr },
+        SupportedUICultures = new[] { culturaPtBr }
+    }
+);
 
 app.UseStaticFiles();
 app.UseRouting();
-app.UseSession();
-
-app.UseAuthentication();
 app.UseCors("React");
+app.UseSession();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
@@ -135,7 +168,6 @@ app.MapControllerRoute(
     pattern: "{controller=Account}/{action=Login}/{id?}"
 );
 
-// SEED COM TRY-CATCH
 using (var scope = app.Services.CreateScope())
 {
     try
@@ -149,3 +181,6 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+static bool EhPedidoApi(PathString path) =>
+    path.StartsWithSegments("/api") || path.StartsWithSegments("/auth");
