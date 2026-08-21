@@ -2,8 +2,8 @@ using MegaHairPro.Web.Models;
 using MegaHairPro.Web.Services;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.Runtime.CompilerServices;
-using System.Windows;
 
 namespace MegaHairPro.Desktop.ViewModels;
 
@@ -46,24 +46,41 @@ public class ServicoAtendimentoItem : INotifyPropertyChanged
 public class AgendaItem
 {
     public int AgendamentoId { get; set; }
+    public int ProfissionalId { get; set; }
+    public DateTime DataHora { get; set; }
     public string ClienteNome { get; set; } = "";
+    public string Inicial { get; set; } = "?";
     public string Horario { get; set; } = "";
+    public string Periodo { get; set; } = "";
     public string Status { get; set; } = "";
+    public string StatusLabel { get; set; } = "";
     public string ServicosResumo { get; set; } = "";
-    public string CorStatus { get; set; } = "#f59e0b";
+    public string ProfissionalNome { get; set; } = "";
+    public string CorStatus { get; set; } = "#C9A227";
+    public string CorFundo { get; set; } = "#FFF8F0";
+    public bool IsAtrasado { get; set; }
+    public string ValorResumo { get; set; } = "";
+}
+
+public class FiltroProfissionalItem
+{
+    public int Id { get; set; }
+    public string Nome { get; set; } = "";
 }
 
 public class MainViewModel : INotifyPropertyChanged
 {
     private readonly AtendimentoService _atendimento;
+    private static readonly CultureInfo PtBr = new("pt-BR");
 
     public ObservableCollection<AgendaItem> AgendaHoje { get; } = [];
     public ObservableCollection<ServicoAtendimentoItem> ServicosAtendimento { get; } = [];
     public ObservableCollection<Cliente> Clientes { get; } = [];
     public ObservableCollection<Servico> ServicosDisponiveis { get; } = [];
     public ObservableCollection<Profissional> Profissionais { get; } = [];
+    public ObservableCollection<FiltroProfissionalItem> FiltrosProfissional { get; } = [];
 
-    public string[] FormasPagamento { get; } = ["Dinheiro", "PIX", "Cartão Débito", "Cartão Crédito"];
+    public string[] FormasPagamento { get; } = ["PIX", "Dinheiro", "Cartão Débito", "Cartão Crédito"];
 
     private string _busca = "";
     public string Busca
@@ -72,18 +89,65 @@ public class MainViewModel : INotifyPropertyChanged
         set { _busca = value; OnPropertyChanged(); }
     }
 
+    private DateTime _dataAgenda = DateTime.Today;
+    public DateTime DataAgenda
+    {
+        get => _dataAgenda;
+        set
+        {
+            _dataAgenda = value.Date;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(DataAgendaTexto));
+            OnPropertyChanged(nameof(EhHoje));
+        }
+    }
+
+    public string DataAgendaTexto => DataAgenda.ToString("dddd, dd 'de' MMMM", PtBr);
+    public bool EhHoje => DataAgenda == DateTime.Today;
+
+    private int _filtroProfissionalId;
+    public int FiltroProfissionalId
+    {
+        get => _filtroProfissionalId;
+        set { _filtroProfissionalId = value; OnPropertyChanged(); }
+    }
+
+    private string _relogio = DateTime.Now.ToString("HH:mm");
+    public string Relogio
+    {
+        get => _relogio;
+        set { _relogio = value; OnPropertyChanged(); }
+    }
+
     private string _clienteNome = "";
     public string ClienteNome
     {
         get => _clienteNome;
-        set { _clienteNome = value; OnPropertyChanged(); }
+        set { _clienteNome = value; OnPropertyChanged(); OnPropertyChanged(nameof(InicialCliente)); }
     }
+
+    public string InicialCliente =>
+        string.IsNullOrWhiteSpace(ClienteNome) ? "?" : ClienteNome.Trim()[0].ToString().ToUpperInvariant();
 
     private string _clienteTelefone = "";
     public string ClienteTelefone
     {
         get => _clienteTelefone;
         set { _clienteTelefone = value; OnPropertyChanged(); }
+    }
+
+    private string _clienteObservacoes = "";
+    public string ClienteObservacoes
+    {
+        get => _clienteObservacoes;
+        set { _clienteObservacoes = value; OnPropertyChanged(); }
+    }
+
+    private string _profissionalPrincipal = "";
+    public string ProfissionalPrincipal
+    {
+        get => _profissionalPrincipal;
+        set { _profissionalPrincipal = value; OnPropertyChanged(); }
     }
 
     private string _horario = "";
@@ -97,8 +161,33 @@ public class MainViewModel : INotifyPropertyChanged
     public string Status
     {
         get => _status;
-        set { _status = value; OnPropertyChanged(); }
+        set
+        {
+            _status = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(PodeReceberSinal));
+            OnPropertyChanged(nameof(PodeFechar));
+            OnPropertyChanged(nameof(PodeCheckIn));
+            OnPropertyChanged(nameof(PodeCancelar));
+            OnPropertyChanged(nameof(StatusCor));
+        }
     }
+
+    public string StatusCor => Status switch
+    {
+        "Confirmado" => "#15803D",
+        "Concluido" => "#1D4ED8",
+        _ => "#C9A227"
+    };
+
+    private string _alertaAnamnese = "";
+    public string AlertaAnamnese
+    {
+        get => _alertaAnamnese;
+        set { _alertaAnamnese = value; OnPropertyChanged(); OnPropertyChanged(nameof(TemAlertaAnamnese)); }
+    }
+
+    public bool TemAlertaAnamnese => !string.IsNullOrWhiteSpace(AlertaAnamnese);
 
     private decimal _valorTotal;
     public decimal ValorTotal
@@ -142,7 +231,6 @@ public class MainViewModel : INotifyPropertyChanged
         set { _agendamentoId = value; OnPropertyChanged(); OnPropertyChanged(nameof(TemAtendimento)); }
     }
 
-    private int? _clienteId;
     public int? ClienteId { get; set; }
 
     private string _formaPagamento = "PIX";
@@ -159,68 +247,154 @@ public class MainViewModel : INotifyPropertyChanged
         set { _servicoParaAdicionar = value; OnPropertyChanged(); }
     }
 
-    private Profissional? _profissionalWalkIn;
-    public Profissional? ProfissionalWalkIn
-    {
-        get => _profissionalWalkIn;
-        set { _profissionalWalkIn = value; OnPropertyChanged(); }
-    }
+    public Profissional? ProfissionalWalkIn { get; set; }
+    public Cliente? ClienteWalkIn { get; set; }
 
-    private Cliente? _clienteWalkIn;
-    public Cliente? ClienteWalkIn
-    {
-        get => _clienteWalkIn;
-        set { _clienteWalkIn = value; OnPropertyChanged(); }
-    }
+    private int _kpiTotal;
+    public int KpiTotal { get => _kpiTotal; set { _kpiTotal = value; OnPropertyChanged(); } }
+    private int _kpiAguardando;
+    public int KpiAguardando { get => _kpiAguardando; set { _kpiAguardando = value; OnPropertyChanged(); } }
+    private int _kpiConfirmados;
+    public int KpiConfirmados { get => _kpiConfirmados; set { _kpiConfirmados = value; OnPropertyChanged(); } }
+    private int _kpiConcluidos;
+    public int KpiConcluidos { get => _kpiConcluidos; set { _kpiConcluidos = value; OnPropertyChanged(); } }
+    private decimal _kpiFaturado;
+    public decimal KpiFaturado { get => _kpiFaturado; set { _kpiFaturado = value; OnPropertyChanged(); } }
 
     public bool TemAtendimento => AgendamentoId.HasValue;
     public bool PodeReceberSinal => TemAtendimento && !SinalPago && ValorSinal > 0 && Status != "Concluido";
     public bool PodeFechar => TemAtendimento && !RestantePago && Status != "Concluido";
-    public string SinalTexto => SinalPago ? $"✓ Sinal R$ {ValorSinal:N2} — Pago" : $"○ Sinal R$ {ValorSinal:N2} — Pendente";
-    public string RestanteTexto => RestantePago ? $"✓ Restante R$ {ValorRestante:N2} — Pago" : $"○ Restante R$ {ValorRestante:N2} — Pendente";
+    public bool PodeCheckIn => TemAtendimento && Status == "Agendado";
+    public bool PodeCancelar => TemAtendimento && Status != "Concluido";
+    public string SinalTexto => SinalPago ? $"Sinal R$ {ValorSinal:N2} · pago" : $"Sinal R$ {ValorSinal:N2} · pendente";
+    public string RestanteTexto => RestantePago ? $"Restante R$ {ValorRestante:N2} · pago" : $"Restante R$ {ValorRestante:N2} · pendente";
 
     public MainViewModel(AtendimentoService atendimento)
     {
         _atendimento = atendimento;
     }
 
+    public void TickRelogio()
+        => Relogio = DateTime.Now.ToString("HH:mm");
+
+    private readonly SemaphoreSlim _carregamentoLock = new(1, 1);
+
     public async Task CarregarInicialAsync()
     {
-        var profs = await _atendimento.ListarProfissionaisAsync();
-        Profissionais.Clear();
-        foreach (var p in profs) Profissionais.Add(p);
+        await _carregamentoLock.WaitAsync();
 
-        var servs = await _atendimento.ListarServicosAsync();
-        ServicosDisponiveis.Clear();
-        foreach (var s in servs) ServicosDisponiveis.Add(s);
+        try
+        {
+            var profs = await _atendimento.ListarProfissionaisAsync();
 
-        await AtualizarAgendaAsync();
+            Profissionais.Clear();
+            FiltrosProfissional.Clear();
+
+            FiltrosProfissional.Add(
+                new FiltroProfissionalItem
+                {
+                    Id = 0,
+                    Nome = "Todas as profissionais"
+                });
+
+            foreach (var p in profs)
+            {
+                Profissionais.Add(p);
+
+                FiltrosProfissional.Add(
+                    new FiltroProfissionalItem
+                    {
+                        Id = p.Id,
+                        Nome = p.Nome
+                    });
+            }
+
+            var servs = await _atendimento.ListarServicosAsync();
+
+            ServicosDisponiveis.Clear();
+
+            foreach (var s in servs)
+                ServicosDisponiveis.Add(s);
+
+            await AtualizarAgendaAsync();
+        }
+        finally
+        {
+            _carregamentoLock.Release();
+        }
     }
 
     public async Task AtualizarAgendaAsync()
     {
         var lista = string.IsNullOrWhiteSpace(Busca)
-            ? await _atendimento.ListarAgendaHojeAsync()
+            ? await _atendimento.ListarAgendaPorDataAsync(DataAgenda)
             : await _atendimento.BuscarClienteAsync(Busca);
+
+        if (FiltroProfissionalId > 0)
+            lista = lista.Where(a => a.ProfissionalId == FiltroProfissionalId).ToList();
+
+        var agora = DateTime.Now;
+        var proximoId = lista
+            .Where(a => a.Status == StatusAgendamento.Agendado && a.DataHora >= agora)
+            .OrderBy(a => a.DataHora)
+            .Select(a => (int?)a.AgendamentoId)
+            .FirstOrDefault();
 
         AgendaHoje.Clear();
         foreach (var a in lista)
         {
+            var atrasado = a.Status == StatusAgendamento.Agendado && a.DataHora < agora && a.DataHora.Date == DateTime.Today;
+            var (cor, fundo, label) = a.Status switch
+            {
+                StatusAgendamento.Confirmado => ("#15803D", "#ECFDF3", "Na cadeira"),
+                StatusAgendamento.Concluido => ("#1D4ED8", "#EFF6FF", "Concluído"),
+                _ when atrasado => ("#B91C1C", "#FEF2F2", "Atrasada"),
+                _ => ("#C9A227", "#FFFBEB", "Aguardando")
+            };
+
             AgendaHoje.Add(new AgendaItem
             {
                 AgendamentoId = a.AgendamentoId,
+                ProfissionalId = a.ProfissionalId,
+                DataHora = a.DataHora,
                 ClienteNome = a.ClienteNome,
+                Inicial = string.IsNullOrWhiteSpace(a.ClienteNome) ? "?" : a.ClienteNome.Trim()[0].ToString().ToUpperInvariant(),
                 Horario = a.WalkIn ? "Walk-in" : a.DataHora.ToString("HH:mm"),
+                Periodo = a.WalkIn ? "sem horário" : $"{a.DataHora:HH:mm} – {a.DataFim:HH:mm}",
                 Status = a.Status.ToString(),
-                ServicosResumo = string.Join(", ", a.Servicos.Select(s => s.Nome)),
-                CorStatus = a.Status switch
-                {
-                    StatusAgendamento.Confirmado => "#16a34a",
-                    StatusAgendamento.Concluido => "#2563eb",
-                    _ => "#f59e0b"
-                }
+                StatusLabel = a.AgendamentoId == proximoId ? "Próxima" : label,
+                ServicosResumo = string.Join(" · ", a.Servicos.Select(s => s.Nome)),
+                ProfissionalNome = a.ProfissionalPrincipal,
+                CorStatus = cor,
+                CorFundo = fundo,
+                IsAtrasado = atrasado,
+                ValorResumo = $"R$ {a.ValorTotal:N0}"
             });
         }
+
+        if (string.IsNullOrWhiteSpace(Busca))
+        {
+            var resumo = await _atendimento.ObterResumoDiaAsync(DataAgenda);
+            KpiTotal = resumo.Total;
+            KpiAguardando = resumo.Aguardando;
+            KpiConfirmados = resumo.Confirmados;
+            KpiConcluidos = resumo.Concluidos;
+            KpiFaturado = resumo.Faturado;
+        }
+    }
+
+    public async Task IrParaHojeAsync()
+    {
+        DataAgenda = DateTime.Today;
+        Busca = "";
+        await AtualizarAgendaAsync();
+    }
+
+    public async Task MudarDiaAsync(int delta)
+    {
+        DataAgenda = DataAgenda.AddDays(delta);
+        Busca = "";
+        await AtualizarAgendaAsync();
     }
 
     public async Task SelecionarAtendimentoAsync(int agendamentoId)
@@ -232,7 +406,11 @@ public class MainViewModel : INotifyPropertyChanged
         ClienteId = at.ClienteId;
         ClienteNome = at.ClienteNome;
         ClienteTelefone = at.ClienteTelefone ?? "";
-        Horario = at.WalkIn ? $"Walk-in — {at.DataHora:dd/MM HH:mm}" : $"{at.DataHora:dd/MM/yyyy HH:mm} — {at.DataFim:HH:mm}";
+        ClienteObservacoes = at.ClienteObservacoes ?? "";
+        ProfissionalPrincipal = at.ProfissionalPrincipal;
+        Horario = at.WalkIn
+            ? $"Walk-in · {at.DataHora:dd/MM HH:mm}"
+            : $"{at.DataHora:dddd, dd/MM · HH:mm} – {at.DataFim:HH:mm}";
         Status = at.Status.ToString();
         ValorTotal = at.ValorTotal;
         ValorSinal = at.ValorSinal;
@@ -254,8 +432,24 @@ public class MainViewModel : INotifyPropertyChanged
             });
         }
 
+        var ana = await _atendimento.ObterAnamneseAsync(at.ClienteId);
+        if (ana.TemAlerta)
+        {
+            var partes = new List<string>();
+            if (!string.IsNullOrWhiteSpace(ana.Alergias)) partes.Add($"Alergias: {ana.Alergias}");
+            if (!string.IsNullOrWhiteSpace(ana.Restricoes)) partes.Add($"Restrições: {ana.Restricoes}");
+            AlertaAnamnese = string.Join("  ·  ", partes);
+        }
+        else
+        {
+            AlertaAnamnese = ana.TemAnamnese ? "" : "Sem ficha de anamnese cadastrada.";
+            if (!ana.TemAnamnese) AlertaAnamnese = "";
+        }
+
         OnPropertyChanged(nameof(PodeReceberSinal));
         OnPropertyChanged(nameof(PodeFechar));
+        OnPropertyChanged(nameof(PodeCheckIn));
+        OnPropertyChanged(nameof(PodeCancelar));
     }
 
     public async Task SalvarServicosAsync()
@@ -287,13 +481,22 @@ public class MainViewModel : INotifyPropertyChanged
 
         ValorTotal = ServicosAtendimento.Sum(s => s.Valor);
         if (!SinalPago)
-            ValorRestante = ValorTotal - (SinalPago ? ValorSinal : 0);
+            ValorRestante = ValorTotal;
+        else
+            ValorRestante = Math.Max(0, ValorTotal - ValorSinal);
     }
 
     public void RemoverServico(ServicoAtendimentoItem item)
     {
         ServicosAtendimento.Remove(item);
         ValorTotal = ServicosAtendimento.Sum(s => s.Valor);
+        ValorRestante = SinalPago ? Math.Max(0, ValorTotal - ValorSinal) : ValorTotal;
+    }
+
+    public void MarcarTodosRealizados()
+    {
+        foreach (var s in ServicosAtendimento)
+            s.Realizado = true;
     }
 
     public async Task BuscarClientesAsync(string filtro)
@@ -302,6 +505,9 @@ public class MainViewModel : INotifyPropertyChanged
         Clientes.Clear();
         foreach (var c in lista) Clientes.Add(c);
     }
+
+    public async Task<Cliente> CriarClienteRapidoAsync(string nome, string? telefone, string? whatsapp, string? obs)
+        => await _atendimento.CriarClienteRapidoAsync(nome, telefone, whatsapp, obs);
 
     public async Task CriarWalkInAsync()
     {
@@ -316,12 +522,27 @@ public class MainViewModel : INotifyPropertyChanged
         var at = await _atendimento.CriarWalkInAsync(ClienteWalkIn.Id, ProfissionalWalkIn.Id, ids);
 
         foreach (var s in ServicosAtendimento)
-        {
             s.ProfissionalId ??= ProfissionalWalkIn.Id;
-        }
 
+        DataAgenda = DateTime.Today;
         await _atendimento.AtualizarServicosAsync(at.AgendamentoId, ServicosAtendimento.Select(x => x.ToDto()).ToList());
         await SelecionarAtendimentoAsync(at.AgendamentoId);
+        await AtualizarAgendaAsync();
+    }
+
+    public async Task MarcarChegadaAsync()
+    {
+        if (!AgendamentoId.HasValue) return;
+        await _atendimento.MarcarChegadaAsync(AgendamentoId.Value);
+        await SelecionarAtendimentoAsync(AgendamentoId.Value);
+        await AtualizarAgendaAsync();
+    }
+
+    public async Task CancelarAtendimentoAsync()
+    {
+        if (!AgendamentoId.HasValue) return;
+        await _atendimento.CancelarAsync(AgendamentoId.Value);
+        LimparAtendimento();
         await AtualizarAgendaAsync();
     }
 
@@ -338,6 +559,7 @@ public class MainViewModel : INotifyPropertyChanged
     {
         if (!AgendamentoId.HasValue) return;
 
+        MarcarTodosRealizados();
         await SalvarServicosAsync();
 
         if (pagarSeparado && SinalPago && ValorSinal > 0 && !RestantePago)
@@ -355,8 +577,11 @@ public class MainViewModel : INotifyPropertyChanged
         ClienteId = null;
         ClienteNome = "";
         ClienteTelefone = "";
+        ClienteObservacoes = "";
+        ProfissionalPrincipal = "";
         Horario = "";
         Status = "";
+        AlertaAnamnese = "";
         ValorTotal = 0;
         ValorSinal = 0;
         ValorRestante = 0;
@@ -367,6 +592,8 @@ public class MainViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(TemAtendimento));
         OnPropertyChanged(nameof(PodeReceberSinal));
         OnPropertyChanged(nameof(PodeFechar));
+        OnPropertyChanged(nameof(PodeCheckIn));
+        OnPropertyChanged(nameof(PodeCancelar));
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

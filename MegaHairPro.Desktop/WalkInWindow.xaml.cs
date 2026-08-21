@@ -31,6 +31,19 @@ public partial class WalkInWindow : Window
         _vm.ClienteWalkIn = CboCliente.SelectedItem as Cliente;
     }
 
+    private void BtnNovaCliente_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new ClienteRapidoWindow(_vm) { Owner = this };
+        if (dlg.ShowDialog() == true && dlg.ClienteCriado != null)
+        {
+            _vm.Clientes.Insert(0, dlg.ClienteCriado);
+            CboCliente.ItemsSource = null;
+            CboCliente.ItemsSource = _vm.Clientes;
+            CboCliente.SelectedItem = dlg.ClienteCriado;
+            _vm.ClienteWalkIn = dlg.ClienteCriado;
+        }
+    }
+
     private async void BtnIniciar_Click(object sender, RoutedEventArgs e)
     {
         _vm.ClienteWalkIn = CboCliente.SelectedItem as Cliente;

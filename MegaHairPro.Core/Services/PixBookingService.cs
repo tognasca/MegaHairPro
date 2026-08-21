@@ -12,7 +12,7 @@ public class PixBookingService
     public PagamentoPixResult CriarPagamento(decimal valor, string descricao, string txid)
     {
         var chave = _config["Booking:PixChave"] ?? _config["PIX_CHAVE"];
-        var nome = _config["Booking:PixNome"] ?? _config["PIX_NOME"] ?? "MegaHair Pro";
+        var nome = _config["Booking:PixNome"] ?? _config["PIX_NOME"] ?? "Tati Mega Hair";
         var cidade = _config["Booking:PixCidade"] ?? _config["PIX_CIDADE"] ?? "SAO PAULO";
 
         if (string.IsNullOrWhiteSpace(chave))

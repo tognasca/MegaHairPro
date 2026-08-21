@@ -1,0 +1,69 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        Paleta "Tati Mega Hair" — Vinho + Terracota + Dourado
+        Inspirada no logo (coroa dourada, tipografia elegante), sem uso de preto puro.
+        Importar no App.xaml:
+        <ResourceDictionary.MergedDictionaries>
+            <ResourceDictionary Source="Colors.xaml"/>
+        </ResourceDictionary.MergedDictionaries>
+    -->
+
+    <!-- ===== Base / Fundo ===== -->
+    <Color x:Key="CreamColor">#FAF3EA</Color>
+    <SolidColorBrush x:Key="Cream" Color="{StaticResource CreamColor}"/>
+
+    <Color x:Key="CreamSoftColor">#F3E9DC</Color>
+    <SolidColorBrush x:Key="CreamSoft" Color="{StaticResource CreamSoftColor}"/>
+
+    <!-- ===== Cor principal — Vinho ===== -->
+    <Color x:Key="WineColor">#6E2142</Color>
+    <SolidColorBrush x:Key="Wine" Color="{StaticResource WineColor}"/>
+
+    <Color x:Key="WineDarkColor">#521832</Color>
+    <SolidColorBrush x:Key="WineDark" Color="{StaticResource WineDarkColor}"/>
+
+    <Color x:Key="WineLightColor">#F8E8EE</Color>
+    <SolidColorBrush x:Key="WineLight" Color="{StaticResource WineLightColor}"/>
+
+    <!-- ===== Acento secundário — Terracota ===== -->
+    <Color x:Key="TerracottaColor">#B5651D</Color>
+    <SolidColorBrush x:Key="Terracotta" Color="{StaticResource TerracottaColor}"/>
+
+    <Color x:Key="TerracottaSoftColor">#F3E2D3</Color>
+    <SolidColorBrush x:Key="TerracottaSoft" Color="{StaticResource TerracottaSoftColor}"/>
+
+    <!-- ===== Dourado (detalhes, como a coroa do logo) ===== -->
+    <Color x:Key="GoldColor">#C9A227</Color>
+    <SolidColorBrush x:Key="Gold" Color="{StaticResource GoldColor}"/>
+
+    <Color x:Key="GoldSoftColor">#E9D9A8</Color>
+    <SolidColorBrush x:Key="GoldSoft" Color="{StaticResource GoldSoftColor}"/>
+
+    <!-- ===== Texto ===== -->
+    <Color x:Key="InkColor">#2E1B14</Color>
+    <SolidColorBrush x:Key="Ink" Color="{StaticResource InkColor}"/>
+
+    <Color x:Key="MutedColor">#8C7A6B</Color>
+    <SolidColorBrush x:Key="Muted" Color="{StaticResource MutedColor}"/>
+
+    <!-- ===== Linhas / bordas ===== -->
+    <Color x:Key="LineColor">#E8DDD3</Color>
+    <SolidColorBrush x:Key="Line" Color="{StaticResource LineColor}"/>
+
+    <!-- ===== Cartões / superfícies elevadas ===== -->
+    <Color x:Key="SurfaceColor">#FFFFFF</Color>
+    <SolidColorBrush x:Key="Surface" Color="{StaticResource SurfaceColor}"/>
+
+    <!-- ===== Status — versões harmonizadas com a paleta terrosa ===== -->
+    <Color x:Key="SuccessColor">#4F7A4A</Color>
+    <SolidColorBrush x:Key="Success" Color="{StaticResource SuccessColor}"/>
+
+    <Color x:Key="InfoColor">#5A6E8C</Color>
+    <SolidColorBrush x:Key="Info" Color="{StaticResource InfoColor}"/>
+
+    <Color x:Key="DangerColor">#A83C3C</Color>
+    <SolidColorBrush x:Key="Danger" Color="{StaticResource DangerColor}"/>
+
+</ResourceDictionary>

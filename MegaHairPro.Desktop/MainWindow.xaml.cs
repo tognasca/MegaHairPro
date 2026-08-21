@@ -1,34 +1,52 @@
 ﻿using MegaHairPro.Desktop.ViewModels;
-using MegaHairPro.Web.Models;
 using MegaHairPro.Web.Services;
 using Microsoft.Extensions.DependencyInjection;
+using System.Diagnostics;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Threading;
 
 namespace MegaHairPro.Desktop;
 
 public partial class MainWindow : Window
 {
     private readonly MainViewModel _vm;
+    private readonly DispatcherTimer _relogio = new() { Interval = TimeSpan.FromSeconds(15) };
+    private readonly DispatcherTimer _autoRefresh = new() { Interval = TimeSpan.FromSeconds(45) };
 
     public MainWindow()
     {
         InitializeComponent();
         DataContext = _vm = new MainViewModel(App.Services.GetRequiredService<AtendimentoService>());
         Loaded += MainWindow_Loaded;
+        Closed += (_, _) =>
+        {
+            _relogio.Stop();
+            _autoRefresh.Stop();
+        };
     }
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
+        _relogio.Tick += (_, _) => _vm.TickRelogio();
+        _autoRefresh.Tick += async (_, _) =>
+        {
+            try { await _vm.AtualizarAgendaAsync(); }
+            catch { /* silencioso — recepção não pode travar */ }
+        };
+        _relogio.Start();
+        _autoRefresh.Start();
+        _vm.TickRelogio();
+
         try
         {
             await _vm.CarregarInicialAsync();
-            ListaAgenda.ItemsSource = _vm.AgendaHoje;
-            CboServicoAdd.ItemsSource = _vm.ServicosDisponiveis;
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Erro ao conectar ao banco:\n{ex.Message}", "MegaHair Pro",
+            MessageBox.Show($"Erro ao conectar ao banco:\n{ex.Message}", "Tati Mega Hair",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -56,37 +74,51 @@ public partial class MainWindow : Window
     }
 
     private async void BtnBuscar_Click(object sender, RoutedEventArgs e)
+        => await ComSeguranca(_vm.AtualizarAgendaAsync);
+
+    private async void TxtBusca_KeyDown(object sender, KeyEventArgs e)
     {
-        try
-        {
-            await _vm.AtualizarAgendaAsync();
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show(ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Warning);
-        }
+        if (e.Key == Key.Enter)
+            await ComSeguranca(_vm.AtualizarAgendaAsync);
     }
+
+    private async void FiltroProfissional_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (!IsLoaded) return;
+        await ComSeguranca(_vm.AtualizarAgendaAsync);
+    }
+
+    private async void BtnDiaAnterior_Click(object sender, RoutedEventArgs e)
+        => await ComSeguranca(() => _vm.MudarDiaAsync(-1));
+
+    private async void BtnDiaProximo_Click(object sender, RoutedEventArgs e)
+        => await ComSeguranca(() => _vm.MudarDiaAsync(1));
+
+    private async void BtnHoje_Click(object sender, RoutedEventArgs e)
+        => await ComSeguranca(_vm.IrParaHojeAsync);
+
+    private async void BtnAtualizar_Click(object sender, RoutedEventArgs e)
+        => await ComSeguranca(_vm.AtualizarAgendaAsync);
 
     private void BtnNovoWalkIn_Click(object sender, RoutedEventArgs e)
     {
         var dlg = new WalkInWindow(_vm) { Owner = this };
         if (dlg.ShowDialog() == true)
-        {
             AtualizarPainel();
-        }
     }
 
     private void BtnAdicionarServico_Click(object sender, RoutedEventArgs e)
-    {
-        _vm.AdicionarServico();
-    }
+        => _vm.AdicionarServico();
+
+    private void BtnMarcarTodos_Click(object sender, RoutedEventArgs e)
+        => _vm.MarcarTodosRealizados();
 
     private async void BtnSalvarServicos_Click(object sender, RoutedEventArgs e)
     {
         try
         {
             await _vm.SalvarServicosAsync();
-            MessageBox.Show("Serviços salvos!", "MegaHair Pro", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Serviços salvos.", "Tati Mega Hair", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
@@ -100,6 +132,51 @@ public partial class MainWindow : Window
             _vm.RemoverServico(item);
     }
 
+    private async void BtnChegada_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            await _vm.MarcarChegadaAsync();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private async void BtnCancelar_Click(object sender, RoutedEventArgs e)
+    {
+        if (MessageBox.Show($"Cancelar o horário de {_vm.ClienteNome}?", "Confirmar",
+                MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+            return;
+
+        try
+        {
+            await _vm.CancelarAtendimentoAsync();
+            ListaAgenda.SelectedItem = null;
+            AtualizarPainel();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void BtnWhatsApp_Click(object sender, RoutedEventArgs e)
+    {
+        var digits = Regex.Replace(_vm.ClienteTelefone ?? "", @"\D", "");
+        if (digits.Length < 10)
+        {
+            MessageBox.Show("Telefone incompleto para WhatsApp.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        if (!digits.StartsWith("55"))
+            digits = "55" + digits;
+
+        Process.Start(new ProcessStartInfo($"https://wa.me/{digits}") { UseShellExecute = true });
+    }
+
     private async void BtnReceberSinal_Click(object sender, RoutedEventArgs e)
     {
         if (!_vm.PodeReceberSinal)
@@ -111,7 +188,7 @@ public partial class MainWindow : Window
         try
         {
             await _vm.ReceberSinalAsync();
-            MessageBox.Show($"Sinal de R$ {_vm.ValorSinal:N2} registrado!", "Sucesso",
+            MessageBox.Show($"Sinal de R$ {_vm.ValorSinal:N2} registrado.", "Sucesso",
                 MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
@@ -134,7 +211,7 @@ public partial class MainWindow : Window
         try
         {
             await _vm.FecharAtendimentoAsync(pagarSeparado: true);
-            MessageBox.Show("Atendimento concluído!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Atendimento concluído.", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
@@ -153,7 +230,7 @@ public partial class MainWindow : Window
         try
         {
             await _vm.FecharAtendimentoAsync(pagarSeparado: false);
-            MessageBox.Show("Atendimento concluído!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Atendimento concluído.", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
@@ -166,5 +243,30 @@ public partial class MainWindow : Window
         _vm.LimparAtendimento();
         ListaAgenda.SelectedItem = null;
         AtualizarPainel();
+    }
+
+    private static async Task ComSeguranca(Func<Task> acao)
+    {
+        try
+        {
+            await acao();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void BtnNovoCliente_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new ClienteRapidoWindow(_vm) { Owner = this };
+        if (dlg.ShowDialog() == true && dlg.ClienteCriado != null)
+        {
+            _vm.Clientes.Insert(0, dlg.ClienteCriado);
+            //CboCliente.ItemsSource = null;
+            //CboCliente.ItemsSource = _vm.Clientes;
+            //CboCliente.SelectedItem = dlg.ClienteCriado;
+            _vm.ClienteWalkIn = dlg.ClienteCriado;
+        }
     }
 }

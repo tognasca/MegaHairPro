@@ -253,7 +253,7 @@ public class BookingPortalService
         if (!string.IsNullOrWhiteSpace(ag.Cliente?.Email))
         {
             var dataFmt = ag.DataHora.ToString("dddd, dd 'de' MMMM", new System.Globalization.CultureInfo("pt-BR"));
-            await _notifier.EnviarEmailAsync(ag.Cliente.Email, "Agendamento Confirmado - MegaHair Pro",
+            await _notifier.EnviarEmailAsync(ag.Cliente.Email, "Agendamento Confirmado - Tati Mega Hair",
                 $"<p>Olá, {ag.Cliente.Nome}! Seu horário foi confirmado para {dataFmt} às {ag.DataHora:HH:mm}.</p>" +
                 $"<p>Serviço: {servicos}<br/>Profissional: {ag.Profissional?.Nome}</p>");
         }
