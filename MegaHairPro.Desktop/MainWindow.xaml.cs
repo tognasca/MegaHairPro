@@ -21,11 +21,48 @@ public partial class MainWindow : Window
         InitializeComponent();
         DataContext = _vm = new MainViewModel(App.Services.GetRequiredService<AtendimentoService>());
         Loaded += MainWindow_Loaded;
+        PreviewKeyDown += MainWindow_PreviewKeyDown;
         Closed += (_, _) =>
         {
             _relogio.Stop();
             _autoRefresh.Stop();
         };
+    }
+
+    private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.F11)
+        {
+            AlternarTelaCheia();
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Escape && WindowStyle == WindowStyle.None)
+        {
+            SairTelaCheia();
+            e.Handled = true;
+        }
+    }
+
+    private void BtnTelaCheia_Click(object sender, RoutedEventArgs e)
+        => AlternarTelaCheia();
+
+    private void AlternarTelaCheia()
+    {
+        if (WindowStyle == WindowStyle.None)
+            SairTelaCheia();
+        else
+        {
+            WindowStyle = WindowStyle.None;
+            ResizeMode = ResizeMode.NoResize;
+            WindowState = WindowState.Maximized;
+        }
+    }
+
+    private void SairTelaCheia()
+    {
+        WindowStyle = WindowStyle.SingleBorderWindow;
+        ResizeMode = ResizeMode.CanResize;
+        WindowState = WindowState.Maximized;
     }
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -107,13 +144,29 @@ public partial class MainWindow : Window
             AtualizarPainel();
     }
 
-    private void BtnAdicionarServico_Click(object sender, RoutedEventArgs e)
-        => _vm.AdicionarServico();
-
-    private void BtnCatalogoServico_Click(object sender, RoutedEventArgs e)
+    private async void BtnCatalogoServico_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button btn && btn.Tag is MegaHairPro.Web.Models.Servico servico)
-            _vm.AdicionarServico(servico);
+        if (sender is not Button btn) return;
+
+        try
+        {
+            var id = btn.Tag switch
+            {
+                int i => i,
+                long l => (int)l,
+                string s when int.TryParse(s, out var parsed) => parsed,
+                _ => 0
+            };
+
+            if (id > 0)
+                await _vm.AdicionarServicoPorIdAsync(id);
+            else if (btn.Tag is MegaHairPro.Web.Models.Servico servico)
+                await _vm.AdicionarServicoAsync(servico);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
     }
 
     private void Pagamento_Checked(object sender, RoutedEventArgs e)
@@ -138,10 +191,19 @@ public partial class MainWindow : Window
         }
     }
 
-    private void BtnRemoverServico_Click(object sender, RoutedEventArgs e)
+    private async void BtnRemoverServico_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button btn && btn.Tag is ServicoAtendimentoItem item)
-            _vm.RemoverServico(item);
+        if (sender is not Button btn || btn.Tag is not ServicoAtendimentoItem item)
+            return;
+
+        try
+        {
+            await _vm.RemoverServicoAsync(item);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
     }
 
     private async void BtnChegada_Click(object sender, RoutedEventArgs e)
@@ -211,19 +273,26 @@ public partial class MainWindow : Window
 
     private async void BtnFecharRestante_Click(object sender, RoutedEventArgs e)
     {
-        if (!_vm.PodeFechar) return;
+        if (!_vm.PodeFechar)
+        {
+            MessageBox.Show("Este atendimento já está concluído ou não há valor a receber.", "Aviso",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
 
+        var valor = _vm.ValorAReceber;
         var msg = _vm.SinalPago
-            ? $"Receber restante de R$ {_vm.ValorRestante:N2} via {_vm.FormaPagamento}?"
-            : $"Fechar atendimento e receber R$ {_vm.ValorRestante:N2}?";
+            ? $"Receber restante de R$ {valor:N2} via {_vm.FormaPagamento} e lançar no financeiro?"
+            : $"Receber R$ {valor:N2} via {_vm.FormaPagamento} e lançar no financeiro?";
 
-        if (MessageBox.Show(msg, "Confirmar", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+        if (MessageBox.Show(msg, "Confirmar baixa", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
             return;
 
         try
         {
             await _vm.FecharAtendimentoAsync(pagarSeparado: true);
-            MessageBox.Show("Atendimento concluído.", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show($"Baixa de R$ {valor:N2} lançada no caixa.", "Sucesso",
+                MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
@@ -233,16 +302,23 @@ public partial class MainWindow : Window
 
     private async void BtnFecharTotal_Click(object sender, RoutedEventArgs e)
     {
-        if (!_vm.PodeFechar) return;
+        if (!_vm.PodeFechar)
+        {
+            MessageBox.Show("Este atendimento já está concluído ou não há valor a receber.", "Aviso",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
 
-        if (MessageBox.Show($"Receber valor total de R$ {_vm.ValorTotal:N2} via {_vm.FormaPagamento}?",
-                "Confirmar", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+        var valor = _vm.ValorAReceber;
+        if (MessageBox.Show($"Receber R$ {valor:N2} via {_vm.FormaPagamento} e lançar no financeiro?",
+                "Confirmar baixa", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
             return;
 
         try
         {
             await _vm.FecharAtendimentoAsync(pagarSeparado: false);
-            MessageBox.Show("Atendimento concluído.", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show($"Pagamento de R$ {valor:N2} lançado no caixa.", "Sucesso",
+                MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {

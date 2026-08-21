@@ -32,7 +32,34 @@ public partial class WalkInWindow : Window
             await BuscarClientesAsync();
         };
 
-        Loaded += async (_, _) => await BuscarClientesAsync();
+        Loaded += WalkInWindow_Loaded;
+    }
+
+    private async void WalkInWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        AjustarAoMonitor();
+        await BuscarClientesAsync();
+    }
+
+    private void AjustarAoMonitor()
+    {
+        var origem = Owner ?? this;
+        var area = SystemParameters.WorkArea;
+        if (origem.ActualWidth > 0 && origem.ActualHeight > 0)
+        {
+            Width = Math.Max(MinWidth, origem.ActualWidth * 0.82);
+            Height = Math.Max(MinHeight, origem.ActualHeight * 0.88);
+        }
+        else
+        {
+            Width = Math.Max(MinWidth, area.Width * 0.82);
+            Height = Math.Max(MinHeight, area.Height * 0.88);
+        }
+
+        Width = Math.Min(Width, area.Width);
+        Height = Math.Min(Height, area.Height);
+        Left = area.Left + (area.Width - Width) / 2;
+        Top = area.Top + (area.Height - Height) / 2;
     }
 
     private void TxtFiltroCliente_TextChanged(object sender, TextChangedEventArgs e)
@@ -109,8 +136,16 @@ public partial class WalkInWindow : Window
 
     private void ServicoTile_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is not ToggleButton btn || btn.Tag is not Servico servico)
+        if (sender is not ToggleButton btn)
             return;
+
+        Servico? servico = btn.Tag switch
+        {
+            Servico s => s,
+            int id => _vm.ServicosDisponiveis.FirstOrDefault(x => x.Id == id),
+            _ => null
+        };
+        if (servico == null) return;
 
         if (btn.IsChecked == true)
             _servicosMarcados.Add(servico.Id);

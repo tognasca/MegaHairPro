@@ -32,6 +32,7 @@ namespace MegaHairPro.Web.Models
 
         public string? ImagemUrl { get; set; }
 
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
         public decimal ValorFinal =>
             ValorPromocional.HasValue && ValorPromocional.Value > 0
                 ? ValorPromocional.Value

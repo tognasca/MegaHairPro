@@ -122,6 +122,13 @@
                 <Setter Property="BorderThickness" Value="1.4"/>
             </Style>
 
+            <Style x:Key="ChipBtn" TargetType="Button" BasedOn="{StaticResource OutlineBtn}">
+                <Setter Property="Padding" Value="10,7"/>
+                <Setter Property="Margin" Value="0,0,8,8"/>
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+            </Style>
+
             <!-- Fantasma — sem fundo, usado em ícones e navegação -->
             <Style x:Key="GhostBtn" TargetType="Button" BasedOn="{StaticResource BaseBtn}">
                 <Setter Property="Background" Value="Transparent"/>

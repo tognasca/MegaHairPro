@@ -79,11 +79,9 @@ public class MainViewModel : INotifyPropertyChanged
     public ObservableCollection<Servico> ServicosDisponiveis { get; } = [];
     public ObservableCollection<Profissional> Profissionais { get; } = [];
     public ObservableCollection<FiltroProfissionalItem> FiltrosProfissional { get; } = [];
+    public ObservableCollection<Servico> CatalogoServicos { get; } = [];
 
     public string[] FormasPagamento { get; } = ["PIX", "Dinheiro", "Cartão Débito", "Cartão Crédito"];
-
-    public IEnumerable<Servico> ServicosParaEscolher =>
-        ServicosDisponiveis.Where(s => ServicosAtendimento.All(a => a.ServicoId != s.Id));
 
     private string _busca = "";
     public string Busca
@@ -172,7 +170,9 @@ public class MainViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(PodeFechar));
             OnPropertyChanged(nameof(PodeCheckIn));
             OnPropertyChanged(nameof(PodeCancelar));
+            OnPropertyChanged(nameof(PodeEditarServicos));
             OnPropertyChanged(nameof(StatusCor));
+            OnPropertyChanged(nameof(StatusLabelAmigavel));
         }
     }
 
@@ -196,14 +196,27 @@ public class MainViewModel : INotifyPropertyChanged
     public decimal ValorTotal
     {
         get => _valorTotal;
-        set { _valorTotal = value; OnPropertyChanged(); }
+        set
+        {
+            _valorTotal = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(ValorJaNoCaixa));
+            OnPropertyChanged(nameof(ValorAReceber));
+        }
     }
 
     private decimal _valorSinal;
     public decimal ValorSinal
     {
         get => _valorSinal;
-        set { _valorSinal = value; OnPropertyChanged(); OnPropertyChanged(nameof(SinalTexto)); }
+        set
+        {
+            _valorSinal = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(SinalTexto));
+            OnPropertyChanged(nameof(ValorJaNoCaixa));
+            OnPropertyChanged(nameof(ValorAReceber));
+        }
     }
 
     private decimal _valorRestante;
@@ -217,7 +230,15 @@ public class MainViewModel : INotifyPropertyChanged
     public bool SinalPago
     {
         get => _sinalPago;
-        set { _sinalPago = value; OnPropertyChanged(); OnPropertyChanged(nameof(SinalTexto)); OnPropertyChanged(nameof(PodeReceberSinal)); }
+        set
+        {
+            _sinalPago = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(SinalTexto));
+            OnPropertyChanged(nameof(PodeReceberSinal));
+            OnPropertyChanged(nameof(ValorJaNoCaixa));
+            OnPropertyChanged(nameof(ValorAReceber));
+        }
     }
 
     private bool _restantePago;
@@ -266,16 +287,26 @@ public class MainViewModel : INotifyPropertyChanged
 
     public bool TemAtendimento => AgendamentoId.HasValue;
     public bool PodeReceberSinal => TemAtendimento && !SinalPago && ValorSinal > 0 && Status != "Concluido";
-    public bool PodeFechar => TemAtendimento && !RestantePago && Status != "Concluido";
+    public bool PodeFechar => TemAtendimento && !RestantePago && Status != "Cancelado";
     public bool PodeCheckIn => TemAtendimento && Status == "Agendado";
     public bool PodeCancelar => TemAtendimento && Status != "Concluido";
+    public bool PodeEditarServicos => TemAtendimento && Status != "Concluido";
     public string SinalTexto => SinalPago ? $"Sinal R$ {ValorSinal:N2} · pago" : $"Sinal R$ {ValorSinal:N2} · pendente";
     public string RestanteTexto => RestantePago ? $"Restante R$ {ValorRestante:N2} · pago" : $"Restante R$ {ValorRestante:N2} · pendente";
+    public decimal ValorJaNoCaixa => SinalPago ? ValorSinal : 0;
+    public decimal ValorAReceber => Math.Max(0, ValorTotal - ValorJaNoCaixa);
+    public string StatusLabelAmigavel => Status switch
+    {
+        "Confirmado" => "Na cadeira",
+        "Concluido" => "Concluído",
+        "Agendado" => "Aguardando",
+        _ => Status
+    };
 
     public MainViewModel(AtendimentoService atendimento)
     {
         _atendimento = atendimento;
-        ServicosAtendimento.CollectionChanged += (_, _) => OnPropertyChanged(nameof(ServicosParaEscolher));
+        ServicosAtendimento.CollectionChanged += (_, _) => AtualizarCatalogo();
     }
 
     public void TickRelogio()
@@ -320,7 +351,7 @@ public class MainViewModel : INotifyPropertyChanged
             foreach (var s in servs)
                 ServicosDisponiveis.Add(s);
 
-            OnPropertyChanged(nameof(ServicosParaEscolher));
+            AtualizarCatalogo();
             await AtualizarAgendaAsync();
         }
         finally
@@ -455,6 +486,8 @@ public class MainViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(PodeFechar));
         OnPropertyChanged(nameof(PodeCheckIn));
         OnPropertyChanged(nameof(PodeCancelar));
+        OnPropertyChanged(nameof(PodeEditarServicos));
+        AtualizarCatalogo();
     }
 
     public async Task SalvarServicosAsync()
@@ -469,8 +502,19 @@ public class MainViewModel : INotifyPropertyChanged
         await AtualizarAgendaAsync();
     }
 
-    public void AdicionarServico(Servico? servico = null)
+    public void AtualizarCatalogo()
     {
+        var ids = ServicosAtendimento.Select(s => s.ServicoId).ToHashSet();
+        CatalogoServicos.Clear();
+        foreach (var s in ServicosDisponiveis.Where(s => !ids.Contains(s.Id)))
+            CatalogoServicos.Add(s);
+    }
+
+    public async Task AdicionarServicoAsync(Servico? servico = null)
+    {
+        if (Status == "Concluido")
+            throw new InvalidOperationException("Atendimento já concluído.");
+
         var origem = servico ?? ServicoParaAdicionar;
         if (origem == null) return;
         if (ServicosAtendimento.Any(s => s.ServicoId == origem.Id)) return;
@@ -485,21 +529,41 @@ public class MainViewModel : INotifyPropertyChanged
             Realizado = false
         });
 
-        ValorTotal = ServicosAtendimento.Sum(s => s.Valor);
-        if (!SinalPago)
-            ValorRestante = ValorTotal;
-        else
-            ValorRestante = Math.Max(0, ValorTotal - ValorSinal);
-
+        RecalcularTotaisLocais();
         ServicoParaAdicionar = null;
+        AtualizarCatalogo();
+
+        if (AgendamentoId.HasValue)
+            await SalvarServicosAsync();
     }
 
-    public void RemoverServico(ServicoAtendimentoItem item)
+    public async Task AdicionarServicoPorIdAsync(int servicoId)
+    {
+        var servico = ServicosDisponiveis.FirstOrDefault(s => s.Id == servicoId);
+        if (servico == null) return;
+        await AdicionarServicoAsync(servico);
+    }
+
+    public async Task RemoverServicoAsync(ServicoAtendimentoItem item)
     {
         ServicosAtendimento.Remove(item);
+        RecalcularTotaisLocais();
+        AtualizarCatalogo();
+        if (AgendamentoId.HasValue)
+            await SalvarServicosAsync();
+    }
+
+    private void RecalcularTotaisLocais()
+    {
         ValorTotal = ServicosAtendimento.Sum(s => s.Valor);
         ValorRestante = SinalPago ? Math.Max(0, ValorTotal - ValorSinal) : ValorTotal;
     }
+
+    public void AdicionarServico(Servico? servico = null)
+        => _ = AdicionarServicoAsync(servico);
+
+    public void RemoverServico(ServicoAtendimentoItem item)
+        => _ = RemoverServicoAsync(item);
 
     public void MarcarTodosRealizados()
     {
@@ -602,6 +666,8 @@ public class MainViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(PodeFechar));
         OnPropertyChanged(nameof(PodeCheckIn));
         OnPropertyChanged(nameof(PodeCancelar));
+        OnPropertyChanged(nameof(PodeEditarServicos));
+        AtualizarCatalogo();
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

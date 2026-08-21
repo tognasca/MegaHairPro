@@ -158,7 +158,7 @@ public class AtendimentoService
         return ag == null ? null : MapResumo(ag);
     }
 
-    /// <summary>Check-in walk-in: cliente sem horário marcado.</summary>
+    /// <summary>Check-inSem Agendamento: cliente sem horário marcado.</summary>
     public async Task<AtendimentoResumoDto> CriarWalkInAsync(int clienteId, int profissionalId, int[] servicosIds)
     {
         if (!servicosIds.Any())
@@ -185,8 +185,8 @@ public class AtendimentoService
             PercentualSinal = 0,
             ValorSinal = 0,
             ValorRestante = valorTotal,
-            SinalPago = true,
-            DataPagamentoSinal = agora
+            SinalPago = false,
+            RestantePago = false
         };
 
         context.Agendamentos.Add(agendamento);
@@ -277,77 +277,63 @@ public class AtendimentoService
     }
 
     public async Task RegistrarRestanteAsync(int agendamentoId, string? formaPagamento = null)
-    {
-        await using var context = await _factory.CreateDbContextAsync();
-
-        var ag = await context.Agendamentos.FindAsync(agendamentoId)
-            ?? throw new InvalidOperationException("Atendimento não encontrado.");
-
-        if (ag.Status == StatusAgendamento.Concluido)
-            throw new InvalidOperationException("Atendimento já concluído.");
-
-        if (!ag.SinalPago && ag.ValorSinal > 0)
-            throw new InvalidOperationException("Registre o sinal antes de receber o restante.");
-
-        if (ag.RestantePago)
-            throw new InvalidOperationException("Restante já registrado.");
-
-        ag.RestantePago = true;
-        ag.DataConclusao = DateTime.Now;
-        ag.Status = StatusAgendamento.Concluido;
-
-        if (ag.ValorRestante > 0)
-        {
-            context.ContasFinanceiras.Add(CriarContaReceber(
-                ag, ag.ValorRestante, $"Restante — Agendamento #{ag.Id}", formaPagamento));
-        }
-
-        await context.SaveChangesAsync();
-    }
+        => await RegistrarBaixaAsync(agendamentoId, formaPagamento, pagamentoTotal: false);
 
     public async Task RegistrarPagamentoTotalAsync(int agendamentoId, string? formaPagamento = null)
+        => await RegistrarBaixaAsync(agendamentoId, formaPagamento, pagamentoTotal: true);
+
+    /// <summary>
+    /// Lança no financeiro a diferença ainda não recebida e conclui o atendimento.
+    /// Evita o caso em que o status muda para Concluído sem gerar conta a receber.
+    /// </summary>
+    private async Task RegistrarBaixaAsync(int agendamentoId, string? formaPagamento, bool pagamentoTotal)
     {
         await using var context = await _factory.CreateDbContextAsync();
 
         var ag = await context.Agendamentos
+            .Include(a => a.Cliente)
             .Include(a => a.AgendamentosServicos).ThenInclude(s => s.Servico)
             .FirstOrDefaultAsync(a => a.Id == agendamentoId)
             ?? throw new InvalidOperationException("Atendimento não encontrado.");
 
-        if (ag.Status == StatusAgendamento.Concluido)
-            throw new InvalidOperationException("Atendimento já concluído.");
+        if (ag.Status == StatusAgendamento.Concluido && ag.RestantePago)
+            throw new InvalidOperationException("Atendimento já concluído e baixado.");
 
-        var valorTotal = ag.AgendamentosServicos.Sum(s => s.Servico.ValorFinal);
+        if (ag.Status == StatusAgendamento.Cancelado)
+            throw new InvalidOperationException("Atendimento cancelado.");
 
-        if (ag.SinalPago && ag.ValorSinal > 0)
+        var valorServicos = ag.AgendamentosServicos.Sum(s => s.Servico?.ValorFinal ?? 0);
+        if (valorServicos <= 0)
+            throw new InvalidOperationException("Não há valor de serviço para dar baixa. Adicione um serviço com preço.");
+
+        var jaLancado = await context.ContasFinanceiras
+            .Where(c => c.AgendamentoId == ag.Id
+                        && c.Tipo == TipoContaFinanceira.Receber
+                        && c.Status != StatusContaFinanceira.Cancelada)
+            .SumAsync(c => (decimal?)c.Valor) ?? 0m;
+
+        if (!pagamentoTotal && !ag.SinalPago && ag.ValorSinal > 0 && jaLancado <= 0)
+            throw new InvalidOperationException("Registre o sinal antes de receber só o restante, ou use pagar tudo.");
+
+        var aReceber = Math.Round(Math.Max(0, valorServicos - jaLancado), 2);
+        var nomeCliente = ag.Cliente?.Nome ?? $"#{ag.Id}";
+
+        if (aReceber > 0)
         {
-            // Reaproveita a mesma lógica/contexto local em vez de chamar o método público
-            // (que abriria um novo DbContext) para manter esta operação atômica.
-            if (!ag.RestantePago)
-            {
-                ag.RestantePago = true;
-                ag.DataConclusao = DateTime.Now;
-                ag.Status = StatusAgendamento.Concluido;
+            var descricao = pagamentoTotal || jaLancado <= 0
+                ? $"Atendimento — {nomeCliente} #{ag.Id}"
+                : $"Restante — {nomeCliente} #{ag.Id}";
 
-                if (ag.ValorRestante > 0)
-                {
-                    context.ContasFinanceiras.Add(CriarContaReceber(
-                        ag, ag.ValorRestante, $"Restante — Agendamento #{ag.Id}", formaPagamento));
-                }
-
-                await context.SaveChangesAsync();
-            }
-
-            return;
+            context.ContasFinanceiras.Add(CriarContaReceber(ag, aReceber, descricao, formaPagamento));
         }
 
-        ag.SinalPago = ag.ValorSinal > 0;
+        if (pagamentoTotal || ag.ValorSinal <= 0)
+            ag.SinalPago = true;
+
         ag.RestantePago = true;
+        ag.ValorRestante = 0;
         ag.DataConclusao = DateTime.Now;
         ag.Status = StatusAgendamento.Concluido;
-
-        context.ContasFinanceiras.Add(CriarContaReceber(
-            ag, valorTotal, $"Atendimento — Agendamento #{ag.Id}", formaPagamento));
 
         await context.SaveChangesAsync();
     }
@@ -541,7 +527,7 @@ public class AtendimentoService
             ProfissionalPrincipal = a.Profissional?.Nome ?? "",
             ProfissionalId = a.ProfissionalId,
             ClienteObservacoes = a.Cliente?.Observacoes,
-            WalkIn = a.PercentualSinal == 0 && a.SinalPago && a.ValorSinal == 0,
+            WalkIn = a.PercentualSinal == 0 && a.ValorSinal == 0,
             Servicos = a.AgendamentosServicos?.Select(s => new AtendimentoServicoDto
             {
                 ServicoId = s.ServicoId,
