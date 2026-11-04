@@ -18,6 +18,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MegaHairPro.Core\MegaHairPro.Core.csproj" />
+    <ProjectReference Include="..\MegaHairPro.PostgreSqlMigrations\MegaHairPro.PostgreSqlMigrations.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Migrations\\" />
