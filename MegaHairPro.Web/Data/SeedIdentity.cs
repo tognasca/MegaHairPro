@@ -1,6 +1,7 @@
 ﻿using MegaHairPro.Web.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Threading.Tasks;
 
@@ -27,13 +28,21 @@ namespace MegaHairPro.Web.Data
                         await roleManager.CreateAsync(new IdentityRole(r));
                 }
 
-                string email = "admin@megahairpro.com";
-                string senha = "Admin123!";
+                var configuration = service.GetRequiredService<IConfiguration>();
+                var email = configuration["BootstrapAdmin:Email"] ?? "admin@megahairpro.com";
+                var senha = configuration["BootstrapAdmin:Password"];
 
                 var user = await userManager.FindByEmailAsync(email);
 
                 if (user == null)
                 {
+                    if (string.IsNullOrWhiteSpace(senha))
+                    {
+                        Console.WriteLine(
+                            "Admin inicial não criado: configure BootstrapAdmin__Password por variável de ambiente.");
+                        return;
+                    }
+
                     user = new ApplicationUser
                     {
                         UserName = email,
@@ -41,11 +50,13 @@ namespace MegaHairPro.Web.Data
                         Nome = "Tatiane (Admin)"
                     };
 
-                    var result =
-                        await userManager.CreateAsync(user, senha);
+                    var result = await userManager.CreateAsync(user, senha);
 
                     if (result.Succeeded)
                         await userManager.AddToRoleAsync(user, "Admin");
+                    else
+                        Console.WriteLine("Falha ao criar admin inicial: " +
+                            string.Join("; ", result.Errors.Select(e => e.Description)));
                 }
             }
             catch (Exception ex)
