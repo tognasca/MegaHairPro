@@ -21,7 +21,8 @@
     <ProjectReference Include="..\MegaHairPro.PostgreSqlMigrations\MegaHairPro.PostgreSqlMigrations.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Migrations\" />
+    <!-- Keep SQL Server migration history in the repository, but do not compile it into the PostgreSQL application. -->
+    <Compile Remove="Migrations\**\*.cs" />
     <Folder Include="Services\Implementations\\" />
     <Folder Include="Views\Profissional\\" />
   </ItemGroup>
