@@ -8,10 +8,10 @@
     <PackageReference Include="DinkToPdf" Version="1.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="10.0.5" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.5">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     <PackageReference Include="PuppeteerSharp" Version="24.42.0" />
     <PackageReference Include="Rotativa.AspNetCore" Version="1.4.0" />
     <PackageReference Include="WkHtmlToPdf" Version="1.0.2" />
@@ -20,8 +20,8 @@
     <ProjectReference Include="..\MegaHairPro.Core\MegaHairPro.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Migrations\" />
-    <Folder Include="Services\Implementations\" />
-    <Folder Include="Views\Profissional\" />
+    <Folder Include="Migrations\\" />
+    <Folder Include="Services\Implementations\\" />
+    <Folder Include="Views\Profissional\\" />
   </ItemGroup>
 </Project>
