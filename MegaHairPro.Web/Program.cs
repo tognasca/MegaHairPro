@@ -138,6 +138,15 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Schema changes are opt-in. Set Database__ApplyMigrations=true only after
+// reviewing the generated PostgreSQL migration and taking a fresh backup.
+if (app.Configuration.GetValue<bool>("Database:ApplyMigrations"))
+{
+    await using var migrationScope = app.Services.CreateAsyncScope();
+    var db = migrationScope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync();
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
