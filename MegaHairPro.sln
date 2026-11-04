@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MegaHairPro.Desktop", "Mega
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MegaHairPro.Core", "MegaHairPro.Core\MegaHairPro.Core.csproj", "{CF0730E5-A22F-427B-B820-BBF3AFD99191}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MegaHairPro.PostgreSqlMigrations", "MegaHairPro.PostgreSqlMigrations\\MegaHairPro.PostgreSqlMigrations.csproj", "{9B1DCE91-7A64-4E9C-90B9-5D7E27D0C4B2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MegaHairPro.PostgreSqlMigrations", "MegaHairPro.PostgreSqlMigrations\MegaHairPro.PostgreSqlMigrations.csproj", "{9B1DCE91-7A64-4E9C-90B9-5D7E27D0C4B2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
