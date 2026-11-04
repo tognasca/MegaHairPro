@@ -42,7 +42,8 @@ if (string.IsNullOrWhiteSpace(connectionString))
         "Configure ConnectionStrings__DefaultConnection with the PostgreSQL connection string.");
 
 builder.Services.AddDbContextFactory<AppDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(connectionString, npgsql =>
+        npgsql.MigrationsAssembly("MegaHairPro.PostgreSqlMigrations")));
 
 builder.Services.AddScoped<ISimulacaoService, SimulacaoService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
