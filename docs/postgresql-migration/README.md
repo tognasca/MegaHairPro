@@ -33,8 +33,11 @@ Não use DROP DATABASE, docker volume rm, docker compose down -v ou comandos de 
 
 A migração inicial precisa ser gerada pelo EF Core com o SDK .NET 10 e o modelo completo atual. O projeto dedicado evita misturar a migração SQL Server existente com PostgreSQL.
 
-Na raiz do repositório:
+Na raiz do repositório, configure a conexão antes de invocar o EF Tools:
 
+    $env:ConnectionStrings__DefaultConnection = "Host=localhost;Port=55432;Database=MegaHairPro;Username=postgres;Password=SUA_SENHA"
+    $env:BootstrapAdmin__Email = "admin@megahairpro.com"
+    $env:BootstrapAdmin__Password = "DEFINA_UMA_SENHA_FORTE_E_UNICA"
     dotnet tool update --global dotnet-ef --version 10.0.5
     dotnet restore
     dotnet ef migrations add InitialPostgreSql --project MegaHairPro.PostgreSqlMigrations --startup-project MegaHairPro.Web --context AppDbContext --output-dir Migrations
@@ -73,4 +76,4 @@ Antes de qualquer troca em produção:
 
 ## Segurança
 
-Os arquivos versionados não contêm mais a connection string antiga. Como uma credencial de banco já esteve no histórico Git, troque essa senha no SQL Server e em qualquer outro serviço onde tenha sido reutilizada. Configure também Booking/AdminToken, Booking/CronSecret e Email/Smtp por variáveis de ambiente ou secret manager.
+Os arquivos versionados não contêm mais a connection string antiga. Como uma credencial de banco já esteve no histórico Git, troque essa senha no SQL Server e em qualquer outro serviço onde tenha sido reutilizada. Configure também Booking__AdminToken, Booking__CronSecret, Booking__SalaoEmail, Email__Smtp__Host, Email__Smtp__Usuario, Email__Smtp__Senha e Email__Remetente por variáveis de ambiente ou secret manager. O usuário administrador inicial só é criado quando BootstrapAdmin__Password estiver configurada; não existe mais senha padrão embutida no código.
