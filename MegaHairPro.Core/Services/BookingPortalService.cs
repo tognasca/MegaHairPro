@@ -364,16 +364,10 @@ public class BookingPortalService
         !string.IsNullOrEmpty(token) &&
         token == (_configuration["Booking:AdminToken"] ?? "");
 
-    private async Task EnsureUsuarioClienteTableAsync()
+    private Task EnsureUsuarioClienteTableAsync()
     {
-        await _context.Database.ExecuteSqlRawAsync(@"
-            IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='UsuariosClientes' AND xtype='U')
-            CREATE TABLE [dbo].[UsuariosClientes] (
-                [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-                [ClienteId] INT NOT NULL,
-                [Senha] NVARCHAR(MAX) NULL,
-                [DataCadastro] DATETIME2(7) NOT NULL DEFAULT GETDATE(),
-                [Ativo] BIT NOT NULL DEFAULT 1
-            )");
+        // UsuariosClientes is part of the EF Core model and must be created by
+        // the PostgreSQL migration. Runtime SQL Server-specific DDL was removed.
+        return Task.CompletedTask;
     }
 }
