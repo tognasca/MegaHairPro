@@ -25,7 +25,8 @@ public static class AppHost
         services.AddSingleton<IConfiguration>(config);
 
         services.AddDbContextFactory<AppDbContext>(options =>
-            options.UseNpgsql(connectionString));
+            options.UseNpgsql(connectionString, npgsql =>
+        npgsql.MigrationsAssembly("MegaHairPro.PostgreSqlMigrations")));
 
         services.AddSingleton<AtendimentoService>();
         return services.BuildServiceProvider();
