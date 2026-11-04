@@ -22,7 +22,7 @@ function Export-SqlTableCsv {
         $record = [ordered]@{}
         foreach ($column in $table.Columns) {
             $value = $row[$column.ColumnName]
-            if ($value -is [DBNull]) { $record[$column.ColumnName] = "" }
+            if ($value -is [DBNull]) { $record[$column.ColumnName] = "__MHP_NULL_8F9C2A__" }
             elseif ($value -is [datetime]) { $record[$column.ColumnName] = $value.ToString("yyyy-MM-dd HH:mm:ss.fffffff", [Globalization.CultureInfo]::InvariantCulture) }
             elseif ($value -is [IFormattable]) { $record[$column.ColumnName] = $value.ToString($null, [Globalization.CultureInfo]::InvariantCulture) }
             else { $record[$column.ColumnName] = [string]$value }
@@ -78,8 +78,8 @@ BEGIN
     END IF;
 END $$;
 
-\copy public."Fornecedores" ("Id","Nome","Contato","CNPJ","InscricaoEstadual","RazaoSocial","NomeFantasia","Telefone","Email","Logradouro","Numero","Complemento","Bairro","Cidade","UF","CEP","Banco","Agencia","Conta","TipoConta","Observacoes","Status") FROM '/tmp/fornecedores.csv' WITH (FORMAT csv, HEADER true, NULL '');
-\copy public."Produtos" ("Id","Codigo","Descricao","TipoProduto","UnidadeMedida","Origem","Tamanho","Cor","FornecedorId","DataCadastro","Status","EstoqueGramas") FROM '/tmp/produtos.csv' WITH (FORMAT csv, HEADER true, NULL '');
+\copy public."Fornecedores" ("Id","Nome","Contato","CNPJ","InscricaoEstadual","RazaoSocial","NomeFantasia","Telefone","Email","Logradouro","Numero","Complemento","Bairro","Cidade","UF","CEP","Banco","Agencia","Conta","TipoConta","Observacoes","Status") FROM '/tmp/fornecedores.csv' WITH (FORMAT csv, HEADER true, NULL '__MHP_NULL_8F9C2A__', FORCE_NULL ("InscricaoEstadual","RazaoSocial","NomeFantasia","Telefone","Email","Logradouro","Numero","Complemento","Bairro","Cidade","UF","CEP","Banco","Agencia","Conta","TipoConta","Observacoes"));
+\copy public."Produtos" ("Id","Codigo","Descricao","TipoProduto","UnidadeMedida","Origem","Tamanho","Cor","FornecedorId","DataCadastro","Status","EstoqueGramas") FROM '/tmp/produtos.csv' WITH (FORMAT csv, HEADER true, NULL '__MHP_NULL_8F9C2A__', FORCE_NULL ("Codigo","Descricao","Origem","Tamanho","Cor","FornecedorId"));
 
 SELECT setval(pg_get_serial_sequence('public."Fornecedores"', 'Id'), GREATEST(COALESCE((SELECT MAX("Id") FROM public."Fornecedores"), 1), 1), true);
 SELECT setval(pg_get_serial_sequence('public."Produtos"', 'Id'), GREATEST(COALESCE((SELECT MAX("Id") FROM public."Produtos"), 1), 1), true);
