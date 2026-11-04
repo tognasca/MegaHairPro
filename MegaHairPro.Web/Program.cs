@@ -35,9 +35,14 @@ builder.Services.AddControllersWithViews(options =>
     options.Filters.Add(new AuthorizeFilter(policy));
 });
 
-// Factory for AtendimentoService (shared with Desktop). Also registers AppDbContext as scoped.
+// PostgreSQL is the single relational provider for MegaHairPro.
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(connectionString))
+    throw new InvalidOperationException(
+        "Configure ConnectionStrings__DefaultConnection with the PostgreSQL connection string.");
+
 builder.Services.AddDbContextFactory<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(connectionString));
 
 builder.Services.AddScoped<ISimulacaoService, SimulacaoService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
