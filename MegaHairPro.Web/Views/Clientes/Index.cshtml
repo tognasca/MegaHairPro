@@ -21,7 +21,7 @@
                 @* <div class="invalid-feedback">Informe o nome</div> *@
             </div>
             <div class="col-md-2">
-                <label class="form-label">CPF</label>
+                <label class="form-label">CPF (opcional)</label>
                 <input id="newCpf" name="CPF" class="form-control" placeholder="000.000.000-00" />
                 @* <div class="invalid-feedback">CPF inválido</div> *@
             </div>
@@ -359,9 +359,13 @@
 
         if (!nome) { document.getElementById("editNome").classList.add("is-invalid"); toast("Informe o nome", "bg-danger"); document.getElementById("editNome").focus(); return; }
 
-        // validar CPF com algoritmo
-        if (!cpf)  { showInvalid(document.getElementById("editCpf"), 'Informe o CPF'); toast("Informe o CPF", "bg-danger"); document.getElementById("editCpf").focus(); return; }
-        if (!isValidCPF(cpf)) { showInvalid(document.getElementById("editCpf"), 'CPF inválido'); toast("CPF inválido", "bg-danger"); document.getElementById("editCpf").focus(); return; }
+        // CPF opcional: validar somente quando informado
+        if (cpf && !isValidCPF(cpf)) {
+            showInvalid(document.getElementById("editCpf"), 'CPF inválido');
+            toast("CPF inválido", "bg-danger");
+            document.getElementById("editCpf").focus();
+            return;
+        }
 
         // validar WhatsApp (10 ou 11 dígitos)
         let whatsDigits = onlyDigits(whats);
