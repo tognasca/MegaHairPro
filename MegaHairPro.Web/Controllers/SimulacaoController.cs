@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using MegaHairPro.Web.Data;
 using MegaHairPro.Web.Models;
 using MegaHairPro.Web.Services;
@@ -219,6 +220,58 @@ Se estiver de acordo responda:
         }
 
 
+        private static readonly (string Chave, string Origem)[] OrigensSimulador =
+        [
+            ("brasileiro-regional", "Brasileiro regional"),
+            ("brasileiro-do-sul", "Brasileiro do Sul"),
+            ("indiano", "Indiano"),
+            ("russo", "Russo"),
+            ("vietnamita", "Vietnamita")
+        ];
+
+        [HttpPost("/api/simulador-megahair/produtos")]
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
+        public IActionResult CadastrarProdutosDoSimulador(
+            [FromServices] Microsoft.Extensions.Configuration.IConfiguration configuration, bool voltar = false)
+        {
+            var produtos = OrigensSimulador.Select(origem => new Produto
+            {
+                Codigo = CodigoProdutoSimulador(configuration, origem.Chave),
+                Descricao = "Simulador - " + origem.Origem,
+                Origem = origem.Origem,
+                TipoProduto = TipoProduto.Cabelo,
+                UnidadeMedida = UnidadeMedida.Grama
+            }).ToArray();
+
+            if (produtos.Select(p => p.Codigo).Distinct(StringComparer.OrdinalIgnoreCase).Count() != produtos.Length)
+                return Conflict("Configure um código diferente para cada origem.");
+
+            using var transacao = _context.Database.BeginTransaction(System.Data.IsolationLevel.Serializable);
+            foreach (var produto in produtos)
+            {
+                var existentes = _context.Produtos.Where(p => p.Codigo == produto.Codigo).Take(2).ToList();
+                if (existentes.Count > 1 || existentes.Any(p => !p.Status || p.TipoProduto != TipoProduto.Cabelo))
+                    return Conflict("Há um produto incompatível com o código " + produto.Codigo);
+
+                if (existentes.Count == 0)
+                    _context.Produtos.Add(produto);
+            }
+
+            _context.SaveChanges();
+            transacao.Commit();
+            if (voltar)
+                return RedirectToAction("Index", "Produtos");
+
+            return Ok(produtos.Select(p => new { p.Codigo, p.Origem }));
+        }
+
+        private static string CodigoProdutoSimulador(
+            Microsoft.Extensions.Configuration.IConfiguration configuration, string chave) =>
+            configuration["SimuladorMegaHair:Produtos:" + chave]?.Trim() is { Length: > 0 } codigo
+                ? codigo
+                : "SIM-" + chave.ToUpperInvariant();
+
         [HttpGet("/api/simulador-megahair/metodos")]
         [AllowAnonymous]
         public IActionResult MetodosDoSimulador() => Ok(_context.MetodosAplicacao
@@ -238,9 +291,11 @@ Se estiver de acordo responda:
             if (request.QuantidadeGramas <= 0 || string.IsNullOrWhiteSpace(request.Metodo))
                 return BadRequest();
 
-            var codigo = configuration["SimuladorMegaHair:ProdutoCodigo"]?.Trim();
-            if (string.IsNullOrWhiteSpace(codigo))
-                codigo = "SIMULADOR-MEGAHAIR";
+            var origem = OrigensSimulador.FirstOrDefault(o => o.Chave == request.Origem);
+            if (origem.Chave == null)
+                return BadRequest("Selecione uma origem de cabelo válida.");
+
+            var codigo = CodigoProdutoSimulador(configuration, origem.Chave);
 
             var produtos = _context.Produtos
                 .Where(p => p.Codigo == codigo && p.Status && p.TipoProduto == TipoProduto.Cabelo)
@@ -267,7 +322,7 @@ Se estiver de acordo responda:
             return Ok(new { valorTotal = decimal.Round(total, 2) });
         }
 
-        public sealed record PrecoSimuladorRequest(string Metodo, decimal QuantidadeGramas);
+        public sealed record PrecoSimuladorRequest(string Metodo, decimal QuantidadeGramas, string? Origem);
 
         // ✅ EDIT AJAX — completo com todos os campos
         [HttpPost]

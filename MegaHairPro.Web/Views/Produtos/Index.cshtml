@@ -11,6 +11,13 @@
 
 <div class="section-card">
     <div class="section-label">Novo produto</div>
+    @if (User.IsInRole("Admin"))
+    {
+        <form method="post" action="@Url.Action("CadastrarProdutosDoSimulador", "Simulacao", new { voltar = true })" class="mb-3">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-outline-secondary">Cadastrar produtos do simulador</button>
+        </form>
+    }
     <form id="formProduto">
         @Html.AntiForgeryToken()
         <div class="row g-3 align-items-end">
@@ -39,7 +46,7 @@
                 <select name="Origem" class="form-select">
                     <option value="">Selecione</option>
                     <option>Indiano</option><option>Vietnamita</option>
-                    <option>Russo</option><option>Brasileiro</option>
+                    <option>Russo</option><option>Brasileiro</option><option>Brasileiro regional</option><option>Brasileiro do Sul</option>
                 </select>
             </div>
             <div class="col-md-2 campo-cabelo">
@@ -80,7 +87,7 @@
             <select id="filtroOrigem" class="form-select">
                 <option value="">Origem</option>
                 <option>Indiano</option><option>Vietnamita</option>
-                <option>Russo</option><option>Brasileiro</option>
+                <option>Russo</option><option>Brasileiro</option><option>Brasileiro regional</option><option>Brasileiro do Sul</option>
             </select>
         </div>
         <div class="col-md-2">
@@ -153,7 +160,7 @@
                         <label class="form-label">Origem</label>
                         <select id="editOrigem" class="form-select">
                             <option>Indiano</option><option>Vietnamita</option>
-                            <option>Russo</option><option>Brasileiro</option>
+                            <option>Russo</option><option>Brasileiro</option><option>Brasileiro regional</option><option>Brasileiro do Sul</option>
                         </select>
                     </div>
                     <div class="col-md-4">
