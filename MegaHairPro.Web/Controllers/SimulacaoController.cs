@@ -219,6 +219,56 @@ Se estiver de acordo responda:
         }
 
 
+        [HttpGet("/api/simulador-megahair/metodos")]
+        [AllowAnonymous]
+        public IActionResult MetodosDoSimulador() => Ok(_context.MetodosAplicacao
+            .Where(m => m.Status && m.Nome != null && m.Nome != "")
+            .Select(m => m.Nome)
+            .Distinct()
+            .OrderBy(nome => nome)
+            .ToList());
+
+        [HttpPost("/api/simulador-megahair/preco")]
+        [AllowAnonymous]
+        [IgnoreAntiforgeryToken]
+        public IActionResult PrecoDoSimulador(
+            [FromBody] PrecoSimuladorRequest request,
+            [FromServices] Microsoft.Extensions.Configuration.IConfiguration configuration)
+        {
+            if (request.QuantidadeGramas <= 0 || string.IsNullOrWhiteSpace(request.Metodo))
+                return BadRequest();
+
+            var codigo = configuration["SimuladorMegaHair:ProdutoCodigo"]?.Trim();
+            if (string.IsNullOrWhiteSpace(codigo))
+                codigo = "SIMULADOR-MEGAHAIR";
+
+            var produtos = _context.Produtos
+                .Where(p => p.Codigo == codigo && p.Status && p.TipoProduto == TipoProduto.Cabelo)
+                .Select(p => p.Id).Take(2).ToList();
+            if (produtos.Count != 1)
+                return NotFound();
+
+            var nomeMetodo = request.Metodo.Trim();
+            var metodos = _context.MetodosAplicacao.Where(m => m.Status && m.Nome != null)
+                .ToList().Where(m => string.Equals(m.Nome?.Trim(), nomeMetodo, StringComparison.OrdinalIgnoreCase))
+                .Take(2).ToList();
+            if (metodos.Count != 1)
+                return NotFound();
+
+            var custos = _custoMedio.CalculaCustoCabelo(produtos[0], request.QuantidadeGramas, 70m);
+            if (custos.Count == 0 || Convert.ToDecimal(custos[0]["custo"]) <= 0)
+                return UnprocessableEntity();
+
+            var despesas = _context.Despesas.Where(d => d.Ratear).Select(d => d.Valor)
+                .AsEnumerable().Sum(valor => valor / 50);
+            var total = Convert.ToDecimal(custos[0]["custo"]) + Convert.ToDecimal(custos[0]["lucro"])
+                + metodos[0].ValorPorGrama * request.QuantidadeGramas + despesas;
+
+            return Ok(new { valorTotal = decimal.Round(total, 2) });
+        }
+
+        public sealed record PrecoSimuladorRequest(string Metodo, decimal QuantidadeGramas);
+
         // ✅ EDIT AJAX — completo com todos os campos
         [HttpPost]
         [ValidateAntiForgeryToken]
