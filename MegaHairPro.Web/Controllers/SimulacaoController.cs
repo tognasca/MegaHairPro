@@ -281,6 +281,22 @@ Se estiver de acordo responda:
             .OrderBy(nome => nome)
             .ToList());
 
+        [HttpPost("/api/simulador-megahair/previa")]
+        [AllowAnonymous]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> PreviaDoSimulador(
+            [FromBody] PrecoSimuladorRequest request,
+            [FromServices] Microsoft.Extensions.Configuration.IConfiguration configuration,
+            [FromServices] BookingConfigService config)
+        {
+            if (!await config.MostrarOrcamentoAntesAsync())
+                return Ok(new { ativo = false });
+
+            var cotacao = PrecoDoSimulador(request, configuration) as OkObjectResult;
+            var valor = (cotacao?.Value as PrecoSimuladorResponse)?.ValorTotal;
+            return Ok(new { ativo = true, valorTotal = valor });
+        }
+
         [HttpPost("/api/simulador-megahair/preco")]
         [AllowAnonymous]
         [IgnoreAntiforgeryToken]
@@ -319,8 +335,10 @@ Se estiver de acordo responda:
             var total = Convert.ToDecimal(custos[0]["custo"]) + Convert.ToDecimal(custos[0]["lucro"])
                 + metodos[0].ValorPorGrama * request.QuantidadeGramas + despesas;
 
-            return Ok(new { valorTotal = decimal.Round(total, 2) });
+            return Ok(new PrecoSimuladorResponse(decimal.Round(total, 2)));
         }
+
+        private sealed record PrecoSimuladorResponse(decimal ValorTotal);
 
         public sealed record PrecoSimuladorRequest(string Metodo, decimal QuantidadeGramas, string? Origem);
 

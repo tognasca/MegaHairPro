@@ -13,6 +13,16 @@
     <div class="section-label">Novo produto</div>
     @if (User.IsInRole("Admin"))
     {
+        var mostrarOrcamento = ViewBag.MostrarOrcamentoAntes is true;
+        <form method="post" action="@Url.Action("SalvarOrcamentoAntes", "Produtos")" class="mb-3">
+            @Html.AntiForgeryToken()
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" id="mostrarOrcamentoAntes"
+                       name="ativo" value="true" checked="@mostrarOrcamento" />
+                <label class="form-check-label" for="mostrarOrcamentoAntes">Mostrar orçamento antes de gerar</label>
+            </div>
+            <button type="submit" class="btn btn-outline-secondary mt-2">Salvar configuração</button>
+        </form>
         <form method="post" action="@Url.Action("CadastrarProdutosDoSimulador", "Simulacao", new { voltar = true })" class="mb-3">
             @Html.AntiForgeryToken()
             <button type="submit" class="btn btn-outline-secondary">Cadastrar produtos do simulador</button>

@@ -1,3 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
+using MegaHairPro.Web.Services;
+using System.Threading.Tasks;
 using MegaHairPro.Web.Data;
 using MegaHairPro.Web.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -17,14 +20,27 @@ namespace MegaHairPro.Web.Controllers
 
         // ✅ INDEX GET
         [HttpGet]
-        public IActionResult Index()
+        public async Task<IActionResult> Index([FromServices] BookingConfigService config)
         {
             var produtos = _context.Produtos
                 .AsNoTracking()
                 .OrderByDescending(p => p.Id)
                 .ToList();
 
+            if (User.IsInRole("Admin"))
+                ViewBag.MostrarOrcamentoAntes = await config.MostrarOrcamentoAntesAsync();
+
             return View(produtos);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SalvarOrcamentoAntes(
+            bool ativo, [FromServices] BookingConfigService config)
+        {
+            await config.SalvarOrcamentoAntesAsync(ativo);
+            return RedirectToAction(nameof(Index));
         }
 
         // ✅ CREATE CORRETO
