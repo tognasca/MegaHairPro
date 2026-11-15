@@ -130,6 +130,9 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddHttpClient("SincronizacaoOrcamento", client => client.Timeout = TimeSpan.FromSeconds(15));
+builder.Services.AddHostedService<MegaHairPro.Web.Services.SincronizacaoOrcamento>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

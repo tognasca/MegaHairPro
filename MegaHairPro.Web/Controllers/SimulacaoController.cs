@@ -220,7 +220,7 @@ Se estiver de acordo responda:
         }
 
 
-        private static readonly (string Chave, string Origem)[] OrigensSimulador =
+        internal static readonly (string Chave, string Origem)[] OrigensSimulador =
         [
             ("brasileiro-regional", "Brasileiro regional"),
             ("brasileiro-do-sul", "Brasileiro do Sul"),
@@ -266,7 +266,7 @@ Se estiver de acordo responda:
             return Ok(produtos.Select(p => new { p.Codigo, p.Origem }));
         }
 
-        private static string CodigoProdutoSimulador(
+        internal static string CodigoProdutoSimulador(
             Microsoft.Extensions.Configuration.IConfiguration configuration, string chave) =>
             configuration["SimuladorMegaHair:Produtos:" + chave]?.Trim() is { Length: > 0 } codigo
                 ? codigo
