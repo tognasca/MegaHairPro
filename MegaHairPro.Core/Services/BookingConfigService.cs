@@ -18,15 +18,11 @@ public class BookingConfigService
 
     public BookingConfigService(AppDbContext context) => _context = context;
 
-    public async Task EnsureSchemaAsync()
+    public Task EnsureSchemaAsync()
     {
-        await _context.Database.ExecuteSqlRawAsync(@"
-            IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='ConfiguracoesBooking' AND xtype='U')
-            CREATE TABLE [dbo].[ConfiguracoesBooking] (
-                [Chave] NVARCHAR(80) NOT NULL PRIMARY KEY,
-                [Valor] NVARCHAR(500) NOT NULL,
-                [AtualizadoEm] DATETIME2(7) NOT NULL DEFAULT GETDATE()
-            )");
+        // ConfiguracoesBooking is part of the EF Core model and must be created by
+        // the PostgreSQL migration. Runtime DDL is intentionally not executed here.
+        return Task.CompletedTask;
     }
 
     public async Task<BookingConfigDto> GetAsync(bool force = false)
