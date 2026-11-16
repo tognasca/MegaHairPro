@@ -186,7 +186,7 @@ namespace MegaHairPro.Web.Controllers
                 return false;
             }
 
-            if (string.IsNullOrWhiteSpace(cliente.CPF) || !IsValidCPF(cliente.CPF))
+            if (!string.IsNullOrWhiteSpace(cliente.CPF) && !IsValidCPF(cliente.CPF))
             {
                 erro = "CPF invalido";
                 return false;
