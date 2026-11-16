@@ -1,3 +1,6 @@
+using System;
+using MegaHairPro.Web.Services.Interfaces;
+using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Authorization;
 using MegaHairPro.Web.Services;
 using System.Threading.Tasks;
@@ -18,9 +21,11 @@ namespace MegaHairPro.Web.Controllers
             _context = context;
         }
 
-        // ✅ INDEX GET
+        public sealed record OrigemSimulador(string Nome, string Codigo, string Situacao);
+
         [HttpGet]
-        public async Task<IActionResult> Index([FromServices] BookingConfigService config)
+        public async Task<IActionResult> Index([FromServices] BookingConfigService config,
+            [FromServices] IConfiguration configuracao, [FromServices] ICustoMedioService custos)
         {
             var produtos = _context.Produtos
                 .AsNoTracking()
@@ -28,7 +33,27 @@ namespace MegaHairPro.Web.Controllers
                 .ToList();
 
             if (User.IsInRole("Admin"))
+            {
                 ViewBag.MostrarOrcamentoAntes = await config.MostrarOrcamentoAntesAsync();
+                ViewBag.OrigensSimulador = SimulacaoController.OrigensSimulador.Select(origem =>
+                {
+                    var codigo = SimulacaoController.CodigoProdutoSimulador(configuracao, origem.Chave);
+                    var encontrados = produtos.Where(p => p.Codigo == codigo).Take(2).ToArray();
+                    var situacao = "Produto ainda não cadastrado";
+                    if (encontrados.Length > 1 || encontrados.Any(p => p.TipoProduto != TipoProduto.Cabelo))
+                        situacao = "Código em conflito";
+                    else if (encontrados.Length == 1 && !encontrados[0].Status)
+                        situacao = "Produto inativo";
+                    else if (encontrados.Length == 1)
+                    {
+                        var custo = custos.CalculaCustoCabelo(encontrados[0].Id, 1m, 70m).SingleOrDefault();
+                        situacao = custo is not null && Convert.ToDecimal(custo["custo"]) > 0
+                            ? "Custo disponível para sincronizar" : "Aguardando compra com custo";
+                    }
+
+                    return new OrigemSimulador(origem.Origem, codigo, situacao);
+                }).ToArray();
+            }
 
             return View(produtos);
         }
@@ -40,6 +65,7 @@ namespace MegaHairPro.Web.Controllers
             bool ativo, [FromServices] BookingConfigService config)
         {
             await config.SalvarOrcamentoAntesAsync(ativo);
+            TempData["SimuladorSucesso"] = "Configuração do orçamento salva.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -55,6 +81,7 @@ namespace MegaHairPro.Web.Controllers
                 ? UnidadeMedida.Grama
                 : produto.UnidadeMedida;
 
+            produto.Descricao = DescricaoDoProduto(produto);
             _context.Produtos.Add(produto);
             _context.SaveChanges();
 
@@ -71,7 +98,7 @@ namespace MegaHairPro.Web.Controllers
             if (original == null)
                 return Json(new { success = false });
 
-            original.Descricao = produto.Descricao;
+            original.Descricao = DescricaoDoProduto(produto);
             original.TipoProduto = produto.TipoProduto;
             original.UnidadeMedida = produto.TipoProduto == TipoProduto.Cabelo
                 ? UnidadeMedida.Grama
@@ -133,6 +160,7 @@ namespace MegaHairPro.Web.Controllers
                 ? UnidadeMedida.Grama
                 : model.UnidadeMedida;
 
+            model.Descricao = DescricaoDoProduto(model);
             _context.Produtos.Add(model);
 
             _context.SaveChanges();
@@ -140,6 +168,16 @@ namespace MegaHairPro.Web.Controllers
 
             return PartialView("_ProdutoRow", model);
 
+        }
+
+        private static string DescricaoDoProduto(Produto produto)
+        {
+            if (!string.IsNullOrWhiteSpace(produto.Descricao))
+                return produto.Descricao.Trim();
+
+            var detalhes = string.Join(" · ", new[] { produto.Origem, produto.Tamanho, produto.Cor }
+                .Where(valor => !string.IsNullOrWhiteSpace(valor)).Select(valor => valor!.Trim()));
+            return detalhes.Length > 0 ? detalhes : produto.TipoProduto.ToString();
         }
 
           // ✅ GERAR CÓDIGO

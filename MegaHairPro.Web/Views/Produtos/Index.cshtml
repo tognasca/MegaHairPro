@@ -11,23 +11,6 @@
 
 <div class="section-card">
     <div class="section-label">Novo produto</div>
-    @if (User.IsInRole("Admin"))
-    {
-        var mostrarOrcamento = ViewBag.MostrarOrcamentoAntes is true;
-        <form method="post" action="@Url.Action("SalvarOrcamentoAntes", "Produtos")" class="mb-3">
-            @Html.AntiForgeryToken()
-            <div class="form-check form-switch">
-                <input type="checkbox" class="form-check-input" id="mostrarOrcamentoAntes"
-                       name="ativo" value="true" checked="@mostrarOrcamento" />
-                <label class="form-check-label" for="mostrarOrcamentoAntes">Mostrar orçamento antes de gerar</label>
-            </div>
-            <button type="submit" class="btn btn-outline-secondary mt-2">Salvar configuração</button>
-        </form>
-        <form method="post" action="@Url.Action("CadastrarProdutosDoSimulador", "Simulacao", new { voltar = true })" class="mb-3">
-            @Html.AntiForgeryToken()
-            <button type="submit" class="btn btn-outline-secondary">Cadastrar produtos do simulador</button>
-        </form>
-    }
     <form id="formProduto">
         @Html.AntiForgeryToken()
         <div class="row g-3 align-items-end">
@@ -46,10 +29,6 @@
                     <option value="2">mL</option>
                     <option value="3">Unidade</option>
                 </select>
-            </div>
-            <div class="col-md-3 campo-cabelo-nome d-none">
-                <label class="form-label">Nome</label>
-                <input name="Nome" id="txtnome" class="form-control" />
             </div>
             <div class="col-md-2 campo-cabelo">
                 <label class="form-label">Origem</label>
@@ -75,9 +54,9 @@
                     <option>Castanho Escuro</option><option>Loiro</option><option>Preto</option>
                 </select>
             </div>
-            <div class="col-md-5 campo-acessorio d-none">
-                <label class="form-label">Descrição</label>
-                <input name="Descricao" class="form-control" />
+            <div class="col-md-5">
+                <label class="form-label" for="produtoDescricao">Descrição</label>
+                <input id="produtoDescricao" name="Descricao" class="form-control" placeholder="Opcional" />
             </div>
             <div class="col-md-1">
                 <button id="btnSalvar" class="btn btn-success w-100">Salvar</button>
@@ -85,6 +64,55 @@
         </div>
     </form>
 </div>
+
+@if (User.IsInRole("Admin"))
+{
+    var mostrarOrcamento = ViewBag.MostrarOrcamentoAntes is true;
+    var origens = ViewBag.OrigensSimulador as MegaHairPro.Web.Controllers.ProdutosController.OrigemSimulador[];
+    <section class="section-card" aria-labelledby="titulo-simulador">
+        <h2 id="titulo-simulador" class="section-label">Produtos do Simulador</h2>
+        @if (TempData["SimuladorSucesso"] is string sucesso)
+        {
+            <p role="status" class="alert alert-success">@sucesso</p>
+        }
+        @if (TempData["SimuladorErro"] is string alerta)
+        {
+            <p role="alert" class="alert alert-warning">@alerta</p>
+        }
+        <p>Cadastre as origens padrão e registre uma compra com gramagem e custo para cada origem que quiser disponibilizar.</p>
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+            <form method="post" action="@Url.RouteUrl("CadastrarProdutosDoSimulador")">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="voltar" value="true" />
+                <button type="submit" class="btn btn-primary">Cadastrar origens padrão</button>
+            </form>
+            <a href="@Url.Action("Index", "Compras")" class="btn btn-outline-secondary">Ir para Compras</a>
+        </div>
+        @if (origens is not null)
+        {
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead><tr><th scope="col">Origem</th><th scope="col">Código</th><th scope="col">Situação</th></tr></thead>
+                    <tbody>
+                        @foreach (var origem in origens)
+                        {
+                            <tr><td>@origem.Nome</td><td>@origem.Codigo</td><td>@origem.Situacao</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        <form method="post" action="@Url.Action("SalvarOrcamentoAntes", "Produtos")" class="border-top pt-3">
+            @Html.AntiForgeryToken()
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" id="mostrarOrcamentoAntes"
+                       name="ativo" value="true" checked="@mostrarOrcamento" />
+                <label class="form-check-label" for="mostrarOrcamentoAntes">Mostrar orçamento antes de gerar a imagem</label>
+            </div>
+            <button type="submit" class="btn btn-outline-secondary mt-2">Salvar configuração do orçamento</button>
+        </form>
+    </section>
+}
 
 <!-- FILTROS -->
 <div class="section-card">
@@ -151,6 +179,10 @@
             <div class="modal-body">
                 <input type="hidden" id="editId" />
                 <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label" for="editDescricao">Descrição</label>
+                        <input id="editDescricao" class="form-control" />
+                    </div>
                     <div class="col-md-4">
                         <label class="form-label">Tipo</label>
                         <select id="editTipo" class="form-select">
@@ -265,11 +297,9 @@
         let tipo = $(this).val();
         if (tipo == "2") {
             $(".campo-cabelo").addClass("d-none");
-            $(".campo-acessorio").removeClass("d-none");
         }
         else {
             $(".campo-cabelo").removeClass("d-none");
-            $(".campo-acessorio").addClass("d-none");
         }
         aplicarRegraUnidade(tipo);
     });
@@ -325,6 +355,7 @@
 
         $("#editId").val(id);
         $("#editTipo").val(row.dataset.tipo);
+        $("#editDescricao").val(row.dataset.nome || "");
         $("#editOrigem").val(row.dataset.origem);
         $("#editTamanho").val(row.dataset.tamanho);
         $("#editCor").val(row.dataset.cor);
@@ -342,10 +373,11 @@
         let fd = new FormData();
         fd.append("Id", id);
         fd.append("TipoProduto", $("#editTipo").val());
+        fd.append("Descricao", $("#editDescricao").val());
         fd.append("UnidadeMedida", $("#editUnidadeMedida").val());
-        fd.append("Origem", $("#editOrigem").val());
-        fd.append("Tamanho", $("#editTamanho").val());
-        fd.append("Cor", $("#editCor").val());
+        fd.append("Origem", $("#editOrigem").val() || "");
+        fd.append("Tamanho", $("#editTamanho").val() || "");
+        fd.append("Cor", $("#editCor").val() || "");
         fd.append("__RequestVerificationToken", getToken());
 
         $.ajax({
