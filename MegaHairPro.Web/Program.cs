@@ -156,7 +156,12 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseExceptionHandler("/Home/Error");
+    app.UseExceptionHandler(erro => erro.Run(async contexto =>
+    {
+        contexto.Response.StatusCode = 500;
+        contexto.Response.ContentType = "text/plain; charset=utf-8";
+        await contexto.Response.WriteAsync("Ocorreu um erro ao processar sua solicitação.");
+    }));
 }
 
 var culturaPtBr = new CultureInfo("pt-BR");

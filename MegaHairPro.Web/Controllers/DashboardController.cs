@@ -7,6 +7,7 @@ namespace MegaHairPro.Web.Controllers
 {
     public class DashboardController : Controller
     {
+        private static readonly TimeZoneInfo FusoSalao = TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo");
         private readonly AppDbContext _context;
 
         public DashboardController(AppDbContext context)
@@ -16,11 +17,12 @@ namespace MegaHairPro.Web.Controllers
 
         public IActionResult Index()
         {
-            var hoje = DateTime.Today;
-            var amanha = hoje.AddDays(1);
+            var hoje = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, FusoSalao).Date;
+            var inicioUtc = TimeZoneInfo.ConvertTimeToUtc(hoje, FusoSalao);
+            var fimUtc = TimeZoneInfo.ConvertTimeToUtc(hoje.AddDays(1), FusoSalao);
 
             var vendasHoje = _context.Vendas
-                .Where(v => v.DataVenda >= hoje && v.DataVenda < amanha)
+                .Where(v => v.DataVenda >= inicioUtc && v.DataVenda < fimUtc)
                 .ToList();
 
             ViewBag.TotalHoje = vendasHoje.Sum(x => x.PrecoVenda);
