@@ -18,7 +18,7 @@ public class Produto
     // ===== FORNECEDOR =====
     public int? FornecedorId { get; set; }
     public Fornecedor? Fornecedor { get; set; }
-    public DateTime DataCadastro { get; set; } = DateTime.Now;
+    public DateTime DataCadastro { get; set; } = DateTime.UtcNow;
     public bool Status { get; set; } = true;
     public decimal EstoqueGramas { get; set; }
 }
