@@ -24,38 +24,43 @@ namespace MegaHairPro.Web.Controllers
         public sealed record OrigemSimulador(string Nome, string Codigo, string Situacao);
 
         [HttpGet]
-        public async Task<IActionResult> Index([FromServices] BookingConfigService config,
+        public IActionResult Index()
+        {
+            var produtos = _context.Produtos.AsNoTracking().OrderByDescending(p => p.Id).ToList();
+            return View(produtos);
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Simulador([FromServices] BookingConfigService config,
             [FromServices] IConfiguration configuracao, [FromServices] ICustoMedioService custos)
         {
-            var produtos = _context.Produtos
-                .AsNoTracking()
-                .OrderByDescending(p => p.Id)
-                .ToList();
+            var codigos = SimulacaoController.OrigensSimulador
+                .Select(origem => SimulacaoController.CodigoProdutoSimulador(configuracao, origem.Chave))
+                .ToArray();
+            var produtos = _context.Produtos.AsNoTracking()
+                .Where(produto => codigos.Contains(produto.Codigo!)).ToList();
 
-            if (User.IsInRole("Admin"))
+            ViewBag.MostrarOrcamentoAntes = await config.MostrarOrcamentoAntesAsync();
+            ViewBag.OrigensSimulador = SimulacaoController.OrigensSimulador.Select(origem =>
             {
-                ViewBag.MostrarOrcamentoAntes = await config.MostrarOrcamentoAntesAsync();
-                ViewBag.OrigensSimulador = SimulacaoController.OrigensSimulador.Select(origem =>
+                var codigo = SimulacaoController.CodigoProdutoSimulador(configuracao, origem.Chave);
+                var encontrados = produtos.Where(p => p.Codigo == codigo).Take(2).ToArray();
+                var situacao = "Produto ainda não cadastrado";
+                if (encontrados.Length > 1 || encontrados.Any(p => p.TipoProduto != TipoProduto.Cabelo))
+                    situacao = "Código em conflito";
+                else if (encontrados.Length == 1 && !encontrados[0].Status)
+                    situacao = "Produto inativo";
+                else if (encontrados.Length == 1)
                 {
-                    var codigo = SimulacaoController.CodigoProdutoSimulador(configuracao, origem.Chave);
-                    var encontrados = produtos.Where(p => p.Codigo == codigo).Take(2).ToArray();
-                    var situacao = "Produto ainda não cadastrado";
-                    if (encontrados.Length > 1 || encontrados.Any(p => p.TipoProduto != TipoProduto.Cabelo))
-                        situacao = "Código em conflito";
-                    else if (encontrados.Length == 1 && !encontrados[0].Status)
-                        situacao = "Produto inativo";
-                    else if (encontrados.Length == 1)
-                    {
-                        var custo = custos.CalculaCustoCabelo(encontrados[0].Id, 1m, 70m).SingleOrDefault();
-                        situacao = custo is not null && Convert.ToDecimal(custo["custo"]) > 0
-                            ? "Custo disponível para sincronizar" : "Aguardando compra com custo";
-                    }
+                    var custo = custos.CalculaCustoCabelo(encontrados[0].Id, 1m, 70m).SingleOrDefault();
+                    situacao = custo is not null && Convert.ToDecimal(custo["custo"]) > 0
+                        ? "Custo disponível para sincronizar" : "Aguardando compra com custo";
+                }
 
-                    return new OrigemSimulador(origem.Origem, codigo, situacao);
-                }).ToArray();
-            }
-
-            return View(produtos);
+                return new OrigemSimulador(origem.Origem, codigo, situacao);
+            }).ToArray();
+            return View();
         }
 
         [HttpPost]
@@ -66,7 +71,7 @@ namespace MegaHairPro.Web.Controllers
         {
             await config.SalvarOrcamentoAntesAsync(ativo);
             TempData["SimuladorSucesso"] = "Configuração do orçamento salva.";
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Simulador));
         }
 
         // ✅ CREATE CORRETO

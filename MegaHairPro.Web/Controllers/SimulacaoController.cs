@@ -248,7 +248,7 @@ Se estiver de acordo responda:
             {
                 if (!voltar) return Conflict(mensagem);
                 TempData["SimuladorErro"] = mensagem;
-                return RedirectToAction("Index", "Produtos");
+                return RedirectToAction("Simulador", "Produtos");
             }
 
             if (produtos.Select(p => p.Codigo).Distinct(StringComparer.OrdinalIgnoreCase).Count() != produtos.Length)
@@ -283,7 +283,7 @@ Se estiver de acordo responda:
                     : $"{criados} produto(s) do Simulador cadastrado(s). Registre as compras com gramagem e custo.";
                 if (bloqueados.Count > 0)
                     TempData["SimuladorErro"] = "Revise os produtos inativos ou com código em conflito: " + string.Join(", ", bloqueados);
-                return RedirectToAction("Index", "Produtos");
+                return RedirectToAction("Simulador", "Produtos");
             }
 
             return Ok(produtos.Select(p => new { p.Codigo, p.Origem }));
