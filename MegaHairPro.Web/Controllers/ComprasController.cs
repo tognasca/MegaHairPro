@@ -1,3 +1,4 @@
+using System;
 using MegaHairPro.Web.Data;
 using MegaHairPro.Web.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -52,6 +53,7 @@ namespace MegaHairPro.Web.Controllers
                 return View("Index", ObterComprasVM());
             }
 
+            compra.DataCompra = NormalizarDiaDaCompra(compra.DataCompra);
             compra.Ativo = true;
             _context.Compras.Add(compra);
             AtualizarEstoque(compra.ProdutoId, compra.QuantidadeGramas ?? 0, true);
@@ -76,7 +78,7 @@ namespace MegaHairPro.Web.Controllers
             original.FornecedorId = compra.FornecedorId;
             original.QuantidadeGramas = compra.QuantidadeGramas;
             original.ValorTotal = compra.ValorTotal;
-            original.DataCompra = compra.DataCompra;
+            original.DataCompra = NormalizarDiaDaCompra(compra.DataCompra);
 
             // Aplica novo estoque
             AtualizarEstoque(original.ProdutoId, original.QuantidadeGramas ?? 0, true);
@@ -86,6 +88,10 @@ namespace MegaHairPro.Web.Controllers
             var vm = ObterCompraVM(original.Id);
             return PartialView("_CompraRow", vm);
         }
+
+        // O formulário envia apenas o dia. Grava o mesmo dia à meia-noite em UTC.
+        private static DateTime NormalizarDiaDaCompra(DateTime data) =>
+            DateTime.SpecifyKind(data.Date, DateTimeKind.Utc);
 
         // ✅ TOGGLE STATUS
         [HttpPost]
