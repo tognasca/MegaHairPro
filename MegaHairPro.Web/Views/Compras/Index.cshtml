@@ -31,7 +31,7 @@
                 <label class="form-label">Produto</label>
                 <select name="ProdutoId" class="form-select" required>
                     <option value="">Selecione...</option>
-                    @foreach (var p in ViewBag.Produtos) { <option value="@p.Id">@p.Nome</option> }
+                    <partial name="_OpcoesProduto" model="ViewBag.Produtos" />
                 </select>
             </div>
             <div class="col-md-2">
@@ -99,7 +99,7 @@
                     <div class="col-12">
                         <label class="form-label">Produto</label>
                         <select id="editProdutoId" class="form-select">
-                            @foreach (var p in ViewBag.Produtos) { <option value="@p.Id">@p.Nome</option> }
+                            <partial name="_OpcoesProduto" model="ViewBag.Produtos" />
                         </select>
                     </div>
                     <div class="col-12">

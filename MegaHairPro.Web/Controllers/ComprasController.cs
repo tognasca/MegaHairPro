@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using System;
 using MegaHairPro.Web.Data;
 using MegaHairPro.Web.Models;
@@ -12,10 +13,15 @@ namespace MegaHairPro.Web.Controllers
     {
         private readonly AppDbContext _context;
 
-        public ComprasController(AppDbContext context)
+        private readonly IConfiguration _configuracao;
+
+        public ComprasController(AppDbContext context, IConfiguration configuracao)
         {
             _context = context;
+            _configuracao = configuracao;
         }
+
+        public sealed record OpcaoProduto(int Id, string Nome, bool DoSimulador);
 
         // ✅ LISTAGEM
         [HttpGet]
@@ -137,17 +143,23 @@ namespace MegaHairPro.Web.Controllers
 
         private void CarregarViewBags()
         {
-            // Exibe código + nome no combo: "CAB-0001 - Cabelo Natural"
-            ViewBag.Produtos = _context.Produtos.Where(p => p.Status == true)
-     .OrderBy(p => p.Codigo)
-     .Select(p => new
-     {
-         p.Id,
-         Nome = p.TipoProduto == TipoProduto.Cabelo
-             ? p.Origem + " (" + p.Tamanho + ")" + " - " + p.Cor
-             : p.Codigo + " - " + p.Descricao
-     }).OrderBy(x => x.Id)
-     .ToList();
+            var codigosSimulador = SimulacaoController.OrigensSimulador
+                .Select(origem => SimulacaoController.CodigoProdutoSimulador(_configuracao, origem.Chave))
+                .ToHashSet();
+            ViewBag.Produtos = _context.Produtos.AsNoTracking().Where(p => p.Status)
+                .OrderBy(p => p.Codigo)
+                .Select(p => new { p.Id, p.Codigo, p.Descricao, p.Origem, p.Tamanho, p.Cor, p.TipoProduto })
+                .ToList()
+                .Select(p =>
+                {
+                    var doSimulador = p.Codigo is not null && codigosSimulador.Contains(p.Codigo);
+                    var detalhes = string.Join(" · ", new[] { p.Origem, p.Tamanho, p.Cor }
+                        .Where(valor => !string.IsNullOrWhiteSpace(valor)));
+                    var nome = !string.IsNullOrWhiteSpace(p.Descricao) ? p.Descricao
+                        : detalhes.Length > 0 ? detalhes : p.TipoProduto.ToString();
+                    var rotulo = string.IsNullOrWhiteSpace(p.Codigo) ? nome : $"{p.Codigo} — {nome}";
+                    return new OpcaoProduto(p.Id, rotulo, doSimulador);
+                }).ToArray();
 
             ViewBag.Fornecedores = _context.Fornecedores
                 .Where(f => f.Status == true)

@@ -1,0 +1,11 @@
+@model IEnumerable<MegaHairPro.Web.Controllers.ComprasController.OpcaoProduto>
+
+@foreach (var grupo in Model.GroupBy(p => p.DoSimulador).OrderByDescending(g => g.Key))
+{
+    <optgroup label="@(grupo.Key ? "Produtos do Simulador" : "Produtos do estoque")">
+        @foreach (var produto in grupo)
+        {
+            <option value="@produto.Id">@produto.Nome</option>
+        }
+    </optgroup>
+}

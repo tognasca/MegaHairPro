@@ -269,6 +269,7 @@
     @{
         bool isAdmin = User.IsInRole("Admin");
         string ctrl = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+        bool verProdutosSimulador = ctrl == "Produtos" && Equals(ViewContext.RouteData.Values["action"], "Simulador");
 
         var usuarioAtual = await UserManager.GetUserAsync(User);
 
@@ -332,7 +333,8 @@
         @if (isAdmin)
         {
             <div class="sb-section">Estoque</div>
-            <a href="/Produtos/Index"         class="sb-link @A("Produtos")">         <i class="bi bi-box-seam"></i>       Produtos      </a>
+            <a href="/Produtos/Index" class="sb-link @(verProdutosSimulador ? "" : A("Produtos"))"><i class="bi bi-box-seam"></i> Produtos</a>
+            <a href="/Produtos/Simulador" class="sb-link ps-4 @(verProdutosSimulador ? "active" : "")"><i class="bi bi-diagram-2"></i> Produtos do Simulador</a>
             <a href="/Compras/Index"          class="sb-link @A("Compras")">          <i class="bi bi-truck"></i>          Compras       </a>
             <a href="/MetodosAplicacao/Index" class="sb-link @A("MetodosAplicacao")"> <i class="bi bi-tools"></i>          Métodos       </a>
 
