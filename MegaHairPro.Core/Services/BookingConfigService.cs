@@ -18,15 +18,11 @@ public class BookingConfigService
 
     public BookingConfigService(AppDbContext context) => _context = context;
 
-    public async Task EnsureSchemaAsync()
+    public Task EnsureSchemaAsync()
     {
-        await _context.Database.ExecuteSqlRawAsync(@"
-            IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='ConfiguracoesBooking' AND xtype='U')
-            CREATE TABLE [dbo].[ConfiguracoesBooking] (
-                [Chave] NVARCHAR(80) NOT NULL PRIMARY KEY,
-                [Valor] NVARCHAR(500) NOT NULL,
-                [AtualizadoEm] DATETIME2(7) NOT NULL DEFAULT GETDATE()
-            )");
+        // ConfiguracoesBooking is part of the EF Core model and must be created by
+        // the PostgreSQL migration. Runtime DDL is intentionally not executed here.
+        return Task.CompletedTask;
     }
 
     public async Task<BookingConfigDto> GetAsync(bool force = false)
@@ -83,6 +79,33 @@ public class BookingConfigService
         await Set(nameof(BookingConfigDto.PrazoAlteracaoHoras), updates.PrazoAlteracaoHoras.ToString());
         await _context.SaveChangesAsync();
         return await GetAsync(force: true);
+    }
+
+    private const string ChavePreviaSimulador = "SimuladorMegaHair.MostrarOrcamentoAntes";
+
+    public async Task<bool> MostrarOrcamentoAntesAsync()
+    {
+        await EnsureSchemaAsync();
+        var valor = await _context.ConfiguracoesBooking.AsNoTracking()
+            .Where(row => row.Chave == ChavePreviaSimulador)
+            .Select(row => row.Valor).SingleOrDefaultAsync();
+        return bool.TryParse(valor, out var ativo) && ativo;
+    }
+
+    public async Task SalvarOrcamentoAntesAsync(bool ativo)
+    {
+        await EnsureSchemaAsync();
+        await using var transacao = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
+        var row = await _context.ConfiguracoesBooking.FindAsync(ChavePreviaSimulador);
+        if (row == null)
+        {
+            row = new ConfiguracaoBooking { Chave = ChavePreviaSimulador };
+            _context.ConfiguracoesBooking.Add(row);
+        }
+        row.Valor = ativo.ToString();
+        row.AtualizadoEm = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+        await transacao.CommitAsync();
     }
 
     public async Task<bool> PodeAlterarAsync(DateTime dataHora)

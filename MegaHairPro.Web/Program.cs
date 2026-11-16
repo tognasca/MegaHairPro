@@ -35,9 +35,15 @@ builder.Services.AddControllersWithViews(options =>
     options.Filters.Add(new AuthorizeFilter(policy));
 });
 
-// Factory for AtendimentoService (shared with Desktop). Also registers AppDbContext as scoped.
+// PostgreSQL is the single relational provider for MegaHairPro.
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(connectionString))
+    throw new InvalidOperationException(
+        "Configure ConnectionStrings__DefaultConnection with the PostgreSQL connection string.");
+
 builder.Services.AddDbContextFactory<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(connectionString, npgsql =>
+        npgsql.MigrationsAssembly("MegaHairPro.PostgreSqlMigrations")));
 
 builder.Services.AddScoped<ISimulacaoService, SimulacaoService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -130,7 +136,19 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddHttpClient("SincronizacaoOrcamento", client => client.Timeout = TimeSpan.FromSeconds(15));
+builder.Services.AddHostedService<MegaHairPro.Web.Services.SincronizacaoOrcamento>();
+
 var app = builder.Build();
+
+// Schema changes are opt-in. Set Database__ApplyMigrations=true only after
+// reviewing the generated PostgreSQL migration and taking a fresh backup.
+if (app.Configuration.GetValue<bool>("Database:ApplyMigrations"))
+{
+    await using var migrationScope = app.Services.CreateAsyncScope();
+    var db = migrationScope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync();
+}
 
 if (app.Environment.IsDevelopment())
 {
