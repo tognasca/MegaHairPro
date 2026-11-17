@@ -260,10 +260,11 @@ Se estiver de acordo responda:
             [FromServices] Microsoft.Extensions.Configuration.IConfiguration configuration,
             [FromServices] BookingConfigService config)
         {
-            if (!await config.MostrarOrcamentoAntesAsync())
+            var orcamento = await config.LerOrcamentoSimuladorAsync();
+            if (!orcamento.MostrarAntes)
                 return Ok(new { ativo = false });
 
-            var cotacao = PrecoDoSimulador(request, configuration) as OkObjectResult;
+            var cotacao = CalcularPrecoDoSimulador(request, configuration, orcamento.PercentualLucro) as OkObjectResult;
             var valor = (cotacao?.Value as PrecoSimuladorResponse)?.ValorTotal;
             return Ok(new { ativo = true, valorTotal = valor });
         }
@@ -271,9 +272,17 @@ Se estiver de acordo responda:
         [HttpPost("/api/simulador-megahair/preco")]
         [AllowAnonymous]
         [IgnoreAntiforgeryToken]
-        public IActionResult PrecoDoSimulador(
+        public async Task<IActionResult> PrecoDoSimulador(
             [FromBody] PrecoSimuladorRequest request,
-            [FromServices] Microsoft.Extensions.Configuration.IConfiguration configuration)
+            [FromServices] Microsoft.Extensions.Configuration.IConfiguration configuration,
+            [FromServices] BookingConfigService config)
+        {
+            var orcamento = await config.LerOrcamentoSimuladorAsync();
+            return CalcularPrecoDoSimulador(request, configuration, orcamento.PercentualLucro);
+        }
+
+        private IActionResult CalcularPrecoDoSimulador(PrecoSimuladorRequest request,
+            Microsoft.Extensions.Configuration.IConfiguration configuration, decimal percentualLucro)
         {
             if (request.QuantidadeGramas <= 0 || string.IsNullOrWhiteSpace(request.Metodo))
                 return BadRequest();
@@ -297,7 +306,7 @@ Se estiver de acordo responda:
             if (metodos.Count != 1)
                 return NotFound();
 
-            var custos = _custoMedio.CalculaCustoCabelo(produtos[0], request.QuantidadeGramas, 70m);
+            var custos = _custoMedio.CalculaCustoCabelo(produtos[0], request.QuantidadeGramas, percentualLucro);
             if (custos.Count == 0 || Convert.ToDecimal(custos[0]["custo"]) <= 0)
                 return UnprocessableEntity();
 

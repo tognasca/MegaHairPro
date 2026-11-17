@@ -51,6 +51,13 @@
                        name="ativo" value="true" checked="@mostrarOrcamento" />
                 <label class="form-check-label" for="mostrarOrcamentoAntes">Mostrar orçamento antes de gerar a imagem</label>
             </div>
+            <div class="mt-3">
+                <label class="form-label" for="percentualLucro">Lucro do cabelo (%)</label>
+                <input type="number" class="form-control w-auto" id="percentualLucro"
+                       name="percentualLucro" value="@ViewBag.PercentualLucro" min="0" step="any" required
+                       aria-describedby="ajudaPercentualLucro" />
+                <div id="ajudaPercentualLucro" class="form-text">O percentual incide sobre o custo do cabelo nos orçamentos do Simulador.</div>
+            </div>
             <button type="submit" class="btn btn-outline-secondary mt-2">Salvar configuração do orçamento</button>
         </form>
     </section>

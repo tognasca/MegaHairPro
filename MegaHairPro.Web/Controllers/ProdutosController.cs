@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using MegaHairPro.Web.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Authorization;
@@ -41,7 +42,9 @@ namespace MegaHairPro.Web.Controllers
             var produtos = _context.Produtos.AsNoTracking()
                 .Where(produto => codigos.Contains(produto.Codigo!)).ToList();
 
-            ViewBag.MostrarOrcamentoAntes = await config.MostrarOrcamentoAntesAsync();
+            var orcamento = await config.LerOrcamentoSimuladorAsync();
+            ViewBag.MostrarOrcamentoAntes = orcamento.MostrarAntes;
+            ViewBag.PercentualLucro = orcamento.PercentualLucro.ToString(CultureInfo.InvariantCulture);
             ViewBag.OrigensSimulador = CatalogoSimulador.Origens.Select(origem =>
             {
                 var codigo = CatalogoSimulador.Codigo(configuracao, origem.Chave);
@@ -53,7 +56,7 @@ namespace MegaHairPro.Web.Controllers
                     situacao = "Produto inativo";
                 else if (encontrados.Length == 1)
                 {
-                    var custo = custos.CalculaCustoCabelo(encontrados[0].Id, 1m, 70m).SingleOrDefault();
+                    var custo = custos.CalculaCustoCabelo(encontrados[0].Id, 1m, orcamento.PercentualLucro).SingleOrDefault();
                     situacao = custo is not null && Convert.ToDecimal(custo["custo"]) > 0
                         ? "Custo disponível para sincronizar" : "Aguardando compra com custo";
                 }
@@ -67,9 +70,16 @@ namespace MegaHairPro.Web.Controllers
         [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SalvarOrcamentoAntes(
-            bool ativo, [FromServices] BookingConfigService config)
+            bool ativo, string? percentualLucro, [FromServices] BookingConfigService config)
         {
-            await config.SalvarOrcamentoAntesAsync(ativo);
+            if (!decimal.TryParse(percentualLucro?.Trim().Replace(',', '.'), NumberStyles.AllowDecimalPoint,
+                CultureInfo.InvariantCulture, out var lucro) || lucro < 0)
+            {
+                TempData["SimuladorErro"] = "Informe um percentual de lucro igual ou maior que zero.";
+                return RedirectToAction(nameof(Simulador));
+            }
+
+            await config.SalvarOrcamentoSimuladorAsync(ativo, lucro);
             TempData["SimuladorSucesso"] = "Configuração do orçamento salva.";
             return RedirectToAction(nameof(Simulador));
         }
