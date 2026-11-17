@@ -220,80 +220,28 @@ Se estiver de acordo responda:
         }
 
 
-        internal static readonly (string Chave, string Origem)[] OrigensSimulador =
-        [
-            ("brasileiro-regional", "Brasileiro regional"),
-            ("brasileiro-do-sul", "Brasileiro do Sul"),
-            ("indiano", "Indiano"),
-            ("russo", "Russo"),
-            ("vietnamita", "Vietnamita")
-        ];
-
         [HttpPost("/api/simulador-megahair/produtos", Name = "CadastrarProdutosDoSimulador")]
         [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
         public IActionResult CadastrarProdutosDoSimulador(
             [FromServices] Microsoft.Extensions.Configuration.IConfiguration configuration, bool voltar = false)
         {
-            var produtos = OrigensSimulador.Select(origem => new Produto
-            {
-                Codigo = CodigoProdutoSimulador(configuration, origem.Chave),
-                Descricao = Produto.FormatarDescricao(TipoProduto.Cabelo, null, origem.Origem, null, null),
-                Origem = origem.Origem,
-                TipoProduto = TipoProduto.Cabelo,
-                UnidadeMedida = UnidadeMedida.Grama
-            }).ToArray();
+            var resultado = CatalogoSimulador.CadastrarFaltantes(_context, configuration, aceitarConflitos: voltar);
+            if (!voltar)
+                return resultado.Aviso is { } aviso
+                    ? Conflict(aviso)
+                    : Ok(resultado.Produtos.Select(p => new { p.Codigo, p.Origem }));
 
-            IActionResult AvisarConflito(string mensagem)
-            {
-                if (!voltar) return Conflict(mensagem);
-                TempData["SimuladorErro"] = mensagem;
-                return RedirectToAction("Simulador", "Produtos");
-            }
+            if (resultado.Aviso is { } erro)
+                TempData["SimuladorErro"] = erro;
 
-            if (produtos.Select(p => p.Codigo).Distinct(StringComparer.OrdinalIgnoreCase).Count() != produtos.Length)
-                return AvisarConflito("Configure um código diferente para cada origem.");
+            if (resultado.Criados > 0)
+                TempData["SimuladorSucesso"] = $"{resultado.Criados} produto(s) do Simulador cadastrado(s). Registre as compras com gramagem e custo.";
+            else if (resultado.Aviso is null)
+                TempData["SimuladorSucesso"] = "As origens padrão já estão cadastradas.";
 
-            using var transacao = _context.Database.BeginTransaction(System.Data.IsolationLevel.Serializable);
-            var bloqueados = new System.Collections.Generic.List<string>();
-            var criados = 0;
-            foreach (var produto in produtos)
-            {
-                var existentes = _context.Produtos.Where(p => p.Codigo == produto.Codigo).Take(2).ToList();
-                if (existentes.Count > 1 || existentes.Any(p => !p.Status || p.TipoProduto != TipoProduto.Cabelo))
-                {
-                    if (!voltar) return AvisarConflito("Há um produto incompatível com o código " + produto.Codigo);
-                    bloqueados.Add(produto.Codigo!);
-                    continue;
-                }
-
-                if (existentes.Count == 0)
-                {
-                    _context.Produtos.Add(produto);
-                    criados++;
-                }
-            }
-
-            _context.SaveChanges();
-            transacao.Commit();
-            if (voltar)
-            {
-                TempData["SimuladorSucesso"] = criados == 0
-                    ? "Nenhum produto novo foi criado."
-                    : $"{criados} produto(s) do Simulador cadastrado(s). Registre as compras com gramagem e custo.";
-                if (bloqueados.Count > 0)
-                    TempData["SimuladorErro"] = "Revise os produtos inativos ou com código em conflito: " + string.Join(", ", bloqueados);
-                return RedirectToAction("Simulador", "Produtos");
-            }
-
-            return Ok(produtos.Select(p => new { p.Codigo, p.Origem }));
+            return RedirectToAction("Simulador", "Produtos");
         }
-
-        internal static string CodigoProdutoSimulador(
-            Microsoft.Extensions.Configuration.IConfiguration configuration, string chave) =>
-            configuration["SimuladorMegaHair:Produtos:" + chave]?.Trim() is { Length: > 0 } codigo
-                ? codigo
-                : "SIM-" + chave.ToUpperInvariant();
 
         [HttpGet("/api/simulador-megahair/metodos")]
         [AllowAnonymous]
@@ -330,11 +278,11 @@ Se estiver de acordo responda:
             if (request.QuantidadeGramas <= 0 || string.IsNullOrWhiteSpace(request.Metodo))
                 return BadRequest();
 
-            var origem = OrigensSimulador.FirstOrDefault(o => o.Chave == request.Origem);
+            var origem = CatalogoSimulador.Origens.FirstOrDefault(o => o.Chave == request.Origem);
             if (origem.Chave == null)
                 return BadRequest("Selecione uma origem de cabelo válida.");
 
-            var codigo = CodigoProdutoSimulador(configuration, origem.Chave);
+            var codigo = CatalogoSimulador.Codigo(configuration, origem.Chave);
 
             var produtos = _context.Produtos
                 .Where(p => p.Codigo == codigo && p.Status && p.TipoProduto == TipoProduto.Cabelo)
