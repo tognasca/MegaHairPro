@@ -5,7 +5,6 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using MegaHairPro.Web.Controllers;
 using MegaHairPro.Web.Data;
 using MegaHairPro.Web.Models;
 using MegaHairPro.Web.Services.Interfaces;
@@ -51,9 +50,9 @@ public sealed class SincronizacaoOrcamento(
         var booking = escopo.ServiceProvider.GetRequiredService<BookingConfigService>();
 
         var itens = new List<Item>();
-        foreach (var origem in SimulacaoController.OrigensSimulador)
+        foreach (var origem in CatalogoSimulador.Origens)
         {
-            var codigo = SimulacaoController.CodigoProdutoSimulador(config, origem.Chave);
+            var codigo = CatalogoSimulador.Codigo(config, origem.Chave);
             var ids = await db.Produtos.Where(p => p.Codigo == codigo && p.Status && p.TipoProduto == TipoProduto.Cabelo)
                 .Select(p => p.Id).Take(2).ToListAsync(ct);
             if (ids.Count != 1) continue;

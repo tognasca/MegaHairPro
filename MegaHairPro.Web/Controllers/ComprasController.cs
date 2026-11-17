@@ -1,3 +1,4 @@
+using MegaHairPro.Web.Services;
 using Microsoft.Extensions.Configuration;
 using System;
 using MegaHairPro.Web.Data;
@@ -143,8 +144,8 @@ namespace MegaHairPro.Web.Controllers
 
         private void CarregarViewBags()
         {
-            var codigosSimulador = SimulacaoController.OrigensSimulador
-                .Select(origem => SimulacaoController.CodigoProdutoSimulador(_configuracao, origem.Chave))
+            var codigosSimulador = CatalogoSimulador.Origens
+                .Select(origem => CatalogoSimulador.Codigo(_configuracao, origem.Chave))
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
             ViewBag.Produtos = _context.Produtos.AsNoTracking().Where(p => p.Status)
                 .OrderBy(p => p.Codigo)

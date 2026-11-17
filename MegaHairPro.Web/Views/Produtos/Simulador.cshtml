@@ -21,12 +21,12 @@
         {
             <p role="alert" class="alert alert-warning">@alerta</p>
         }
-        <p>Cadastre as origens padrão e registre uma compra com gramagem e custo para cada origem que quiser disponibilizar.</p>
+        <p>As origens padrão são cadastradas ao iniciar o MegaHairPro. Para disponibilizar o orçamento de uma origem, registre uma compra com gramagem e custo.</p>
         <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
             <form method="post" action="@Url.RouteUrl("CadastrarProdutosDoSimulador")">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="voltar" value="true" />
-                <button type="submit" class="btn btn-primary">Cadastrar origens padrão</button>
+                <button type="submit" class="btn btn-outline-secondary">Cadastrar origens faltantes</button>
             </form>
             <a href="@Url.Action("Index", "Compras")" class="btn btn-outline-secondary">Ir para Compras</a>
         </div>

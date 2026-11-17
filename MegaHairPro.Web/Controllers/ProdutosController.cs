@@ -35,16 +35,16 @@ namespace MegaHairPro.Web.Controllers
         public async Task<IActionResult> Simulador([FromServices] BookingConfigService config,
             [FromServices] IConfiguration configuracao, [FromServices] ICustoMedioService custos)
         {
-            var codigos = SimulacaoController.OrigensSimulador
-                .Select(origem => SimulacaoController.CodigoProdutoSimulador(configuracao, origem.Chave))
+            var codigos = CatalogoSimulador.Origens
+                .Select(origem => CatalogoSimulador.Codigo(configuracao, origem.Chave))
                 .ToArray();
             var produtos = _context.Produtos.AsNoTracking()
                 .Where(produto => codigos.Contains(produto.Codigo!)).ToList();
 
             ViewBag.MostrarOrcamentoAntes = await config.MostrarOrcamentoAntesAsync();
-            ViewBag.OrigensSimulador = SimulacaoController.OrigensSimulador.Select(origem =>
+            ViewBag.OrigensSimulador = CatalogoSimulador.Origens.Select(origem =>
             {
-                var codigo = SimulacaoController.CodigoProdutoSimulador(configuracao, origem.Chave);
+                var codigo = CatalogoSimulador.Codigo(configuracao, origem.Chave);
                 var encontrados = produtos.Where(p => p.Codigo == codigo).Take(2).ToArray();
                 var situacao = "Produto ainda não cadastrado";
                 if (encontrados.Length > 1 || encontrados.Any(p => p.TipoProduto != TipoProduto.Cabelo))

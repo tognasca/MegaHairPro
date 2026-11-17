@@ -18,6 +18,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Globalization;
 using System.IO;
@@ -197,6 +198,23 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         Console.WriteLine("Erro no Seed: " + ex.Message);
+    }
+}
+
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var resultado = CatalogoSimulador.CadastrarFaltantes(db, app.Configuration, aceitarConflitos: true);
+        if (resultado.Criados > 0)
+            app.Logger.LogInformation("{Quantidade} produtos padrão do Simulador cadastrados.", resultado.Criados);
+        if (resultado.Aviso is { } aviso)
+            app.Logger.LogWarning("{Aviso}", aviso);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Falha ao cadastrar os produtos padrão do Simulador.");
     }
 }
 
