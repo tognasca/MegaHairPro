@@ -145,18 +145,16 @@ namespace MegaHairPro.Web.Controllers
         {
             var codigosSimulador = SimulacaoController.OrigensSimulador
                 .Select(origem => SimulacaoController.CodigoProdutoSimulador(_configuracao, origem.Chave))
-                .ToHashSet();
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
             ViewBag.Produtos = _context.Produtos.AsNoTracking().Where(p => p.Status)
                 .OrderBy(p => p.Codigo)
                 .Select(p => new { p.Id, p.Codigo, p.Descricao, p.Origem, p.Tamanho, p.Cor, p.TipoProduto })
                 .ToList()
                 .Select(p =>
                 {
-                    var doSimulador = p.Codigo is not null && codigosSimulador.Contains(p.Codigo);
-                    var detalhes = string.Join(" · ", new[] { p.Origem, p.Tamanho, p.Cor }
-                        .Where(valor => !string.IsNullOrWhiteSpace(valor)));
-                    var nome = !string.IsNullOrWhiteSpace(p.Descricao) ? p.Descricao
-                        : detalhes.Length > 0 ? detalhes : p.TipoProduto.ToString();
+                    var doSimulador = p.Codigo is not null
+                        && (codigosSimulador.Contains(p.Codigo) || p.Codigo.StartsWith("SIM-", StringComparison.OrdinalIgnoreCase));
+                    var nome = Produto.FormatarDescricao(p.TipoProduto, p.Descricao, p.Origem, p.Cor, p.Tamanho);
                     var rotulo = string.IsNullOrWhiteSpace(p.Codigo) ? nome : $"{p.Codigo} — {nome}";
                     return new OpcaoProduto(p.Id, rotulo, doSimulador);
                 }).ToArray();
