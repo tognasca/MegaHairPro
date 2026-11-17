@@ -86,7 +86,7 @@ namespace MegaHairPro.Web.Controllers
                 ? UnidadeMedida.Grama
                 : produto.UnidadeMedida;
 
-            produto.Descricao = DescricaoDoProduto(produto);
+            produto.Descricao = produto.ObterDescricao();
             _context.Produtos.Add(produto);
             _context.SaveChanges();
 
@@ -103,7 +103,7 @@ namespace MegaHairPro.Web.Controllers
             if (original == null)
                 return Json(new { success = false });
 
-            original.Descricao = DescricaoDoProduto(produto);
+            original.Descricao = produto.ObterDescricao();
             original.TipoProduto = produto.TipoProduto;
             original.UnidadeMedida = produto.TipoProduto == TipoProduto.Cabelo
                 ? UnidadeMedida.Grama
@@ -165,7 +165,7 @@ namespace MegaHairPro.Web.Controllers
                 ? UnidadeMedida.Grama
                 : model.UnidadeMedida;
 
-            model.Descricao = DescricaoDoProduto(model);
+            model.Descricao = model.ObterDescricao();
             _context.Produtos.Add(model);
 
             _context.SaveChanges();
@@ -173,16 +173,6 @@ namespace MegaHairPro.Web.Controllers
 
             return PartialView("_ProdutoRow", model);
 
-        }
-
-        private static string DescricaoDoProduto(Produto produto)
-        {
-            if (!string.IsNullOrWhiteSpace(produto.Descricao))
-                return produto.Descricao.Trim();
-
-            var detalhes = string.Join(" · ", new[] { produto.Origem, produto.Tamanho, produto.Cor }
-                .Where(valor => !string.IsNullOrWhiteSpace(valor)).Select(valor => valor!.Trim()));
-            return detalhes.Length > 0 ? detalhes : produto.TipoProduto.ToString();
         }
 
           // ✅ GERAR CÓDIGO

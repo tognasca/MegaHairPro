@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Compras";
+    var opcoesProduto = (MegaHairPro.Web.Controllers.ComprasController.OpcaoProduto[])ViewBag.Produtos;
 }
 
 <div class="page-header">
@@ -31,8 +32,12 @@
                 <label class="form-label">Produto</label>
                 <select name="ProdutoId" class="form-select" required>
                     <option value="">Selecione...</option>
-                    <partial name="_OpcoesProduto" model="ViewBag.Produtos" />
+                    @await Html.PartialAsync("_OpcoesProduto", opcoesProduto)
                 </select>
+                @if (User.IsInRole("Admin") && !opcoesProduto.Any(produto => produto.DoSimulador))
+                {
+                    <a class="form-text" href="@Url.Action("Simulador", "Produtos")">Nenhum produto ativo do Simulador. Gerenciar origens</a>
+                }
             </div>
             <div class="col-md-2">
                 <label class="form-label">Fornecedor</label>
@@ -99,7 +104,7 @@
                     <div class="col-12">
                         <label class="form-label">Produto</label>
                         <select id="editProdutoId" class="form-select">
-                            <partial name="_OpcoesProduto" model="ViewBag.Produtos" />
+                            @await Html.PartialAsync("_OpcoesProduto", opcoesProduto)
                         </select>
                     </div>
                     <div class="col-12">

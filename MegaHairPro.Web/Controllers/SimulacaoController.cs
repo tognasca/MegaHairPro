@@ -238,7 +238,7 @@ Se estiver de acordo responda:
             var produtos = OrigensSimulador.Select(origem => new Produto
             {
                 Codigo = CodigoProdutoSimulador(configuration, origem.Chave),
-                Descricao = "Simulador - " + origem.Origem,
+                Descricao = Produto.FormatarDescricao(TipoProduto.Cabelo, null, origem.Origem, null, null),
                 Origem = origem.Origem,
                 TipoProduto = TipoProduto.Cabelo,
                 UnidadeMedida = UnidadeMedida.Grama

@@ -54,7 +54,7 @@
                     <option>Castanho Escuro</option><option>Loiro</option><option>Preto</option>
                 </select>
             </div>
-            <div class="col-md-5">
+            <div class="col-md-5 campo-descricao d-none">
                 <label class="form-label" for="produtoDescricao">Descrição</label>
                 <input id="produtoDescricao" name="Descricao" class="form-control" placeholder="Opcional" />
             </div>
@@ -130,7 +130,7 @@
             <div class="modal-body">
                 <input type="hidden" id="editId" />
                 <div class="row g-3">
-                    <div class="col-12">
+                    <div class="col-12 campo-descricao d-none">
                         <label class="form-label" for="editDescricao">Descrição</label>
                         <input id="editDescricao" class="form-control" />
                     </div>
@@ -219,7 +219,7 @@
         modalEditarProduto = new bootstrap.Modal(document.getElementById("modalEditarProduto"));
         modalExcluir = new bootstrap.Modal(document.getElementById("modalExcluir"));
 
-        aplicarRegraUnidade($("#TipoProduto").val());
+        atualizarCamposProduto($("#formProduto"), $("#TipoProduto").val());
 
         // 🔥 INICIALIZA DATATABLE
         tabela = $("#tabelaProdutos").DataTable({
@@ -233,26 +233,22 @@
         });
     });
 
-    function aplicarRegraUnidade(tipo) {
-        if (tipo === "1") {
-            $("#UnidadeMedida").val("1").prop("disabled", true);
-            $("#editUnidadeMedida").val("1").prop("disabled", true);
-        }
-        else {
-            $("#UnidadeMedida").prop("disabled", false);
-            $("#editUnidadeMedida").prop("disabled", false);
-        }
+    function atualizarCamposProduto(container, tipo) {
+        const cabelo = tipo === "1";
+        const unidade = container.find("#UnidadeMedida, #editUnidadeMedida");
+        if (cabelo) unidade.val("1");
+        unidade.prop("disabled", cabelo);
+        container.find(".campo-descricao").toggleClass("d-none", tipo !== "2");
+        container.find(".campo-descricao input").prop("disabled", tipo !== "2");
     }
 
-    $("#TipoProduto").change(function () {
-        let tipo = $(this).val();
-        if (tipo == "2") {
-            $(".campo-cabelo").addClass("d-none");
-        }
-        else {
-            $(".campo-cabelo").removeClass("d-none");
-        }
-        aplicarRegraUnidade(tipo);
+    $("#TipoProduto").on("change", function () {
+        atualizarCamposProduto($("#formProduto"), this.value);
+        $("#formProduto .campo-cabelo").toggleClass("d-none", this.value === "2");
+    });
+
+    $("#editTipo").on("change", function () {
+        atualizarCamposProduto($("#modalEditarProduto"), this.value);
     });
 
     function getToken() { return $('input[name="__RequestVerificationToken"]').first().val(); }
@@ -298,7 +294,7 @@
 
     function limpar() {
         $("#formProduto")[0].reset();
-        aplicarRegraUnidade($("#TipoProduto").val());
+        $("#TipoProduto").trigger("change");
     }
 
     function editarProduto(id) {
@@ -312,7 +308,7 @@
         $("#editCor").val(row.dataset.cor);
         $("#editUnidadeMedida").val(row.dataset.unidade || "1");
 
-        aplicarRegraUnidade($("#editTipo").val());
+        $("#editTipo").trigger("change");
 
         modalEditarProduto.show();
     }
