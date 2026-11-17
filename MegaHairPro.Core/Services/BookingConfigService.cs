@@ -4,6 +4,7 @@ using MegaHairPro.Web.Models.Booking;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -83,27 +84,43 @@ public class BookingConfigService
 
     private const string ChavePreviaSimulador = "SimuladorMegaHair.MostrarOrcamentoAntes";
 
-    public async Task<bool> MostrarOrcamentoAntesAsync()
+    private const string ChaveLucroSimulador = "SimuladorMegaHair.PercentualLucroCabelo";
+    private const decimal LucroSimuladorPadrao = 70m;
+
+    public async Task<(bool MostrarAntes, decimal PercentualLucro)> LerOrcamentoSimuladorAsync()
     {
         await EnsureSchemaAsync();
-        var valor = await _context.ConfiguracoesBooking.AsNoTracking()
-            .Where(row => row.Chave == ChavePreviaSimulador)
-            .Select(row => row.Valor).SingleOrDefaultAsync();
-        return bool.TryParse(valor, out var ativo) && ativo;
+        var valores = await _context.ConfiguracoesBooking.AsNoTracking()
+            .Where(row => row.Chave == ChavePreviaSimulador || row.Chave == ChaveLucroSimulador)
+            .ToDictionaryAsync(row => row.Chave, row => row.Valor);
+
+        var mostrarAntes = bool.TryParse(valores.GetValueOrDefault(ChavePreviaSimulador), out var ativo) && ativo;
+        var percentual = decimal.TryParse(valores.GetValueOrDefault(ChaveLucroSimulador),
+            NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var lucro) && lucro >= 0
+            ? lucro : LucroSimuladorPadrao;
+        return (mostrarAntes, percentual);
     }
 
-    public async Task SalvarOrcamentoAntesAsync(bool ativo)
+    public async Task SalvarOrcamentoSimuladorAsync(bool ativo, decimal percentualLucro)
     {
+        ArgumentOutOfRangeException.ThrowIfNegative(percentualLucro);
         await EnsureSchemaAsync();
         await using var transacao = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
-        var row = await _context.ConfiguracoesBooking.FindAsync(ChavePreviaSimulador);
-        if (row == null)
+
+        async Task Salvar(string chave, string valor)
         {
-            row = new ConfiguracaoBooking { Chave = ChavePreviaSimulador };
-            _context.ConfiguracoesBooking.Add(row);
+            var row = await _context.ConfiguracoesBooking.FindAsync(chave);
+            if (row == null)
+            {
+                row = new ConfiguracaoBooking { Chave = chave };
+                _context.ConfiguracoesBooking.Add(row);
+            }
+            row.Valor = valor;
+            row.AtualizadoEm = DateTime.UtcNow;
         }
-        row.Valor = ativo.ToString();
-        row.AtualizadoEm = DateTime.UtcNow;
+
+        await Salvar(ChavePreviaSimulador, ativo.ToString());
+        await Salvar(ChaveLucroSimulador, percentualLucro.ToString(CultureInfo.InvariantCulture));
         await _context.SaveChangesAsync();
         await transacao.CommitAsync();
     }
