@@ -49,6 +49,7 @@ public sealed class SincronizacaoOrcamento(
         var custos = escopo.ServiceProvider.GetRequiredService<ICustoMedioService>();
         var booking = escopo.ServiceProvider.GetRequiredService<BookingConfigService>();
 
+        var orcamento = await booking.LerOrcamentoSimuladorAsync();
         var itens = new List<Item>();
         foreach (var origem in CatalogoSimulador.Origens)
         {
@@ -56,7 +57,7 @@ public sealed class SincronizacaoOrcamento(
             var ids = await db.Produtos.Where(p => p.Codigo == codigo && p.Status && p.TipoProduto == TipoProduto.Cabelo)
                 .Select(p => p.Id).Take(2).ToListAsync(ct);
             if (ids.Count != 1) continue;
-            var custo = custos.CalculaCustoCabelo(ids[0], 1m, 70m).SingleOrDefault();
+            var custo = custos.CalculaCustoCabelo(ids[0], 1m, orcamento.PercentualLucro).SingleOrDefault();
             if (custo is null || Convert.ToDecimal(custo["custo"]) <= 0) continue;
             itens.Add(new(origem.Chave, origem.Origem, "origem", "grama",
                 Convert.ToDecimal(custo["custo"]) + Convert.ToDecimal(custo["lucro"])));
@@ -75,7 +76,7 @@ public sealed class SincronizacaoOrcamento(
 
         using var req = new HttpRequestMessage(HttpMethod.Put, endpoint)
         {
-            Content = JsonContent.Create(new { mostrarAntes = await booking.MostrarOrcamentoAntesAsync(), itens })
+            Content = JsonContent.Create(new { mostrarAntes = orcamento.MostrarAntes, itens })
         };
         req.Headers.Add("X-Orcamento-Chave", chave);
         using var resposta = await clientes.CreateClient("SincronizacaoOrcamento").SendAsync(req, ct);
